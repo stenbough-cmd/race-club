@@ -17,7 +17,7 @@
   var MENU = [
     { id: 'news', label: 'News', href: 'raceroom.html' },
     { id: 'leaderboards', label: 'Leaderboards', href: 'raceroom-leaderboards.html' },
-    { id: 'profiles', label: 'Profiles', href: 'raceroom-profiles.html' }
+    { id: 'profiles', label: 'Drivers', href: 'raceroom-profiles.html' }
   ];
   var TABSETS = {
     leaderboards: [
@@ -55,7 +55,10 @@
     forward: '<path d="M9 5l7 7-7 7"/>',
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
     login: '<path d="M14 4h6v16h-6"/><path d="M3 12h11"/><path d="M10 8l4 4-4 4"/>',
-    logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>'
+    logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
+    protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>'
   };
   function setIcon(node, name) {
     node.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
@@ -101,11 +104,15 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Admin log in / log out. The login system itself is not built yet, so a click does nothing. */
+  /* Icon area at the far right (not part of the navbar): Search, Help, Protest, then admin Log in / Log out.
+     None of these do anything yet. Each will be wired up when its feature is designed. */
   var topEnd = el('div', 'rr-topbar-end');
+  var searchBtn = iconBtn('button', 'search', 'Search');
+  var helpBtn = iconBtn('button', 'help', 'Help');
+  var protestBtn = iconBtn('button', 'protest', 'Protest');
   var adminBtn = iconBtn('button', 'login', 'Log in');
   adminBtn.classList.add('rr-tip-end');
-  topEnd.appendChild(adminBtn);
+  add(topEnd, searchBtn, helpBtn, protestBtn, adminBtn);
   add(topbar, logo, nav, topEnd);
 
   var head = el('div', 'rr-page-head');

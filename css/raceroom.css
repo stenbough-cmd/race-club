@@ -61,11 +61,11 @@ button, select { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 48px;
-  padding: 16px var(--rr-pad) 12px;
+  padding: 16px var(--rr-pad) 24px;
 }
 .rr-logo { display: inline-flex; align-items: center; transition: opacity var(--rr-speed) ease; }
 .rr-logo:hover { opacity: 0.8; }
-.rr-logo-img { display: block; height: 20px; width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
+.rr-logo-img { display: block; height: 25px; width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
 .rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: wrap; }
 .rr-topbar-end { display: flex; gap: var(--rr-gap); margin-left: auto; }
 
@@ -85,7 +85,7 @@ button, select { font-family: inherit; }
   cursor: pointer;
   transition: background-color var(--rr-speed) ease, border-color var(--rr-speed) ease, color var(--rr-speed) ease;
 }
-.rr-nav-item { padding: 0 16px; }
+.rr-nav-item { padding: 0 16px; font-weight: 400; }
 .rr-icon-btn { width: 34px; padding: 0; }
 .rr-icon-btn svg { display: block; width: 18px; height: 18px; }
 .rr-nav-item:hover, .rr-icon-btn:hover { border-color: var(--rr-text); }
