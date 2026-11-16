@@ -10,7 +10,7 @@
   function driver(id) { return byId(D.drivers, id); }
   function className(id) { var c = byId(D.classes, id); return c ? c.name : '-'; }
   function round(n) { return D.rounds.filter(function (r) { return r.n === n; })[0]; }
-  function profileLink(d) { return 'raceroom-profile.html?driver=' + encodeURIComponent(d.id); }
+  function profileLink(d) { return 'driver.html?driver=' + encodeURIComponent(d.id); }
   function standings(cls) {
     return D.drivers.filter(function (d) { return cls === 'all' || d.cls === cls; })
       .sort(function (a, b) { return b.points - a.points || a.name.localeCompare(b.name); });
@@ -28,7 +28,7 @@
 
   var PAGES = {};
 
-  /* ---------------- NEWS (raceroom.html): every post, newest first ----------------
+  /* ---------------- NEWS (index.html): every post, newest first ----------------
      Page 1 shows the 3 newest posts. Every page after that shows 6.
      The block of stories is the same height on every page, so the pills under it never move. */
   PAGES.news = function () {
@@ -49,7 +49,7 @@
       items.forEach(function (n, i) {
         grid.appendChild(RR.promo({
           feature: p === 1 && i === 0, eyebrow: n.eyebrow + ' \u00B7 ' + n.date, title: n.title, desc: n.desc,
-          href: 'raceroom-story.html?id=' + encodeURIComponent(n.id)
+          href: 'story.html?id=' + encodeURIComponent(n.id)
         }));
       });
       main.appendChild(add(el('div', 'rr-news'), grid,
@@ -60,7 +60,7 @@
     draw();
   };
 
-  /* ---------------- ONE POST (raceroom-story.html) ---------------- */
+  /* ---------------- ONE POST (story.html) ---------------- */
   PAGES.story = function () {
     var main = document.querySelector('main');
     var posts = newestFirst(), at = -1;
@@ -74,7 +74,7 @@
     main.appendChild(art);
   };
 
-  /* ---------------- LEADERBOARDS (raceroom-leaderboards.html) ---------------- */
+  /* ---------------- LEADERBOARDS (leaderboards.html) ---------------- */
   PAGES.leaderboards = function () {
     var cls = 'all', pickedRound = null, pickedTrack = null, onlyUpcoming = false;
     var done = D.rounds.filter(function (r) { return r.done; });
@@ -172,7 +172,7 @@
     drawAll();
   };
 
-  /* ---------------- PROFILES LIST (raceroom-profiles.html) ---------------- */
+  /* ---------------- PROFILES LIST (drivers.html) ---------------- */
   PAGES.profiles = function () {
     var holder = el('div');
     document.querySelector('main').appendChild(holder);
@@ -192,7 +192,7 @@
     draw('all');
   };
 
-  /* ---------------- ONE DRIVER (raceroom-profile.html?driver=...) ---------------- */
+  /* ---------------- ONE DRIVER (driver.html?driver=...) ---------------- */
   PAGES.profile = function () {
     var d = driver(RR.param('driver'));
     if (!d) {

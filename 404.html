@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found | Race Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/raceroom.css">
+</head>
+<body data-rr-page="missing" data-rr-main="none" data-rr-title="Page not found">
+<main>
+<section data-rr-view="missing"></section>
+</main>
+<script src="js/raceroom-shell.js"></script>
+<script>
+(function () {
+  var RR = window.RR, p = RR.el('div', 'rr-panel rr-stack'), a = RR.el('a', 'rr-btn', 'Go to the home page');
+  a.href = '/';
+  RR.add(p, RR.heading('Page not found'), RR.el('p', 'rr-body', 'This page does not exist. The site was rebuilt and some old addresses are gone.'), RR.row(a));
+  RR.view('missing').appendChild(p);
+})();
+</script>
+</body>
+</html>

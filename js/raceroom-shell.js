@@ -1,7 +1,7 @@
 /* Race Club RaceRoom site: shared shell and shared building blocks.
    Draws the top bar (with Back, Forward, Home and the admin log in icon),
    page title row, sub-tabs and bottom bar on
-   every raceroom page from ONE menu list, so they are identical everywhere.
+   every page from ONE menu list, so they are identical everywhere.
    Also holds the only builders for tables, cards, tiles and options (RR.*),
    so every list and option on the site looks the same.
 
@@ -15,11 +15,11 @@
 
   /* ---- The one menu list. Change the site menu here and nowhere else. ---- */
   var MENU = [
-    { id: 'news', label: 'News', href: 'raceroom.html' },
-    { id: 'leaderboards', label: 'Leaderboards', href: 'raceroom-leaderboards.html' },
-    { id: 'profiles', label: 'Drivers', href: 'raceroom-profiles.html' },
+    { id: 'news', label: 'News', href: 'index.html' },
+    { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
+    { id: 'profiles', label: 'Drivers', href: 'drivers.html' },
     /* Shown only while an admin is logged in. */
-    { id: 'admin', label: 'Admin', href: 'raceroom-admin.html', admin: true }
+    { id: 'admin', label: 'Admin', href: 'admin.html', admin: true }
   ];
   var TABSETS = {
     leaderboards: [
@@ -112,7 +112,7 @@
   /* ---- Build the frame ---- */
   var body = document.body;
   /* A page marked data-rr-admin="required" is only for a logged-in admin. */
-  if (body.getAttribute('data-rr-admin') === 'required' && !adminLoad()) location.replace('raceroom-login.html');
+  if (body.getAttribute('data-rr-admin') === 'required' && !adminLoad()) location.replace('login.html');
   var main = document.querySelector('main');
   var mainId = body.getAttribute('data-rr-main') || 'news';
   var tabs = TABSETS[body.getAttribute('data-rr-tabs')] || [];
@@ -122,7 +122,7 @@
 
   var topbar = el('header', 'rr-topbar');
   var logo = el('a', 'rr-logo');
-  logo.href = 'raceroom.html';
+  logo.href = 'index.html';
   logo.setAttribute('aria-label', 'Race Club home');
   var logoImg = el('img', 'rr-logo-img');
   logoImg.src = 'assets/images/rr-RC-title-x.png';
@@ -133,7 +133,7 @@
   var backBtn = iconBtn('button', 'back', 'Back');
   var forwardBtn = iconBtn('button', 'forward', 'Forward');
   var homeBtn = iconBtn('a', 'home', 'Home');
-  homeBtn.href = 'raceroom.html';
+  homeBtn.href = 'index.html';
   add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
     if (item.admin && !adminLoad()) return;
@@ -174,7 +174,7 @@
   add(app, topbar, head, subtabs, main, bottom);
 
   /* ---- Back / Forward: steps through the places visited on this site, in this browser tab ---- */
-  var NAV_KEY = 'rr-nav';
+  var NAV_KEY = 'rc-nav';   /* renamed when the pages were renamed, so old page names are forgotten */
   function navLoad() {
     var raw = '';
     try { raw = sessionStorage.getItem(NAV_KEY) || ''; } catch (e) {}
@@ -188,7 +188,7 @@
     try { window.name = NAV_KEY + ':' + raw; } catch (e) {}
   }
   function navHere() {
-    var file = location.pathname.split('/').pop() || 'raceroom.html';
+    var file = location.pathname.split('/').pop() || 'index.html';
     var hash = location.hash;
     if (tabs.length) hash = '#' + tabs[currentTab()][0];
     else if (hash === '#' || hash === '#page-1') hash = '';
@@ -299,9 +299,9 @@
   RR.setAdmin(!!adminLoad());
   adminBtn.addEventListener('click', function () {
     var a = adminLoad();
-    if (!a) { location.href = 'raceroom-login.html'; return; }
+    if (!a) { location.href = 'login.html'; return; }
     adminClear();
-    apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'raceroom.html'; });
+    apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'index.html'; });
   });
 
   /* The logged-in admin ({ name }) or null. */
@@ -325,7 +325,7 @@
     var a = adminLoad(), payload = { action: action, token: a ? a.token : '' };
     Object.keys(data || {}).forEach(function (k) { payload[k] = data[k]; });
     return apiCall(apiAddress(), payload).then(function (res) {
-      if (res && res.error === 'signed-out') { adminClear(); location.href = 'raceroom-login.html'; }
+      if (res && res.error === 'signed-out') { adminClear(); location.href = 'login.html'; }
       return res;
     });
   };

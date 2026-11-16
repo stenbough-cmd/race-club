@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   var RR = window.RR, el = RR.el, add = RR.add;
-  if (RR.admin()) { location.replace('raceroom-admin.html'); return; }
+  if (RR.admin()) { location.replace('admin.html'); return; }
 
   var form = { api: RR.apiAddress(), name: '', password: '' }, busy = false;
   var status = el('div');
@@ -26,7 +26,7 @@
     say('Checking...', 'ok');
     RR.signIn(form.api, form.name, form.password).then(function (res) {
       busy = false;
-      if (res && res.ok) { location.href = 'raceroom-admin.html'; return; }
+      if (res && res.ok) { location.href = 'admin.html'; return; }
       say(ERRORS[res && res.error] || 'Log in failed. The service answered: ' + ((res && (res.detail || res.error)) || 'nothing') + '.', 'warn');
     });
   }
