@@ -53,17 +53,6 @@ button, select { font-family: inherit; }
   overflow: hidden;
 }
 .rr-app > * { position: relative; z-index: 1; flex-shrink: 0; }
-.rr-app::before, .rr-app::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  bottom: -40px;
-  background: var(--rr-red);
-  transform: skewX(-32deg);
-  pointer-events: none;
-}
-.rr-app::before { left: -50px; width: 110px; height: 96px; }
-.rr-app::after { left: 84px; width: 30px; height: 70px; }
 
 /* ---------- Top bar ---------- */
 .rr-app > .rr-topbar { z-index: 5; }
@@ -71,12 +60,12 @@ button, select { font-family: inherit; }
 .rr-topbar {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 48px;
   padding: 16px var(--rr-pad) 12px;
 }
 .rr-logo { display: inline-flex; align-items: center; transition: opacity var(--rr-speed) ease; }
 .rr-logo:hover { opacity: 0.8; }
-.rr-logo-img { display: block; height: 30px; width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
+.rr-logo-img { display: block; height: 20px; width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
 .rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: wrap; }
 .rr-topbar-end { display: flex; gap: var(--rr-gap); margin-left: auto; }
 
@@ -105,6 +94,8 @@ button, select { font-family: inherit; }
   border-color: var(--rr-invert-bg);
   color: var(--rr-invert-text);
 }
+/* Icons at the far right are not part of the navbar: icon only, no fill, same white border on hover. */
+.rr-topbar-end .rr-icon-btn { background: transparent; }
 .rr-icon-btn[aria-disabled="true"] { color: var(--rr-muted); cursor: default; }
 .rr-icon-btn[aria-disabled="true"]:hover { border-color: transparent; }
 
@@ -622,7 +613,6 @@ button, select { font-family: inherit; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }
   .rr-span-2 { grid-column: auto; }
   .rr-row-stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rr-app::before, .rr-app::after { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
