@@ -6,3 +6,6 @@
 
 # Full-size original track photos (kept only on this computer; the website uses the small copies in assets/tracks/)
 _originals/
+
+# RaceRoom Apps Script files (a copy kept only on this computer; the live code is in the Apps Script editor)
+_raceroom-apps-script/

@@ -412,11 +412,26 @@ button, select { font-family: inherit; }
 .rr-input input:focus, .rr-input textarea:focus { outline: none; }
 .rr-input input[type="number"] { width: 64px; }
 .rr-input-wide { display: flex; flex: 1 1 360px; }
+/* Shown but not editable: no hover border, muted value. */
+.rr-input-locked, .rr-input-locked:hover { border-color: var(--rr-line); background: transparent; }
+.rr-input-locked input { color: var(--rr-muted); cursor: default; }
+/* A box that failed a check: red border until it is fixed. */
+.rr-input[aria-invalid="true"], .rr-input[aria-invalid="true"]:hover, .rr-input[aria-invalid="true"]:focus-within,
+.rr-select[aria-invalid="true"] .rr-select-btn, .rr-select[aria-invalid="true"] .rr-select-arrow { border-color: var(--rr-red); }
 .rr-textarea { display: flex; align-items: flex-start; height: auto; padding: 8px 12px; }
 .rr-textarea textarea { height: 56px; resize: vertical; line-height: 1.45; }
 
 /* ---------- Rows of option boxes, notices ---------- */
 .rr-form-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rr-gap); }
+/* Three even columns of option boxes: name at the left, value at the right. */
+.rr-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rr-gap); }
+.rr-form-grid .rr-select { display: block; }
+.rr-form-grid .rr-select-btn { width: 100%; }
+.rr-form-grid .rr-select-text { flex: 1 1 auto; justify-content: space-between; min-width: 0; }
+.rr-form-grid .rr-select-value { overflow: hidden; text-overflow: ellipsis; }
+.rr-form-grid .rr-input { display: flex; }
+.rr-form-grid .rr-input input { text-align: right; }
+.rr-subheading { margin: 8px 0 0; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rr-muted); }
 .rr-notice { margin: 0; padding: 8px 12px; border-left: 2px solid var(--rr-text); background: var(--rr-panel); }
 .rr-notice-warn { border-left-color: var(--rr-red); }
 
@@ -679,7 +694,7 @@ button, select { font-family: inherit; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
   .rr-subtab { flex: 0 0 auto; padding-left: 16px; padding-right: 16px; }
-  .rr-grid-2, .rr-grid-3, .rr-split, .rr-news-first, .rr-news-rest { grid-template-columns: minmax(0, 1fr); }
+  .rr-grid-2, .rr-grid-3, .rr-split, .rr-news-first, .rr-news-rest, .rr-form-grid { grid-template-columns: minmax(0, 1fr); }
   .rr-news-grid { flex: 0 0 auto; grid-template-rows: none; grid-auto-rows: 170px; }
   .rr-news-first > :first-child { grid-row: auto; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }

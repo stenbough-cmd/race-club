@@ -1,7 +1,8 @@
-/* Race Club RaceRoom site: admin season wizard and server exporter (Stage 1).
-   Runs entirely in the browser. Nothing is uploaded anywhere: the season is kept in this
-   browser's storage and in the season file you save, and the server files are built here
-   and downloaded as a .zip. Server passwords therefore never leave your computer.
+/* Race Club RaceRoom site: admin season wizard and server exporter.
+   The wizard works in the browser: the season is kept in this browser's storage, and the server
+   files are built here and downloaded as a .zip. "Save season to the Sheet" (Review step) sends the
+   season, with its server passwords, to the league's private Google Sheet through the service,
+   which only accepts it from a logged-in admin. Nothing is ever written into the website itself.
 
    The server file format is recorded in the Project doc raceroom-server-export-format-2026-11-16.md.
    Every part of the screen is made with the shared builders in raceroom-shell.js (RR.*). */
@@ -13,7 +14,57 @@
 
   /* ---------------- Lookup helpers ---------------- */
   var layoutIndex = {};
-  R3E.tracks.forEach(function (t) { t.l.forEach(function (l) { layoutIndex[l.id] = { track: t.n, layout: l.n, max: l.m }; }); });
+  function indexLayouts() {
+    layoutIndex = {};
+    R3E.tracks.forEach(function (t) { t.l.forEach(function (l) { layoutIndex[l.id] = { track: t.n, layout: l.n, max: l.m }; }); });
+  }
+  indexLayouts();
+
+  /* The car and track list. The page starts with our saved copy (raceroom-r3e-data.js) so it always works,
+     then asks RaceRoom's GitHub file for the newest list and switches to it if the answer is good. */
+  var LIVE_URL = 'https://raw.githubusercontent.com/kwstudios-sweden/r3e-spectator-overlay/master/r3e-data.json';
+  var listSource = 'saved';   /* 'saved' | 'live' */
+  function trimLookup(d) {
+    var cars = {}, classes = [], tracks = [];
+    Object.keys(d.cars).forEach(function (id) {
+      var c = d.cars[id];
+      cars[id] = { n: c.Name, c: c.Class, l: (c.liveries || []).map(function (l) { return [l.Id, (l.Name + ' ' + (l.TeamName || '')).trim()]; }) };
+    });
+    Object.keys(d.classes).forEach(function (id) {
+      var c = d.classes[id], ids = (c.Cars || []).map(function (x) { return x.Id; }).filter(function (x) { return cars[x]; });
+      if (ids.length) classes.push({ id: c.Id, n: c.Name, cars: ids });
+    });
+    Object.keys(d.tracks).forEach(function (id) {
+      var t = d.tracks[id];
+      tracks.push({ id: t.Id, n: t.Name, l: (t.layouts || []).map(function (l) { return { id: l.Id, n: l.Name, m: l.MaxNumberOfVehicles || 0 }; }) });
+    });
+    function byName(a, b) { return a.n.toLowerCase() < b.n.toLowerCase() ? -1 : 1; }
+    classes.sort(byName);
+    tracks.sort(byName);
+    if (classes.length < 50 || tracks.length < 40) throw new Error('lookup file looks wrong');
+    return { classes: classes, cars: cars, tracks: tracks };
+  }
+  function loadLiveList(done) {
+    var stop = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (stop) stop.abort(); }, 8000);
+    fetch(LIVE_URL, stop ? { signal: stop.signal, cache: 'no-store' } : { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('not found'); return r.json(); })
+      .then(function (d) {
+        var fresh = trimLookup(d);
+        fresh.copied = R3E.copied;
+        R3E = fresh;
+        indexLayouts();
+        listSource = 'live';
+      })
+      .catch(function () { listSource = 'saved'; })
+      .then(function () { clearTimeout(timer); done(); });
+  }
+  function listNote() {
+    return RR.notice(listSource === 'live'
+      ? 'Car and track list: the newest one, read just now from RaceRoom\'s file on GitHub.'
+      : 'Car and track list: our saved copy from ' + showDate(R3E.copied) + '. The newest list on GitHub could not be reached.',
+      listSource === 'live' ? 'ok' : 'warn');
+  }
   function car(id) { return R3E.cars[id]; }
   function classById(id) { return R3E.classes.filter(function (c) { return c.id === id; })[0]; }
   function range(a, b, step) { var out = []; for (var i = a; i <= b; i += (step || 1)) out.push([i, String(i)]); return out; }
@@ -66,6 +117,23 @@
   var QUALI_START = [[0, 'Standing Start'], [1, 'Rolling Start']];
   var RACE_START = [[1, 'Standing Start'], [0, 'Rolling Start'], [2, 'Formation Lap Rolling Start']];
   var SESSIONS = [['Practice', 'Practice'], ['Qualify', 'Qualifying'], ['Race1', 'Race 1'], ['Race2', 'Race 2'], ['Race3', 'Race 3']];
+  /* What the server tool forces for each preset (from Matt's screenshots of the server tool, 16.11.2026). */
+  var PRESET_VALUES = {
+    1: { DriveAssistTransmission: -1, DriveAssistEsp: 3, DriveAssistSteer: 1, DriveAssistBrake: -1,
+      DriveAssistTractionControl: 1, DriveAssistRaceline: -1, DriveAssistAutopit: 1 },
+    2: { DriveAssistTransmission: -1, DriveAssistEsp: 1, DriveAssistSteer: 0, DriveAssistBrake: 1,
+      DriveAssistTractionControl: 1, DriveAssistRaceline: -1, DriveAssistAutopit: -1 },
+    3: { DriveAssistTransmission: -1, DriveAssistEsp: 0, DriveAssistSteer: 0, DriveAssistBrake: 2,
+      DriveAssistTractionControl: 2, DriveAssistRaceline: 0, DriveAssistAutopit: -1 }
+  };
+  /* The same curated time zone list the LMU season wizard uses (js/reference-data.js, TIMEZONE_LIST). */
+  var TIMEZONES = ['Pacific/Honolulu', 'America/Anchorage', 'America/Los_Angeles', 'America/Tijuana', 'America/Denver', 'America/Phoenix',
+    'America/Chicago', 'America/Mexico_City', 'America/New_York', 'America/Bogota', 'America/Halifax', 'America/La_Paz', 'America/Sao_Paulo',
+    'America/Argentina/Buenos_Aires', 'America/Noronha', 'Atlantic/Cape_Verde', 'Europe/London', 'Africa/Accra', 'Europe/Paris', 'Africa/Lagos',
+    'Europe/Athens', 'Africa/Johannesburg', 'Europe/Moscow', 'Africa/Nairobi', 'Asia/Tehran', 'Asia/Dubai', 'Asia/Baku', 'Asia/Kabul',
+    'Asia/Karachi', 'Asia/Kolkata', 'Asia/Kathmandu', 'Asia/Dhaka', 'Asia/Yangon', 'Asia/Bangkok', 'Asia/Jakarta', 'Asia/Shanghai',
+    'Asia/Singapore', 'Australia/Perth', 'Asia/Tokyo', 'Asia/Seoul', 'Australia/Adelaide', 'Australia/Sydney', 'Pacific/Port_Moresby',
+    'Pacific/Noumea', 'Pacific/Auckland', 'Pacific/Fiji', 'Pacific/Tongatapu', 'Pacific/Kiritimati'];
 
   /* ---------------- The season being edited ---------------- */
   function session(len, start) { return { len: len, unit: 'M', start: start, tod: 2, clouds: [0, 0, 0, 0, 0] }; }
@@ -92,12 +160,30 @@
         DriveAssistTractionControl: 1, DriveAssistRaceline: -1, DriveAssistAutopit: -1 },
       weekend: newWeekend(),
       points: { tables: {}, pole: 0, fastestLap: 0, clean: 0, dropWeeks: 0 },
-      rounds: []
+      calendar: { date: '', time: '20:00', gap: 1 },
+      rounds: []   /* in calendar order; an entry with bye: true is a week off, not a race */
     };
   }
   var S = newSeason();
   try { var kept = JSON.parse(localStorage.getItem(STORE)); if (kept && kept.version === 1) S = kept; } catch (e) {}
+  function tidy() {   /* fill in anything an older saved season does not have */
+    if (!S.calendar) S.calendar = { date: (S.rounds[0] && S.rounds[0].date) || '', time: (S.rounds[0] && S.rounds[0].time) || '20:00', gap: 1 };
+    setDates();
+  }
   function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+  /* true once an export was refused: boxes that fail a check then show a red border until fixed */
+  var flagged = false;
+
+  /* Races only (no bye weeks), and the round number of a race. */
+  function races() { return S.rounds.filter(function (r) { return !r.bye; }); }
+  function roundNo(r) { return races().indexOf(r) + 1; }
+  /* Every calendar entry gets its date from the first date and the gap. Dates are never typed per round. */
+  function setDates() {
+    var d = S.calendar.date ? S.calendar.date.split('-').map(Number) : null;
+    S.rounds.forEach(function (r, i) {
+      r.date = d ? new Date(Date.UTC(d[0], d[1] - 1, d[2] + i * 7 * Number(S.calendar.gap))).toISOString().slice(0, 10) : '';
+    });
+  }
 
   /* ---------------- Cars chosen ---------------- */
   function chosen() { var set = {}; S.liveries.forEach(function (id) { set[id] = 1; }); return set; }
@@ -136,6 +222,11 @@
     return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
   }
   function showDate(d) { var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  /* Calendar dates are written out (Thu 3 Dec 2026) so the day and month can never be mixed up. */
+  function longDate(d) {
+    var p = d.split('-').map(Number);
+    return new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).replace(',', '');
+  }
   function weekendOf(r) { return r.weekend || S.weekend; }
   /* When qualifying and Race 1 start, if practice and qualifying are timed in minutes. */
   function startTimes(r) {
@@ -213,10 +304,11 @@
     if (!String(S.prefix).trim()) out.push('Step 1: the server name is empty.');
     if (!Number(S.serverId)) out.push('Step 1: the server ID is missing.');
     if (!cars.length) out.push('Step 2: no cars are chosen.');
-    if (!S.rounds.length) out.push('Step 6: there are no rounds.');
-    S.rounds.forEach(function (r, i) {
+    if (!races().length) out.push('Step 6: there are no rounds.');
+    else if (!S.calendar.date) out.push('Step 6: the first round date is missing.');
+    races().forEach(function (r, i) {
       var n = 'Round ' + (i + 1) + ': ', w = weekendOf(r), L = layoutIndex[r.layoutId];
-      if (!r.date || !r.time) out.push(n + 'the date or the server online time is missing.');
+      if (!r.time) out.push(n + 'the server online time is missing.');
       if (!r.password) out.push(n + 'there is no password.');
       if (!Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len)) out.push(n + 'no race has a length.');
       if (L && L.max && Number(S.rules.MaxNumOfPlayers) > L.max) {
@@ -279,7 +371,7 @@
     return 'round-' + ('0' + (i + 1)).slice(-2) + '-' + r.id + '-' + slug(L.track + ' ' + L.layout) + '.json';
   }
   function exportFiles() {
-    return S.rounds.map(function (r, i) { return { name: roundFileName(r, i), text: JSON.stringify(buildRoundFile(r), null, 2) }; });
+    return races().map(function (r, i) { return { name: roundFileName(r, i), text: JSON.stringify(buildRoundFile(r), null, 2) }; });
   }
 
   /* ---------------- Small screen helpers ---------------- */
@@ -300,25 +392,47 @@
     return p;
   }
   function note(text) { return el('p', 'rr-body', text); }
-  /* A dropdown tied to obj[key]. Numbers stay numbers. */
-  function pick(label, options, obj, key, after) {
-    return RR.select(label, options, function (v) { obj[key] = isNaN(Number(v)) ? v : Number(v); save(); if (after) after(); }, obj[key]);
+  /* A dropdown tied to obj[key]. Numbers stay numbers. bad (optional) returns true when the choice fails a check. */
+  function pick(label, options, obj, key, after, bad) {
+    var box = RR.select(label, options, function (v) {
+      obj[key] = isNaN(Number(v)) || v === '' ? v : Number(v);
+      save();
+      mark();
+      if (after) after();
+    }, obj[key]);
+    function mark() { if (flagged && bad && bad()) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
+    mark();
+    return box;
   }
+  /* A text box tied to obj[key]. o.bad (optional) returns true when the value fails a check. */
   function text(label, obj, key, o) {
     o = o || {};
-    return RR.input({ label: label, value: obj[key], type: o.type, placeholder: o.placeholder, wide: o.wide, min: o.min, max: o.max,
-      onChange: function (v) { obj[key] = o.type === 'number' ? Number(v) : v; save(); if (o.after) o.after(); } });
+    var box = RR.input({ label: label, value: obj[key], type: o.type, placeholder: o.placeholder, wide: o.wide, min: o.min, max: o.max,
+      onChange: function (v) { obj[key] = o.type === 'number' ? Number(v) : v; save(); mark(); if (o.after) o.after(); } });
+    function mark() { if (flagged && o.bad && o.bad()) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
+    mark();
+    return box;
+  }
+  function noRaceLength(w) { return !Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len); }
+  function tooManyPlayers() {
+    return races().some(function (r) { var L = layoutIndex[r.layoutId]; return L && L.max && Number(S.rules.MaxNumOfPlayers) > L.max; });
+  }
+  function zoneLabel(z) {
+    var m = -zoneOffset(z, new Date()), a = Math.abs(m);
+    return z.replace(/_/g, ' ') + ' (UTC' + (m < 0 ? '-' : '+') + ('0' + Math.floor(a / 60)).slice(-2) + ':' + ('0' + (a % 60)).slice(-2) + ')';
   }
 
   /* ---------------- Step 1: Season ---------------- */
   function drawSeason() {
     fill(RR.view('season'), stack(
       panel('Season',
-        RR.row(text('Season name', S, 'name'), text('Server name', S, 'prefix', { wide: true })),
+        RR.row(text('Season name', S, 'name'), text('Server name', S, 'prefix', { wide: true, bad: function () { return !String(S.prefix).trim(); } })),
         note('Each round adds its own round ID to the end of the server name. Results are matched to the round by that ID.')),
       panel('Server',
-        RR.row(text('Server ID', S, 'serverId', { type: 'number' }), text('Time zone', S, 'zone')),
+        RR.row(text('Server ID', S, 'serverId', { type: 'number', bad: function () { return !Number(S.serverId); } }),
+          pick('Time zone', TIMEZONES.map(function (z) { return [z, zoneLabel(z)]; }), S, 'zone')),
         note('The server ID is the number of your server in the RaceRoom server tool. Every round is imported onto that one server.'),
+        note('Choose the time zone of the computer that runs the server. Every server online time in the calendar is in this zone.'),
         RR.row(text('Server image address', S, 'thumbnail', { wide: true })),
         note('The address RaceRoom gave your Race Club banner when you uploaded it in the server tool. It is used for every round.')),
       panel('Message of the day',
@@ -373,6 +487,7 @@
         RR.stat('Cars', cars.length),
         RR.stat('Liveries', S.liveries.length)
       ]),
+      listNote(),
       RR.row(RR.button('Clear all', function () { S.liveries = []; save(); drawCars(); })),
       tree));
     RR.refresh();
@@ -380,13 +495,44 @@
 
   /* ---------------- Step 3: Rules ---------------- */
   function drawRules() {
-    var rules = RR.row.apply(null, RULES.map(function (r) { return pick(r[1], r[2], S.rules, r[0]); }));
-    var assistRow = RR.row.apply(null, ASSISTS.map(function (a) { return pick(a[1], a[2], S.assists, a[0]); }));
+    /* The settings in groups, three to a row, so they can be found and read quickly. */
+    var GROUPS = [
+      ['Grid and sessions', ['MaxNumOfPlayers', 'ReverseStartOrderPlaces', 'StartingGridFromLeaderboards',
+        'AllowPlayersJoinInQualifying', 'StayInPracticeSessionIfEmpty', 'NonReadyPitlaneStartDelay']],
+      ['Car and wear', ['FuelUsage', 'TireWear', 'TireTemperature', 'Damage', 'MandatoryPitstop', 'FixedSetup']],
+      ['Race rules', ['FlagRules', 'CutRules', 'PreventFalseStart', 'WreckerPrevention', 'MaxIncidentPoints',
+        'RaceFinishDuration', 'CheckeredAfterTime']],
+      ['Who can join', ['MinRating', 'MaxRating', 'MinReputation', 'MaxReputation', 'MaxPing']],
+      ['Server', ['LiveUpdate']]
+    ];
+    var rules = el('div', 'rr-stack');
+    GROUPS.forEach(function (grp) {
+      var grid = RR.grid.apply(null, grp[1].map(function (key) {
+        var r = RULES.filter(function (x) { return x[0] === key; })[0];
+        return pick(r[1], r[2], S.rules, r[0], null, r[0] === 'MaxNumOfPlayers' ? tooManyPlayers : null);
+      }));
+      add(rules, add(el('div'), el('p', 'rr-subheading', grp[0])), grid);
+    });
+    /* Choosing a preset fills the seven boxes with what that preset forces.
+       Changing any box afterwards turns the preset back to Custom. */
+    function choosePreset() {
+      var forced = PRESET_VALUES[Number(S.preset)];
+      if (forced) Object.keys(forced).forEach(function (k) { S.assists[k] = forced[k]; });
+      save();
+      drawRules();
+    }
+    function assistChanged() {
+      if (Number(S.preset)) { S.preset = 0; save(); drawRules(); }
+    }
+    var assistRow = RR.grid.apply(null, ASSISTS.map(function (a) { return pick(a[1], a[2], S.assists, a[0], assistChanged); }));
+    var unknown = Number(S.preset) && !PRESET_VALUES[Number(S.preset)];
     fill(RR.view('rules'), stack(
       panel('Global server settings', rules),
       panel('Drive assists',
-        RR.row(pick('Preset', PRESETS, S, 'preset', drawRules)),
-        Number(S.preset) ? note('With a preset chosen, the server tool sets the seven assists itself and locks them. Choose Custom to set them here.') : assistRow)
+        RR.grid(pick('Preset', PRESETS, S, 'preset', choosePreset)),
+        assistRow,
+        unknown ? RR.notice('The values this preset forces are not recorded here yet, so the seven boxes may not match it. The server tool applies its own values for this preset on import.', 'warn') : null,
+        note('Changing any of the seven boxes turns the preset back to Custom.'))
     ));
   }
 
@@ -412,7 +558,7 @@
       drawWeather();
       box.appendChild(panel(def[1],
         RR.row(
-          text('Length', s, 'len', { type: 'number', min: 0, after: changed }),
+          text('Length', s, 'len', { type: 'number', min: 0, after: changed, bad: isRace ? function () { return noRaceLength(w); } : null }),
           pick('In', [['M', 'Minutes'], ['L', 'Laps']], s, 'unit', changed),
           def[0] === 'Practice' ? null : pick('Start', isRace ? RACE_START : QUALI_START, s, 'start', changed),
           pick('Starts at', TIMES, s, 'tod', changed)),
@@ -446,7 +592,7 @@
   }
 
   /* ---------------- Step 6: Calendar ---------------- */
-  var addTrack = R3E.tracks[0].id, addLayout = R3E.tracks[0].l[0].id, fillFrom = { date: "", time: "20:00", gap: 1 };
+  var addTrack = null, addLayout = null;
   function newRoundId() {
     var id;
     do { id = String(1000000 + Math.floor(Math.random() * 9000000)); }
@@ -454,8 +600,10 @@
     return id;
   }
   function drawCalendar() {
+    if (!R3E.tracks.some(function (t) { return t.id === addTrack; })) { addTrack = R3E.tracks[0].id; addLayout = R3E.tracks[0].l[0].id; }
     var track = R3E.tracks.filter(function (t) { return t.id === addTrack; })[0];
-    var adder = panel('Add a round', RR.row(
+    function changed() { setDates(); save(); drawCalendar(); }
+    var adder = panel('Add to the calendar', RR.row(
       RR.select('Track', R3E.tracks.map(function (t) { return [t.id, t.n]; }), function (v) {
         addTrack = Number(v);
         addLayout = R3E.tracks.filter(function (t) { return t.id === addTrack; })[0].l[0].id;
@@ -463,48 +611,51 @@
       }, addTrack),
       RR.select('Layout', track.l.map(function (l) { return [l.id, l.n + ' (' + l.m + ' cars)']; }), function (v) { addLayout = Number(v); }, addLayout),
       RR.button('Add round', function () {
-        S.rounds.push({ id: newRoundId(), layoutId: addLayout, date: '', time: fillFrom.time, password: '', weekend: null });
-        save();
-        drawCalendar();
-      })));
-    var filler = panel('Fill dates', RR.row(
-      text('First round', fillFrom, 'date', { type: 'date' }), text('Server online', fillFrom, 'time', { type: 'time' }),
-      RR.select('Every', [[1, 'Week'], [2, 'Second week'], [3, 'Third week'], [4, 'Fourth week']], function (v) { fillFrom.gap = Number(v); }, fillFrom.gap),
-      RR.button('Fill', function () {
-        if (!fillFrom.date) return;
-        var d = fillFrom.date.split('-').map(Number);
-        S.rounds.forEach(function (r, i) {
-          var day = new Date(Date.UTC(d[0], d[1] - 1, d[2] + i * 7 * fillFrom.gap));
-          r.date = day.toISOString().slice(0, 10);
-          r.time = fillFrom.time;
-        });
-        save();
-        drawCalendar();
+        S.rounds.push({ id: newRoundId(), layoutId: addLayout, date: '', time: S.calendar.time, password: '', weekend: null });
+        changed();
+      }),
+      RR.button('Add bye week', function () {
+        S.rounds.push({ id: newRoundId(), bye: true, date: '' });
+        changed();
       })),
-      note('Gives every round a date, starting from the first and spaced evenly. Change or skip any date afterwards in the round itself.'));
+      note('A bye week takes a place in the calendar, so the rounds after it move back by one gap. It has no race and no server file.'));
+    var dates = panel('Dates', RR.row(
+      text('First round', S.calendar, 'date', { type: 'date', after: changed, bad: function () { return races().length > 0 && !S.calendar.date; } }),
+      text('Server online', S.calendar, 'time', { type: 'time', after: function () {
+        S.rounds.forEach(function (r) { if (!r.bye) r.time = S.calendar.time; });
+        save();
+        drawCalendar();
+      } }),
+      pick('Every', [[1, 'Week'], [2, 'Second week'], [3, 'Third week'], [4, 'Fourth week']], S.calendar, 'gap', changed)),
+      note('Every date below is worked out from the first round and the gap, in calendar order. Changing the server online time here sets it for every round; one round can still be given a different time below.'));
     var list = stack();
-    if (!S.rounds.length) list.appendChild(RR.empty('No rounds yet. Pick a track and layout, then Add round.'));
+    if (!S.rounds.length) list.appendChild(RR.empty('Nothing in the calendar yet. Pick a track and layout, then Add round.'));
     S.rounds.forEach(function (r, i) {
-      var L = layoutIndex[r.layoutId] || { track: 'Unknown track', layout: '', max: 0 }, times = el('p', 'rr-body');
-      function showTimes() {
-        var t = startTimes(r);
-        times.textContent = 'Server name: ' + serverName(r) + ' · Qualifying starts ' + t.quali + ' · Race 1 starts ' + t.race;
-      }
-      showTimes();
       function move(by) {
         var j = i + by;
         if (j < 0 || j >= S.rounds.length) return;
         S.rounds.splice(j, 0, S.rounds.splice(i, 1)[0]);
-        save();
-        drawCalendar();
+        changed();
       }
-      var p = panel('Round ' + (i + 1) + ' · ' + L.track + ' · ' + L.layout,
+      var dateBox = RR.input({ label: 'Date', value: r.date ? longDate(r.date) : 'Set the first round date', readOnly: true });
+      var order = [RR.button('Up', function () { move(-1); }), RR.button('Down', function () { move(1); }),
+        RR.button('Remove', function () { S.rounds.splice(i, 1); changed(); })];
+      if (r.bye) {
+        list.appendChild(panel('Bye week', RR.row(dateBox, order[0], order[1], order[2]), note('No race this week.')));
+        return;
+      }
+      var L = layoutIndex[r.layoutId] || { track: 'Unknown track', layout: '', max: 0 }, times = el('p', 'rr-body');
+      function showTimes() {
+        var t = startTimes(r);
+        times.textContent = 'Server name: ' + serverName(r) + ' \u00B7 Qualifying starts ' + t.quali + ' \u00B7 Race 1 starts ' + t.race;
+      }
+      showTimes();
+      list.appendChild(panel('Round ' + roundNo(r) + ' \u00B7 ' + L.track + ' \u00B7 ' + L.layout,
         RR.row(
-          text('Date', r, 'date', { type: 'date' }),
-          text('Server online', r, 'time', { type: 'time', after: showTimes }),
-          text('Password', r, 'password'),
-          RR.button('Up', function () { move(-1); }), RR.button('Down', function () { move(1); }),
-          RR.button('Remove', function () { S.rounds.splice(i, 1); save(); drawCalendar(); })),
+          dateBox,
+          text('Server online', r, 'time', { type: 'time', after: showTimes, bad: function () { return !r.time; } }),
+          text('Password', r, 'password', { bad: function () { return !r.password; } }),
+          order[0], order[1], order[2]),
         times,
         L.max && Number(S.rules.MaxNumOfPlayers) > L.max
           ? RR.notice('This layout holds ' + L.max + ' cars, but max players is ' + S.rules.MaxNumOfPlayers + '.', 'warn') : null,
@@ -513,11 +664,81 @@
           save();
           drawCalendar();
         }, !!r.weekend)),
-        r.weekend ? weekendEditor(r.weekend, showTimes) : null);
-      list.appendChild(p);
+        r.weekend ? weekendEditor(r.weekend, showTimes) : null));
     });
-    fill(RR.view('calendar'), stack(adder, filler, list));
+    fill(RR.view('calendar'), stack(listNote(), adder, dates, list));
     RR.refresh();
+  }
+
+  /* ---------------- The season in the Google Sheet ---------------- */
+  var sheetNote = null, sheetSeasons = null, sheetBusy = false;
+  var SHEET_ERRORS = {
+    'no-address': 'The service address is missing. Log out, then log in again.',
+    'unreachable': 'The service could not be reached. Check your connection and try again.',
+    'bad-season': 'The season needs a name before it can be saved.',
+    'not-found': 'That season is no longer in the Sheet.',
+    'signed-out': 'Your log in has ended. Log in again.'
+  };
+  function sheetError(res) {
+    if (res.error === 'round-ids-taken') return 'Not saved. Round ID ' + res.ids.join(', ') + ' already belongs to another season in the Sheet. Remove that round here and add it again to give it a new ID.';
+    if (res.error === 'bad-round-ids') return 'Not saved. These round IDs are not valid: ' + res.ids.join(', ') + '.';
+    return SHEET_ERRORS[res.error] || 'Not saved. The service answered: ' + (res.detail || res.error || 'nothing') + '.';
+  }
+  function sheetDone(text, kind) { sheetBusy = false; sheetNote = { text: text, kind: kind || 'ok' }; drawExport(); }
+  function saveToSheet() {
+    if (sheetBusy) return;
+    var layouts = {};
+    races().forEach(function (r) { var L = layoutIndex[r.layoutId]; if (L) layouts[r.layoutId] = { track: L.track, layout: L.layout }; });
+    sheetBusy = true; sheetNote = { text: 'Saving to the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }) }).then(function (res) {
+      if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
+      S.seasonId = res.seasonId;
+      save();
+      sheetSeasons = null;
+      sheetDone('Saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.');
+    });
+  }
+  function listFromSheet() {
+    if (sheetBusy) return;
+    sheetBusy = true; sheetNote = { text: 'Reading the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('listSeasons').then(function (res) {
+      if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
+      sheetSeasons = res.seasons;
+      sheetBusy = false; sheetNote = null; drawExport();
+    });
+  }
+  function loadFromSheet(seasonId, name) {
+    if (sheetBusy) return;
+    if (!window.confirm('Replace what is in the wizard with "' + name + '" from the Sheet?')) return;
+    sheetBusy = true; sheetNote = { text: 'Loading from the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('loadSeason', { seasonId: seasonId }).then(function (res) {
+      if (!res || !res.ok || !res.season || res.season.version !== 1) { sheetDone(sheetError(res || {}), 'warn'); return; }
+      S = res.season;
+      flagged = false;
+      tidy();
+      save();
+      sheetBusy = false; sheetNote = { text: 'Loaded "' + S.name + '" from the Sheet.', kind: 'ok' };
+      drawAll();
+    });
+  }
+  function sheetPanel() {
+    var p = panel('Google Sheet', RR.row(
+      RR.button('Save season to the Sheet', saveToSheet, true),
+      RR.button('Show seasons in the Sheet', listFromSheet)));
+    if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
+    if (sheetSeasons) {
+      p.appendChild(RR.table([
+        { key: 'name', label: 'Season' }, { key: 'id', label: 'Season ID' }, { key: 'status', label: 'Status' },
+        { key: 'first', label: 'First round' }, { key: 'rounds', label: 'Rounds', num: true }, { key: 'saved', label: 'Saved' },
+        { key: 'by', label: 'Saved by' }, { key: 'load', label: '' }
+      ], sheetSeasons.map(function (s) {
+        return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
+          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.button('Load', function () { loadFromSheet(s.seasonId, s.name); }) } };
+      }), 'No seasons are saved in the Sheet yet.'));
+    }
+    p.appendChild(note((S.seasonId ? 'This season is in the Sheet as ' + S.seasonId + '. Saving again updates it.' : 'This season has not been saved to the Sheet yet.') +
+      ' Results are matched to a round by its round ID, so save the season before its first race. The Sheet keeps the server passwords; keep the Sheet private.'));
+    return p;
   }
 
   /* ---------------- Step 7: Review and export ---------------- */
@@ -536,14 +757,18 @@
         var got = JSON.parse(t);
         if (!got || got.version !== 1 || !got.rounds) throw new Error('not a season file');
         S = got;
+        flagged = false;
+        tidy();
         save();
         drawAll();
       }).catch(function () { status.textContent = 'That file is not a Race Club season file.'; });
     });
-    var status = el('p', 'rr-body');
-    var rows = S.rounds.map(function (r, i) {
+    var status = el('p', 'rr-body', (window.RR_ADMIN && window.RR_ADMIN.lastStatus) || '');
+    if (window.RR_ADMIN) window.RR_ADMIN.lastStatus = '';
+    var rows = S.rounds.map(function (r) {
+      if (r.bye) return { cells: { n: 'Bye week', track: '-', date: r.date ? longDate(r.date) : '-', online: '-', race: '-', id: '-', pw: '-', own: '-' } };
       var L = layoutIndex[r.layoutId] || { track: '-', layout: '' }, t = startTimes(r);
-      return { cells: { n: 'Round ' + (i + 1), track: RR.cell(L.track, L.layout), date: r.date ? showDate(r.date) : '-', online: r.time || '-',
+      return { cells: { n: 'Round ' + roundNo(r), track: RR.cell(L.track, L.layout), date: r.date ? longDate(r.date) : '-', online: r.time || '-',
         race: t.race, id: r.id, pw: r.password ? 'Set' : '-', own: r.weekend ? 'Own' : 'Season' } };
     });
     fill(RR.view('export'), stack(
@@ -556,13 +781,22 @@
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date' }, { key: 'online', label: 'Server online' },
         { key: 'race', label: 'Race 1 starts' }, { key: 'id', label: 'Round ID' }, { key: 'pw', label: 'Password' }, { key: 'own', label: 'Weekend format' }
       ], rows, 'No rounds yet.')),
+      sheetPanel(),
       panel('Files',
         RR.row(
           RR.button('Export season (.zip)', function () {
             var left = problems();
-            if (left.length) { status.textContent = 'Fix the ' + left.length + ' item(s) under Checks first.'; return; }
+            if (left.length) {
+              /* Refused: from now on every box that fails a check shows a red border until it is fixed. */
+              flagged = true;
+              drawAll();
+              window.RR_ADMIN.lastStatus = 'Fix the ' + left.length + ' item(s) under Checks first. The boxes that need attention have a red border.';
+              drawExport();
+              return;
+            }
+            flagged = false;
             download(makeZip(exportFiles()), slug(S.name || 'season') + '-server-files.zip');
-            status.textContent = 'Downloaded ' + S.rounds.length + ' round file(s) in one zip.';
+            status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip.';
           }),
           RR.button('Save season file', function () {
             download(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }), slug(S.name || 'season') + '-season.json');
@@ -572,6 +806,8 @@
           RR.button('Start a new season', function () {
             if (!window.confirm('Clear everything in the wizard and start a new season?')) return;
             S = newSeason();
+            flagged = false;
+            sheetNote = null;
             save();
             drawAll();
           }),
@@ -594,10 +830,14 @@
   /* For checking the exporter from the browser console or a test. */
   window.RR_ADMIN = {
     season: function () { return S; },
-    load: function (season) { S = season; save(); drawAll(); },
+    load: function (season) { S = season; tidy(); save(); drawAll(); },
+    listSource: function () { return listSource; },
     buildRoundFile: buildRoundFile,
     newSeason: newSeason
   };
 
+  tidy();
   drawAll();
+  /* Then try for the newest car and track list, and redraw the steps that use it. */
+  loadLiveList(function () { drawCars(); drawPoints(); drawCalendar(); drawExport(); RR.refresh(); });
 })();

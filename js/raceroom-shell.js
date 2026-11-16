@@ -17,7 +17,9 @@
   var MENU = [
     { id: 'news', label: 'News', href: 'raceroom.html' },
     { id: 'leaderboards', label: 'Leaderboards', href: 'raceroom-leaderboards.html' },
-    { id: 'profiles', label: 'Drivers', href: 'raceroom-profiles.html' }
+    { id: 'profiles', label: 'Drivers', href: 'raceroom-profiles.html' },
+    /* Shown only while an admin is logged in. */
+    { id: 'admin', label: 'Admin', href: 'raceroom-admin.html', admin: true }
   ];
   var TABSETS = {
     leaderboards: [
@@ -84,8 +86,33 @@
     return b;
   }
 
+  /* ---- Admin log in ----
+     The session is kept for this browser tab only and ends when the tab is closed, after 6 hours, or on Log out.
+     The service address (the Apps Script web app) is remembered in this browser so it is typed once.
+     Nothing here protects data by itself: every admin request is checked again by the service. */
+  var ADMIN_KEY = 'rr-admin', API_KEY = 'rr-api';
+  function adminLoad() {
+    try {
+      var a = JSON.parse(sessionStorage.getItem(ADMIN_KEY));
+      if (a && a.token && a.until > Date.now()) return a;
+    } catch (e) {}
+    return null;
+  }
+  function adminClear() { try { sessionStorage.removeItem(ADMIN_KEY); } catch (e) {} }
+  function apiAddress() { try { return localStorage.getItem(API_KEY) || ''; } catch (e) { return ''; } }
+  function apiGood(url) { return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url); }
+  /* One request to the service. Answers a promise of { ok: true, ... } or { ok: false, error: 'word' }. */
+  function apiCall(url, payload) {
+    if (!apiGood(url)) return Promise.resolve({ ok: false, error: 'no-address' });
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { ok: false, error: 'unreachable' }; });
+  }
+
   /* ---- Build the frame ---- */
   var body = document.body;
+  /* A page marked data-rr-admin="required" is only for a logged-in admin. */
+  if (body.getAttribute('data-rr-admin') === 'required' && !adminLoad()) location.replace('raceroom-login.html');
   var main = document.querySelector('main');
   var mainId = body.getAttribute('data-rr-main') || 'news';
   var tabs = TABSETS[body.getAttribute('data-rr-tabs')] || [];
@@ -109,13 +136,14 @@
   homeBtn.href = 'raceroom.html';
   add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
+    if (item.admin && !adminLoad()) return;
     var a = el('a', 'rr-nav-item', item.label);
     a.href = item.href;
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
   /* Icon area at the far right (not part of the navbar): Search, Help, Protest, then admin Log in / Log out.
-     None of these do anything yet. Each will be wired up when its feature is designed. */
+     Search, Help and Protest do nothing yet. Each will be wired up when its feature is designed. */
   var topEnd = el('div', 'rr-topbar-end');
   var searchBtn = iconBtn('button', 'search', 'Search');
   var helpBtn = iconBtn('button', 'help', 'Help');
@@ -262,11 +290,44 @@
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
   RR.param = function (name) { return new URLSearchParams(location.search).get(name); };
 
-  /* Switch the top-right icon between Log in and Log out (for the future admin login). */
+  /* Switch the top-right icon between Log in and Log out. */
   RR.setAdmin = function (signedIn) {
     setIcon(adminBtn, signedIn ? 'logout' : 'login');
     adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
     adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');
+  };
+  RR.setAdmin(!!adminLoad());
+  adminBtn.addEventListener('click', function () {
+    var a = adminLoad();
+    if (!a) { location.href = 'raceroom-login.html'; return; }
+    adminClear();
+    apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'raceroom.html'; });
+  });
+
+  /* The logged-in admin ({ name }) or null. */
+  RR.admin = function () { var a = adminLoad(); return a ? { name: a.name } : null; };
+  RR.apiAddress = apiAddress;
+  /* Log in. Answers a promise of { ok: true } or { ok: false, error }. */
+  RR.signIn = function (url, name, password) {
+    url = String(url).trim();
+    return apiCall(url, { action: 'login', name: name, password: password }).then(function (res) {
+      if (!res || !res.ok) return res || { ok: false, error: 'unreachable' };
+      try {
+        localStorage.setItem(API_KEY, url);
+        sessionStorage.setItem(ADMIN_KEY, JSON.stringify({ name: res.name, token: res.token, until: Date.now() + res.seconds * 1000 }));
+      } catch (e) { return { ok: false, error: 'storage' }; }
+      return { ok: true };
+    });
+  };
+  /* An admin request to the service, for example RR.api('listSeasons'). If the session has ended,
+     the browser is sent to the log in page. */
+  RR.api = function (action, data) {
+    var a = adminLoad(), payload = { action: action, token: a ? a.token : '' };
+    Object.keys(data || {}).forEach(function (k) { payload[k] = data[k]; });
+    return apiCall(apiAddress(), payload).then(function (res) {
+      if (res && res.error === 'signed-out') { adminClear(); location.href = 'raceroom-login.html'; }
+      return res;
+    });
   };
 
   /* Give any button or link the standard tooltip. */
@@ -521,7 +582,8 @@
   };
 
   /* Text box in the same style as a dropdown: LABEL then what you type.
-     o: { label, value, type ('text', 'number', 'date', 'time', 'password'), placeholder, min, max, wide, onChange } */
+     o: { label, value, type ('text', 'number', 'date', 'time', 'password'), placeholder, min, max, wide, onChange,
+          readOnly (shown but cannot be changed), invalid (red border: a check failed) } */
   RR.input = function (o) {
     var box = el('label', 'rr-input' + (o.wide ? ' rr-input-wide' : '')), input = el('input');
     input.type = o.type || 'text';
@@ -529,7 +591,9 @@
     if (o.placeholder) input.placeholder = o.placeholder;
     if (o.min !== undefined) input.min = o.min;
     if (o.max !== undefined) input.max = o.max;
-    input.addEventListener('input', function () { o.onChange(input.value); });
+    if (o.readOnly) { input.readOnly = true; input.tabIndex = -1; box.classList.add('rr-input-locked'); }
+    if (o.invalid) box.setAttribute('aria-invalid', 'true');
+    input.addEventListener('input', function () { if (o.onChange) o.onChange(input.value); });
     return add(box, el('span', 'rr-input-label', o.label), input);
   };
 
@@ -557,6 +621,14 @@
     var r = el('div', 'rr-form-row');
     for (var i = 0; i < arguments.length; i++) if (arguments[i]) r.appendChild(arguments[i]);
     return r;
+  };
+
+  /* Option boxes in three even columns: every box is the same width, its name at the left and its
+     value at the right, so a long list of settings can be read down the columns. */
+  RR.grid = function () {
+    var g = el('div', 'rr-form-grid');
+    for (var i = 0; i < arguments.length; i++) if (arguments[i]) g.appendChild(arguments[i]);
+    return g;
   };
 
   /* Sidebar list. items: [[value, label, count]] */
