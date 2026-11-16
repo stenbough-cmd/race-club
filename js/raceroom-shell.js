@@ -31,6 +31,16 @@
       ['history', 'Race History'],
       ['statistics', 'Statistics'],
       ['achievements', 'Achievements']
+    ],
+    /* Admin season wizard: one sub-tab per step. */
+    admin: [
+      ['season', '1 Season'],
+      ['cars', '2 Classes and cars'],
+      ['rules', '3 Rules'],
+      ['weekend', '4 Weekend format'],
+      ['points', '5 Points'],
+      ['calendar', '6 Calendar'],
+      ['export', '7 Review and export']
     ]
   };
 
@@ -433,11 +443,19 @@
     return box;
   };
 
-  /* Dropdown. Shows LABEL then the chosen value in bold, with an arrow box. options: [[value, label]] */
-  RR.select = function (labelText, options, onChange) {
+  /* Only one dropdown is open at a time; a click anywhere else closes it. */
+  var openSelect = null;
+  document.addEventListener('click', function (e) {
+    if (openSelect && !openSelect.box.contains(e.target)) openSelect.close();
+  });
+
+  /* Dropdown. Shows LABEL then the chosen value in bold, with an arrow box. options: [[value, label]].
+     initial (optional) is the value to start on. */
+  RR.select = function (labelText, options, onChange, initial) {
     var box = el('div', 'rr-select'), btn = el('button', 'rr-select-btn');
-    var value = el('span', 'rr-select-value', options[0][1]);
     var list = el('ul', 'rr-select-list'), picked = 0, focus = 0;
+    options.forEach(function (o, i) { if (initial !== undefined && String(o[0]) === String(initial)) picked = i; });
+    var value = el('span', 'rr-select-value', options[picked][1]);
     btn.type = 'button';
     btn.setAttribute('aria-haspopup', 'listbox');
     btn.setAttribute('aria-expanded', 'false');
@@ -451,10 +469,16 @@
       });
     }
     function open(on) {
+      if (on && openSelect && openSelect.box !== box) openSelect.close();
       list.hidden = !on;
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
       focus = picked;
       mark();
+      if (on) {
+        openSelect = { box: box, close: function () { open(false); } };
+        var chosen = list.children[picked];
+        if (chosen) list.scrollTop = chosen.offsetTop - 60;
+      } else if (openSelect && openSelect.box === box) openSelect = null;
     }
     function choose(i) {
       var changed = i !== picked;
@@ -481,19 +505,58 @@
         mark();
       } else if ((e.key === 'Enter' || e.key === ' ') && isOpen) { e.preventDefault(); choose(focus); }
     });
-    document.addEventListener('click', function (e) { if (!box.contains(e.target)) open(false); });
     add(box, btn, list);
     mark();
     return box;
   };
 
-  /* Check box: a square with a solid square inside when on, label beside it. */
-  RR.checkbox = function (labelText, onChange, checked) {
-    var box = el('label', 'rr-check'), input = el('input');
+  /* Check box: a square with a solid square inside when on, label beside it.
+     partial (optional) shows a dash: some, but not all, of the things under it are on. */
+  RR.checkbox = function (labelText, onChange, checked, partial) {
+    var box = el('label', 'rr-check' + (partial && !checked ? ' rr-check-partial' : '')), input = el('input');
     input.type = 'checkbox';
     input.checked = !!checked;
     input.addEventListener('change', function () { onChange(input.checked); });
     return add(box, input, el('span', 'rr-check-box'), el('span', '', labelText));
+  };
+
+  /* Text box in the same style as a dropdown: LABEL then what you type.
+     o: { label, value, type ('text', 'number', 'date', 'time', 'password'), placeholder, min, max, wide, onChange } */
+  RR.input = function (o) {
+    var box = el('label', 'rr-input' + (o.wide ? ' rr-input-wide' : '')), input = el('input');
+    input.type = o.type || 'text';
+    if (o.value !== undefined && o.value !== null) input.value = o.value;
+    if (o.placeholder) input.placeholder = o.placeholder;
+    if (o.min !== undefined) input.min = o.min;
+    if (o.max !== undefined) input.max = o.max;
+    input.addEventListener('input', function () { o.onChange(input.value); });
+    return add(box, el('span', 'rr-input-label', o.label), input);
+  };
+
+  /* Bigger text box for a few lines of text. o: { label, value, onChange } */
+  RR.textarea = function (o) {
+    var box = el('label', 'rr-input rr-textarea'), input = el('textarea');
+    input.value = o.value || '';
+    input.addEventListener('input', function () { o.onChange(input.value); });
+    return add(box, el('span', 'rr-input-label', o.label), input);
+  };
+
+  /* Standard button. Outlined; pass save = true only for a button that writes to the sheet. */
+  RR.button = function (text, onClick, save) {
+    var b = el('button', save ? 'rr-btn rr-btn-save' : 'rr-btn', text);
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  };
+
+  /* One-line notice. kind: 'warn' (red edge) or 'ok' (white edge). */
+  RR.notice = function (text, kind) { return el('p', 'rr-notice rr-notice-' + (kind || 'ok'), text); };
+
+  /* A row of option boxes that wraps. */
+  RR.row = function () {
+    var r = el('div', 'rr-form-row');
+    for (var i = 0; i < arguments.length; i++) if (arguments[i]) r.appendChild(arguments[i]);
+    return r;
   };
 
   /* Sidebar list. items: [[value, label, count]] */

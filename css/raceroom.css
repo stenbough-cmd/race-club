@@ -375,6 +375,78 @@ button, select { font-family: inherit; }
 .rr-check input:checked + .rr-check-box::after { opacity: 1; }
 .rr-check:hover .rr-check-box, .rr-check input:focus-visible + .rr-check-box { border-color: var(--rr-text); }
 
+.rr-check-partial .rr-check-box::after { height: 4px; opacity: 1; }
+
+/* ---------- Text box (same look as a dropdown) ---------- */
+.rr-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--rr-line);
+  background: var(--rr-well);
+  transition: border-color var(--rr-speed) ease;
+}
+.rr-input:hover, .rr-input:focus-within { border-color: var(--rr-text); }
+.rr-input-label {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rr-input input, .rr-input textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 150px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rr-text);
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.rr-input input:focus, .rr-input textarea:focus { outline: none; }
+.rr-input input[type="number"] { width: 64px; }
+.rr-input-wide { display: flex; flex: 1 1 360px; }
+.rr-textarea { display: flex; align-items: flex-start; height: auto; padding: 8px 12px; }
+.rr-textarea textarea { height: 56px; resize: vertical; line-height: 1.45; }
+
+/* ---------- Rows of option boxes, notices ---------- */
+.rr-form-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rr-gap); }
+.rr-notice { margin: 0; padding: 8px 12px; border-left: 2px solid var(--rr-text); background: var(--rr-panel); }
+.rr-notice-warn { border-left-color: var(--rr-red); }
+
+/* ---------- Tree (class, then cars, then liveries) ---------- */
+.rr-tree-row { display: flex; align-items: center; gap: 8px; min-height: 34px; border-bottom: 1px solid var(--rr-line); }
+.rr-tree-l2 { padding-left: 36px; }
+.rr-tree-l3 { padding-left: 72px; }
+.rr-tree-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color var(--rr-speed) ease;
+}
+.rr-tree-toggle:hover { border-color: var(--rr-text); }
+.rr-tree-toggle::after {
+  content: "";
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--rr-text);
+  transition: transform var(--rr-speed) ease;
+}
+.rr-tree-toggle[aria-expanded="true"]::after { transform: rotate(90deg); }
+.rr-tree-count { margin-left: auto; padding-right: 12px; }
+
 /* ---------- Page pills ---------- */
 .rr-pager { display: flex; justify-content: center; gap: 6px; padding-top: 8px; }
 .rr-pill {
