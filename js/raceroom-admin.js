@@ -673,7 +673,7 @@
   /* ---------------- The season in the Google Sheet ---------------- */
   var sheetNote = null, sheetSeasons = null, sheetBusy = false;
   var SHEET_ERRORS = {
-    'no-address': 'The service address is missing. Log out, then log in again.',
+    'no-address': 'The site is missing its service address (js/config.js).',
     'unreachable': 'The service could not be reached. Check your connection and try again.',
     'bad-season': 'The season needs a name before it can be saved.',
     'not-found': 'That season is no longer in the Sheet.',

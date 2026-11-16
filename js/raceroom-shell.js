@@ -88,9 +88,9 @@
 
   /* ---- Admin log in ----
      The session is kept for this browser tab only and ends when the tab is closed, after 6 hours, or on Log out.
-     The service address (the Apps Script web app) is remembered in this browser so it is typed once.
+     The service address (the Apps Script web app) comes from js/config.js, so an admin types only a name and password.
      Nothing here protects data by itself: every admin request is checked again by the service. */
-  var ADMIN_KEY = 'rr-admin', API_KEY = 'rr-api';
+  var ADMIN_KEY = 'rr-admin';
   function adminLoad() {
     try {
       var a = JSON.parse(sessionStorage.getItem(ADMIN_KEY));
@@ -99,7 +99,7 @@
     return null;
   }
   function adminClear() { try { sessionStorage.removeItem(ADMIN_KEY); } catch (e) {} }
-  function apiAddress() { try { return localStorage.getItem(API_KEY) || ''; } catch (e) { return ''; } }
+  function apiAddress() { return (window.RC_CONFIG && window.RC_CONFIG.service) || ''; }
   function apiGood(url) { return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url); }
   /* One request to the service. Answers a promise of { ok: true, ... } or { ok: false, error: 'word' }. */
   function apiCall(url, payload) {
@@ -306,14 +306,11 @@
 
   /* The logged-in admin ({ name }) or null. */
   RR.admin = function () { var a = adminLoad(); return a ? { name: a.name } : null; };
-  RR.apiAddress = apiAddress;
   /* Log in. Answers a promise of { ok: true } or { ok: false, error }. */
-  RR.signIn = function (url, name, password) {
-    url = String(url).trim();
-    return apiCall(url, { action: 'login', name: name, password: password }).then(function (res) {
+  RR.signIn = function (name, password) {
+    return apiCall(apiAddress(), { action: 'login', name: name, password: password }).then(function (res) {
       if (!res || !res.ok) return res || { ok: false, error: 'unreachable' };
       try {
-        localStorage.setItem(API_KEY, url);
         sessionStorage.setItem(ADMIN_KEY, JSON.stringify({ name: res.name, token: res.token, until: Date.now() + res.seconds * 1000 }));
       } catch (e) { return { ok: false, error: 'storage' }; }
       return { ok: true };
