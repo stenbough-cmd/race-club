@@ -39,7 +39,7 @@
       RR.input({ label: 'Password', type: 'password', onChange: function (v) { form.password = v; } }),
       RR.button('Log in', logIn)),
     status,
-    el('p', 'rr-body', 'For league admins only. Nothing on the public pages needs a log in.'));
+    el('p', 'rr-body', 'For league admins only.'));
   panel.addEventListener('keydown', function (e) { if (e.key === 'Enter') logIn(); });
   RR.view('login').appendChild(panel);
 })();

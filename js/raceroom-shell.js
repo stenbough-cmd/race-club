@@ -253,6 +253,7 @@
     for (var i = 0; i < tabs.length; i++) if (tabs[i][0] === want) return i;
     return 0;
   }
+  var shownTab = null;
   function showTab() {
     if (!tabs.length) {
       /* No sub-tabs here (News, a post, the driver list): the bottom bar stays empty. */
@@ -275,7 +276,10 @@
       tabs[i - 1] && { label: tabs[i - 1][1], href: '#' + tabs[i - 1][0] },
       tabs[i + 1] && { label: tabs[i + 1][1], href: '#' + tabs[i + 1][0] }
     );
-    main.scrollTop = 0;
+    /* Go to the top only when a different sub-tab opens. Redrawing the one already open (opening a
+       class in the wizard, adding a round) must leave the page exactly where the reader is. */
+    if (id !== shownTab) main.scrollTop = 0;
+    shownTab = id;
   }
   window.addEventListener('hashchange', function () { showTab(); navRecord(); });
 
@@ -453,16 +457,19 @@
     return c;
   };
 
-  /* Promo tile (a big block that is a link, so it gets a white border on hover) */
+  /* Promo tile (a big block that is a link, so it gets a border on hover).
+     Without an href it is a placeholder for something not built yet: no link, no button, and a NOT YET tag. */
   RR.promo = function (o) {
-    var a = el('a', 'rr-promo rr-block-link' + (o.feature ? ' rr-promo-feature' : ''));
-    a.href = o.href;
+    var soon = !o.href;
+    var a = el(soon ? 'div' : 'a', 'rr-promo' + (soon ? ' rr-promo-soon' : ' rr-block-link') + (o.feature ? ' rr-promo-feature' : ''));
+    if (!soon) a.href = o.href;
     if (o.photo) { a.classList.add('rr-has-photo'); a.style.backgroundImage = 'url("' + o.photo + '")'; }
-    if (o.tag) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag(o.tag)));
+    if (soon) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag('Not yet', true)));
+    else if (o.tag) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag(o.tag)));
     if (o.eyebrow) a.appendChild(el('div', 'rr-label rr-red', o.eyebrow));
     a.appendChild(el('h3', 'rr-tile-title', o.title));
     var foot = el('div', 'rr-promo-foot');
-    add(foot, el('p', 'rr-body', o.desc || ''), el('span', 'rr-btn', o.button || 'Read'));
+    add(foot, el('p', 'rr-body', o.desc || ''), soon ? null : el('span', 'rr-btn', o.button || 'Read'));
     a.appendChild(foot);
     return a;
   };

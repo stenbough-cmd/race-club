@@ -6,25 +6,45 @@
 
 /* ---------- Tokens ---------- */
 :root {
-  --rr-bg: #17181B;
-  --rr-panel: rgba(255, 255, 255, 0.06);
-  --rr-panel-strong: rgba(255, 255, 255, 0.16);
-  --rr-line: rgba(255, 255, 255, 0.18);
-  --rr-text: #FFFFFF;
-  --rr-muted: #A9ADB3;
-  --rr-red: #EF3025;
-  --rr-up: #3FBF6B;
-  --rr-invert-bg: #FFFFFF;
-  --rr-invert-text: #17181B;
+  /* Light theme, same palette as the old Race Club site (offwhite page, white cards, silver lines,
+     carbon text, steel for quiet text, one red). The top bar stays near-black with the white logo. */
+  --rr-bg: #F5F5F3;
+  --rr-card: #FFFFFF;
+  --rr-panel: #FFFFFF;
+  --rr-panel-strong: #E6EAEE;
+  --rr-line: #D8DDE1;
+  --rr-ink: #171717;
+  --rr-text: #171717;
+  --rr-muted: #536575;
+  --rr-red: #F21B0C;
+  --rr-up: #1F5C25;
+  --rr-on-red: #FFFFFF;
+  --rr-invert-bg: #171717;
+  --rr-invert-text: #FFFFFF;
+  --rr-shadow: 0 0 0 1px #D8DDE1, 0 2px 10px rgba(23, 23, 23, 0.05);
   --rr-font: "Montserrat", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --rr-pad: 32px;
   --rr-gap: 8px;
-  --rr-control: rgba(255, 255, 255, 0.10);
-  --rr-well: rgba(0, 0, 0, 0.35);
-  --rr-pill: rgba(255, 255, 255, 0.12);
-  --rr-pill-on: rgba(255, 255, 255, 0.55);
+  --rr-control: rgba(23, 23, 23, 0.06);
+  --rr-well: rgba(23, 23, 23, 0.05);
+  --rr-pill: rgba(23, 23, 23, 0.12);
+  --rr-pill-on: rgba(23, 23, 23, 0.65);
+  /* Top bar (always dark, white logo) */
+  --rr-bar: #141416;
+  --rr-bar-line: #2C2D31;
+  --rr-bar-text: #FFFFFF;
+  --rr-bar-muted: #B4B7BD;
+  --rr-bar-control: rgba(255, 255, 255, 0.10);
+  /* Text laid over a photo or graphic */
+  --rr-photo-text: #FFFFFF;
+  --rr-photo-muted: rgba(255, 255, 255, 0.85);
+  --rr-photo-fade: rgba(23, 23, 23, 0.88);
+  --rr-photo-line: rgba(255, 255, 255, 0.45);
   --rr-speed: 0.16s;
 }
+
+/* ---------- Cards and panels: white with a thin silver outline ---------- */
+.rr-panel, .rr-card, .rr-stat, .rr-hero, .rr-barlist, .rr-article, .rr-empty, .rr-notice, .rr-tile, .rr-promo { box-shadow: var(--rr-shadow); }
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
@@ -58,10 +78,19 @@ button, select { font-family: inherit; }
 .rr-app > .rr-topbar { z-index: 5; }
 .rr-app > .rr-page-head { z-index: 4; }
 .rr-topbar {
+  --rr-text: var(--rr-bar-text);
+  --rr-muted: var(--rr-bar-muted);
+  --rr-line: var(--rr-bar-line);
+  --rr-control: var(--rr-bar-control);
+  --rr-invert-bg: var(--rr-bar-text);
+  --rr-invert-text: var(--rr-bar);
   display: flex;
   align-items: center;
   gap: 48px;
-  padding: 16px var(--rr-pad) 24px;
+  padding: 14px var(--rr-pad);
+  background: var(--rr-bar);
+  border-bottom: 1px solid var(--rr-bar-line);
+  color: var(--rr-text);
 }
 .rr-logo { display: inline-flex; align-items: center; transition: opacity var(--rr-speed) ease; }
 .rr-logo:hover { opacity: 0.8; }
@@ -69,7 +98,7 @@ button, select { font-family: inherit; }
 .rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: wrap; }
 .rr-topbar-end { display: flex; gap: var(--rr-gap); margin-left: auto; }
 
-/* Top buttons: no border, see-through fill. Hover = white border. Active = solid white. */
+/* Top buttons: no border, see-through fill. Hover = light border. Active = solid light. */
 .rr-nav-item, .rr-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -328,7 +357,7 @@ button, select { font-family: inherit; }
   overflow-y: auto;
   border: 1px solid var(--rr-text);
   border-top: 0;
-  background: var(--rr-bg);
+  background: var(--rr-card);
   list-style: none;
 }
 .rr-select-option {
@@ -614,7 +643,7 @@ button, select { font-family: inherit; }
   text-transform: uppercase;
   white-space: nowrap;
 }
-.rr-tag { background: var(--rr-red); color: var(--rr-text); }
+.rr-tag { background: var(--rr-red); color: var(--rr-on-red); }
 .rr-tag-outline { border-color: var(--rr-text); }
 
 /* ---------- Change indicator ---------- */
@@ -638,10 +667,20 @@ button, select { font-family: inherit; }
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, var(--rr-bg), transparent 70%);
+  background: linear-gradient(to top, var(--rr-photo-fade), transparent 75%);
 }
 .rr-tile > *, .rr-promo > * { position: relative; }
+/* Text over a photo or graphic is always light, on the dark fade */
+.rr-tile.rr-has-photo, .rr-promo.rr-has-photo {
+  --rr-text: var(--rr-photo-text);
+  --rr-muted: var(--rr-photo-muted);
+  --rr-line: var(--rr-photo-line);
+  --rr-invert-bg: var(--rr-photo-text);
+  --rr-invert-text: var(--rr-ink);
+  color: var(--rr-photo-text);
+}
 .rr-promo-feature { min-height: 300px; }
+.rr-promo-soon { cursor: default; }
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .rr-promo-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .rr-tile-corner { position: absolute; top: 16px; left: 16px; }
@@ -672,7 +711,17 @@ button, select { font-family: inherit; }
   border-color: var(--rr-invert-bg);
   color: var(--rr-invert-text);
 }
-.rr-btn-save { background: var(--rr-red); border-color: var(--rr-red); }
+.rr-btn-save { background: var(--rr-red); border-color: var(--rr-red); color: var(--rr-on-red); }
+.rr-btn[disabled] { opacity: 0.4; cursor: default; pointer-events: none; }
+
+/* ---------- Upload Results: drop area and file list ---------- */
+.rr-drop { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; padding: 24px; border: 1px dashed var(--rr-line); background: var(--rr-panel); }
+.rr-drop[data-over="true"] { border-color: var(--rr-text); background: var(--rr-panel-strong); }
+.rr-drop .rr-body { max-width: 640px; }
+.rr-upload-actions { display: flex; flex-wrap: wrap; gap: var(--rr-gap); }
+.rr-status-ok { color: var(--rr-up); }
+.rr-status-bad { color: var(--rr-red); }
+.rr-table .rr-select { min-width: 260px; }
 
 /* ---------- Links in text ---------- */
 .rr-link:hover { text-decoration: underline; }
