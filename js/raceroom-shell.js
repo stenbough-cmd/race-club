@@ -159,6 +159,15 @@
   adminBtn.classList.add('rr-tip-end');
   add(topEnd, searchBtn, helpBtn, protestBtn, adminBtn);
   add(topbar, logo, nav, topEnd);
+  /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
+     to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
+  function fitTopbar() {
+    topbar.classList.remove('rr-topbar-stacked');
+    if (nav.offsetTop > logo.offsetTop + 4 || topEnd.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
+  }
+  window.addEventListener('resize', fitTopbar);
+  window.addEventListener('load', fitTopbar);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTopbar);
 
   var head = el('div', 'rr-page-head');
   var title = el('h1', 'rr-page-title', body.getAttribute('data-rr-title') || '');

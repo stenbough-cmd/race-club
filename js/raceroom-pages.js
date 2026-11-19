@@ -29,26 +29,32 @@
   var PAGES = {};
 
   /* ---------------- NEWS (index.html): every post, newest first ----------------
-     Page 1 shows the 3 newest posts. Every page after that shows 6.
+     Landscape: page 1 shows the 3 newest posts (the first one large), every page after that shows 6.
+     Portrait: every page shows 6, all the same size.
      The block of stories is the same height on every page, so the pills under it never move. */
   PAGES.news = function () {
     var main = document.querySelector('main'), posts = newestFirst();
     RR.fillContent();
-    var FIRST = 3, REST = 6;
-    var pages = posts.length <= FIRST ? 1 : 1 + Math.ceil((posts.length - FIRST) / REST);
+    var portraitQuery = window.matchMedia('(orientation: portrait)');
+    var FIRST = 3, REST = 6, pages = 1;
+    function setSizes() {
+      FIRST = portraitQuery.matches ? 6 : 3;
+      pages = posts.length <= FIRST ? 1 : 1 + Math.ceil((posts.length - FIRST) / REST);
+    }
     function currentPage() {
       var m = /^#page-(\d+)$/.exec(location.hash), p = m ? Number(m[1]) : 1;
       return Math.min(Math.max(p, 1), pages);
     }
     function draw() {
+      setSizes();
       var p = currentPage();
       var items = p === 1 ? posts.slice(0, FIRST) : posts.slice(FIRST + (p - 2) * REST, FIRST + (p - 1) * REST);
       main.textContent = '';
       if (!posts.length) { main.appendChild(RR.empty('No posts yet.')); return; }
-      var grid = el('div', 'rr-news-grid ' + (p === 1 ? 'rr-news-first' : 'rr-news-rest'));
+      var grid = el('div', 'rr-news-grid ' + (p === 1 && !portraitQuery.matches ? 'rr-news-first' : 'rr-news-rest'));
       items.forEach(function (n, i) {
         grid.appendChild(RR.promo({
-          feature: p === 1 && i === 0, eyebrow: n.eyebrow + ' \u00B7 ' + n.date, title: n.title, desc: n.desc,
+          feature: p === 1 && i === 0 && !portraitQuery.matches, eyebrow: n.eyebrow + ' \u00B7 ' + n.date, title: n.title, desc: n.desc,
           href: 'story.html?id=' + encodeURIComponent(n.id)
         }));
       });
@@ -57,6 +63,7 @@
       main.scrollTop = 0;
     }
     window.addEventListener('hashchange', draw);
+    if (portraitQuery.addEventListener) portraitQuery.addEventListener('change', draw);
     draw();
   };
 
