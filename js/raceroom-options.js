@@ -30,8 +30,8 @@
     [
       ['League News', 'assets/images/home/league-news.jpg', 'js/raceroom-home.js'],
       ['Leaderboards', 'assets/images/home/leaderboards.jpg', 'js/raceroom-home.js'],
-      ['File a Protest', 'assets/images/home/file-a-protest.jpg', 'js/raceroom-home.js'],
       ['Driver List', 'assets/images/home/driver-list.jpg', 'js/raceroom-home.js'],
+      ['About Race Club', 'assets/images/home/about-race-club.jpg', 'js/raceroom-home.js'],
       ['Season Wizard', 'assets/images/admin/season-wizard.jpg', 'js/raceroom-hub.js'],
       ['News Generator', 'assets/images/admin/news-generator.jpg', 'js/raceroom-hub.js'],
       ['Stewarding', 'assets/images/admin/stewarding.jpg', 'js/raceroom-hub.js'],
