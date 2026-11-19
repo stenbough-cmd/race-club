@@ -1,5 +1,7 @@
-# Keeps the site's RaceRoom pictures complete and current (see tools/r3e-sync.mjs for what it does).
-# Runs by itself once a day, and by hand: GitHub, Actions tab, "RaceRoom pictures", "Run workflow".
+# Keeps the site's RaceRoom pictures and car details complete and current.
+# tools/r3e-sync.mjs: data file + pictures.   tools/r3e-cars.mjs: car details from the store pages.
+# Runs by itself every day with nothing for anyone to do. It can also be started by hand:
+# GitHub, Actions tab, "RaceRoom pictures", "Run workflow".
 name: RaceRoom pictures
 
 on:
@@ -34,6 +36,37 @@ jobs:
 
       - name: Update the data and download missing pictures
         run: |
+          FLAGS=""
+          # On a hand-started run with the box ticked, and every Monday, ask the store again about missing pictures.
+          if [ "${{ github.event.inputs.recheck }}" = "true" ] || [ "$(date -u +%u)" = "1" ]; then FLAGS="--recheck-missing"; fi
+          node tools/r3e-sync.mjs $FLAGS
+
+      - name: Install the hidden browser
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Download missing car details
+        continue-on-error: true      # a store problem here must not lose the pictures saved above
+        run: |
+          FLAGS=""
+          # On a hand-started run with the box ticked, and every Monday, open every car page again.
+          if [ "${{ github.event.inputs.recheck }}" = "true" ] || [ "$(date -u +%u)" = "1" ]; then FLAGS="--refresh --recheck-missing"; fi
+          node tools/r3e-cars.mjs $FLAGS
+
+      - name: Save anything new into the repo
+        if: always()
+        run: |
+          git config user.name "Race Club picture sync"
+          git config user.email "actions@users.noreply.github.com"
+          git add raceroom-data/r3e-data.json assets/r3e
+          if git diff --cached --quiet; then
+            echo "Nothing new today."
+          else
+            git commit -m "Update RaceRoom data, pictures and car details"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
           FLAGS=""
           # On a hand-started run with the box ticked, and every Monday, ask the store again about missing pictures.
           if [ "${{ github.event.inputs.recheck }}" = "true" ] || [ "$(date -u +%u)" = "1" ]; then FLAGS="--recheck-missing"; fi
