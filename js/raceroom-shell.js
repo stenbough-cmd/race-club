@@ -36,6 +36,11 @@
       ['statistics', 'Statistics'],
       ['achievements', 'Achievements']
     ],
+    /* Admin Website Options: reminders for changing parts of the site. */
+    options: [
+      ['pictures', 'Tile pictures'],
+      ['database', 'Picture database']
+    ],
     /* Admin season wizard: one sub-tab per step. */
     admin: [
       ['season', '1 Season'],

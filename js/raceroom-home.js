@@ -1,5 +1,5 @@
 /* Race Club home: one big tile for each main place on the site, drawn the same way as the news stories.
-   To change a tile's picture, put the new picture in assets/images/home/ and change its file name below.
+   To change a tile's picture, replace the picture in assets/images/home/ with a new 1800 x 900 .jpg of the same name.
    A tile with no "href" is a placeholder for something not built yet (it shows NOT YET and does nothing).
    When it is built, add its "href" here and nowhere else. */
 (function () {
@@ -8,10 +8,10 @@
   var IMG = 'assets/images/home/';
 
   var TILES = [
-    { title: 'League News', desc: 'The latest from the league.', href: 'news.html', photo: IMG + 'league-news.svg' },
-    { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html', photo: IMG + 'leaderboards.svg' },
-    { title: 'File a Protest', desc: 'Ask the stewards to look at an incident.', photo: IMG + 'file-a-protest.svg' },
-    { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html', photo: IMG + 'about-race-club.svg' }
+    { title: 'League News', desc: 'The latest from the league.', href: 'news.html', photo: IMG + 'league-news.jpg' },
+    { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html', photo: IMG + 'leaderboards.jpg' },
+    { title: 'File a Protest', desc: 'Ask the stewards to look at an incident.', photo: IMG + 'file-a-protest.jpg' },
+    { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html', photo: IMG + 'about-race-club.jpg' }
   ];
 
   var main = document.querySelector('main');
