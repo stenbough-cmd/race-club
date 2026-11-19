@@ -727,6 +727,10 @@ button, select { font-family: inherit; }
 @media (orientation: portrait) {
   :root { --rr-pad: 16px; }
   .rr-topbar { flex-wrap: wrap; gap: 12px; min-height: 0; padding-top: 22px; padding-bottom: 22px; }
+  /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
+  .rr-logo { order: 1; }
+  .rr-topbar-end { order: 2; }
+  .rr-nav { order: 3; flex: 0 0 100%; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
