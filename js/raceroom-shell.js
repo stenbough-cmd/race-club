@@ -141,6 +141,9 @@
   var forwardBtn = iconBtn('button', 'forward', 'Forward');
   var homeBtn = iconBtn('a', 'home', 'Home');
   homeBtn.href = 'index.html';
+  /* Back and Forward are hidden in portrait (phones have their own); see css. */
+  backBtn.classList.add('rr-hide-portrait');
+  forwardBtn.classList.add('rr-hide-portrait');
   add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
     if (item.admin && !adminLoad()) return;

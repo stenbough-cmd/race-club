@@ -737,6 +737,7 @@ button, select { font-family: inherit; }
   .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
   .rr-topbar-end { order: 2; flex-shrink: 0; }
   .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
+  .rr-hide-portrait { display: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
