@@ -17,9 +17,7 @@
   var MENU = [
     { id: 'news', label: 'News', href: 'news.html' },
     { id: 'leaderboards', label: 'Standings', href: 'leaderboards.html' },
-    { id: 'profiles', label: 'Drivers', href: 'drivers.html' },
-    /* Shown only while an admin is logged in. */
-    { id: 'admin', label: 'Admin', href: 'admin.html', admin: true }
+    { id: 'profiles', label: 'Drivers', href: 'drivers.html' }
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
   var LEGAL_SHORT = 'Race Club is an independent community-run sim racing league and is not affiliated with, endorsed by, or sponsored by RaceRoom, KW Studios, RaceRoom Entertainment AG, any racing team, vehicle manufacturer, race circuit, racing series, or trademark owner. All trademarks, logos, team names, liveries, vehicle names, and circuit names are the property of their respective owners and are used for identification and informational purposes only.';
@@ -77,6 +75,7 @@
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
+    admin: '<path d="M4 6h9"/><path d="M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h10"/><path d="M18 18h2"/><circle cx="16" cy="18" r="2"/>',
     protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>'
   };
   function setIcon(node, name) {
@@ -146,7 +145,6 @@
   forwardBtn.classList.add('rr-hide-portrait');
   add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
-    if (item.admin && !adminLoad()) return;
     var a = el('a', 'rr-nav-item', item.label);
     a.href = item.href;
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
@@ -158,9 +156,13 @@
   var searchBtn = iconBtn('button', 'search', 'Search');
   var helpBtn = iconBtn('button', 'help', 'Help');
   var protestBtn = iconBtn('button', 'protest', 'Protest');
+  /* Admin (sliders icon): only shown while an admin is logged in. It opens the admin hub. */
+  var adminLink = iconBtn('a', 'admin', 'Admin');
+  adminLink.href = 'admin.html';
+  if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
   var adminBtn = iconBtn('button', 'login', 'Log in');
   adminBtn.classList.add('rr-tip-end');
-  add(topEnd, searchBtn, helpBtn, protestBtn, adminBtn);
+  add(topEnd, searchBtn, helpBtn, protestBtn, adminLink, adminBtn);
   add(topbar, logo, nav, topEnd);
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
@@ -300,6 +302,7 @@
 
   /* Switch the top-right icon between Log in and Log out. */
   RR.setAdmin = function (signedIn) {
+    adminLink.hidden = !signedIn;
     setIcon(adminBtn, signedIn ? 'logout' : 'login');
     adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
     adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');

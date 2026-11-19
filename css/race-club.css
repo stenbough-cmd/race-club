@@ -132,6 +132,7 @@ button, select { font-family: inherit; }
 }
 /* Icons at the far right are not part of the navbar: icon only, no fill, same white border on hover. */
 .rr-topbar-end .rr-icon-btn { background: transparent; }
+.rr-icon-btn[aria-current="page"] { border-color: var(--rr-text); }
 .rr-icon-btn[aria-disabled="true"] { color: var(--rr-muted); cursor: default; }
 .rr-icon-btn[aria-disabled="true"]:hover { border-color: transparent; }
 
