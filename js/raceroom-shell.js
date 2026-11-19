@@ -163,7 +163,12 @@
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
     topbar.classList.remove('rr-topbar-stacked');
+    nav.style.zoom = '';
     if (nav.offsetTop > logo.offsetTop + 4 || topEnd.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
+    /* On its own row the buttons shrink together (never wrap or scroll) when the window is too narrow for them. */
+    if (topbar.classList.contains('rr-topbar-stacked') && nav.scrollWidth > nav.clientWidth + 1) {
+      nav.style.zoom = String(Math.floor(nav.clientWidth / nav.scrollWidth * 1000) / 1000);
+    }
   }
   window.addEventListener('resize', fitTopbar);
   window.addEventListener('load', fitTopbar);
