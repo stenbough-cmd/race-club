@@ -60,7 +60,7 @@
       });
       main.appendChild(add(el('div', 'rr-news'), grid,
         RR.pager(pages, p, function (n) { location.hash = n === 1 ? '' : 'page-' + n; })));
-      main.scrollTop = 0;
+      RR.scrollTop();
     }
     window.addEventListener('hashchange', draw);
     if (portraitQuery.addEventListener) portraitQuery.addEventListener('change', draw);
@@ -79,6 +79,9 @@
     art.appendChild(add(el('div', 'rr-article-meta'), el('span', 'rr-label rr-red', n.eyebrow), el('span', 'rr-label', n.date)));
     n.body.forEach(function (p) { art.appendChild(el('p', '', p)); });
     main.appendChild(art);
+    /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
+    function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }
+    RR.setSteps(storyLink(posts[at - 1], 'Newer story'), storyLink(posts[at + 1], 'Older story'));
   };
 
   /* ---------------- LEADERBOARDS (leaderboards.html) ---------------- */

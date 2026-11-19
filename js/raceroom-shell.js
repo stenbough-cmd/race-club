@@ -198,8 +198,19 @@
   legal.appendChild(legalLink);
   add(bottom, legal);
 
+  /* Previous / next links that sit just above the footer line. Only the Leaderboards sub-tabs and a news story
+     use them (see setSteps); everywhere else the row is empty and not shown. */
+  var steps = el('div', 'rr-steps');
+  steps.setAttribute('aria-label', 'Previous and next');
+
+  /* The page content and the footer scroll together inside one scroll area, so the footer line moves with the page.
+     On a short page the footer still rests at the bottom of the window. */
+  var scroller = el('div', 'rr-scroll');
+  var foot = el('div', 'rr-foot');
+  add(foot, steps, bottom);
   main.classList.add('rr-content');
-  add(app, topbar, head, subtabs, main, bottom);
+  add(scroller, main, foot);
+  add(app, topbar, head, subtabs, scroller);
 
   /* ---- Back / Forward: steps through the places visited on this site, in this browser tab ---- */
   var NAV_KEY = 'rc-nav';   /* renamed when the pages were renamed, so old page names are forgotten */
@@ -268,6 +279,18 @@
     for (var i = 0; i < tabs.length; i++) if (tabs[i][0] === want) return i;
     return 0;
   }
+  function step(label, href, key) {
+    var a = el('a', 'rr-step');
+    a.href = href;
+    add(a, el('span', 'rr-step-key', key), el('span', '', label));
+    return a;
+  }
+  /* prev / next are { label, href } or null. */
+  function setSteps(prev, next) {
+    steps.textContent = '';
+    if (prev) steps.appendChild(step(prev.label, prev.href, '\u2039'));
+    if (next) steps.appendChild(step(next.label, next.href, '\u203A'));
+  }
   var shownTab = null;
   function showTab() {
     if (!tabs.length) return;   /* no sub-tabs here (News, a post, the driver list) */
@@ -283,9 +306,16 @@
       var only = t.getAttribute('data-rr-for');
       t.hidden = !!only && only !== id;
     });
+    /* Previous / next sub-tab links: the Leaderboards page only. */
+    if (body.getAttribute('data-rr-tabs') === 'leaderboards') {
+      setSteps(
+        tabs[i - 1] && { label: tabs[i - 1][1], href: '#' + tabs[i - 1][0] },
+        tabs[i + 1] && { label: tabs[i + 1][1], href: '#' + tabs[i + 1][0] }
+      );
+    }
     /* Go to the top only when a different sub-tab opens. Redrawing the one already open (opening a
        class in the wizard, adding a round) must leave the page exactly where the reader is. */
-    if (id !== shownTab) main.scrollTop = 0;
+    if (id !== shownTab) scroller.scrollTop = 0;
     shownTab = id;
   }
   window.addEventListener('hashchange', function () { showTab(); navRecord(); });
@@ -342,6 +372,8 @@
   RR.tip = function (node, text) { node.setAttribute('data-rr-tip', text); return node; };
 
   /* Let a page's content fill the whole content area (used so a paged block keeps one height). */
+  RR.scrollTop = function () { scroller.scrollTop = 0; };
+  RR.setSteps = setSteps;
   RR.fillContent = function () { main.classList.add('rr-content-fill'); };
 
   /* Page pills. Returns the row to place right under the paged block. count pages, current is 1-based.

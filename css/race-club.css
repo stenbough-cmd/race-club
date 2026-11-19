@@ -225,13 +225,20 @@ button, select { font-family: inherit; }
 }
 
 /* ---------- Content ---------- */
-.rr-content {
+/* The scroll area holds the page content and the footer, so the footer moves with the page. */
+.rr-scroll {
+  display: flex;
   flex: 1 1 0;
+  flex-direction: column;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px var(--rr-pad) 24px;
   scrollbar-width: thin;
   scrollbar-color: var(--rr-line) transparent;
+}
+.rr-foot { flex: 0 0 auto; margin-top: auto; }
+.rr-content {
+  flex: 1 0 auto;
+  padding: 16px var(--rr-pad) 24px;
 }
 .rr-stack { display: flex; flex-direction: column; gap: 16px; }
 .rr-grid-2, .rr-grid-3 { display: grid; gap: var(--rr-gap); }
@@ -268,6 +275,28 @@ button, select { font-family: inherit; }
   padding: 12px 0 16px;
   border-top: 1px solid var(--rr-line);
 }
+/* Previous / next links just above the footer line (Leaderboards sub-tabs, news stories) */
+.rr-steps { display: flex; justify-content: flex-end; gap: 24px; padding: 8px var(--rr-pad) 16px; }
+.rr-steps:empty { display: none; }
+.rr-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rr-step-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--rr-text);
+  transition: background-color var(--rr-speed) ease, color var(--rr-speed) ease;
+}
+.rr-step:hover .rr-step-key { background: var(--rr-invert-bg); color: var(--rr-invert-text); }
 .rr-legal { flex: 1 1 0; min-width: 0; font-size: 10.5px; line-height: 1.45; color: var(--rr-muted); }
 .rr-legal-text { margin-right: 8px; }
 .rr-legal-link { color: var(--rr-text); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
@@ -722,7 +751,7 @@ button, select { font-family: inherit; }
 .rr-link:hover { text-decoration: underline; }
 
 /* ---------- Article ---------- */
-.rr-article { max-width: 760px; padding: 24px; background: var(--rr-panel); }
+.rr-article { padding: 24px; background: var(--rr-panel); }
 .rr-article p { margin: 0 0 16px; font-size: 15px; line-height: 1.6; }
 .rr-article p:last-child { margin-bottom: 0; }
 .rr-article-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
