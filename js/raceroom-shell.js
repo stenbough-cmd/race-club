@@ -77,7 +77,7 @@
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
-    protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>'
+    about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/>'
   };
   function setIcon(node, name) {
     node.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
@@ -149,15 +149,16 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Icon area at the far right (not part of the navbar): Search, Help, Protest, then admin Log in / Log out.
-     Search, Help and Protest do nothing yet. Each will be wired up when its feature is designed. */
+  /* Icon area at the far right (not part of the navbar): Search, Help, About, then admin Log in / Log out.
+     Search and Help do nothing yet. They will be wired up when their features are designed. About opens about.html. */
   var topEnd = el('div', 'rr-topbar-end');
   var searchBtn = iconBtn('button', 'search', 'Search');
   var helpBtn = iconBtn('button', 'help', 'Help');
-  var protestBtn = iconBtn('button', 'protest', 'Protest');
+  var aboutBtn = iconBtn('a', 'about', 'About Race Club');
+  aboutBtn.href = 'about.html';
   var adminBtn = iconBtn('button', 'login', 'Log in');
   adminBtn.classList.add('rr-tip-end');
-  add(topEnd, searchBtn, helpBtn, protestBtn, adminBtn);
+  add(topEnd, searchBtn, helpBtn, aboutBtn, adminBtn);
   add(topbar, logo, nav, topEnd);
 
   var head = el('div', 'rr-page-head');
