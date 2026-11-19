@@ -58,7 +58,7 @@ export function parseTrackText(text) {
   const location = middle.length > 1 ? middle[0] : '';
   const versions = middle.length > 2 ? middle.slice(1, -1) : [];
   const lay = lines.map((l) => /^(\d+) LAYOUTS?$/.exec(l)).filter(Boolean)[0];
-  return { venue: lines[0], country: lines[1], location, versions, description, type: val('TRACK'), opened: num(val('OPENED')), racedIn: val('RACED HERE'), layoutCount: lay ? Number(lay[1]) : null };
+  return { venue: lines[0], country: lines[1], location, versions, description, type: val('TRACK'), opened: num(val('OPENED')), openedText: val('OPENED'), racedIn: val('RACED HERE'), layoutCount: lay ? Number(lay[1]) : null };
 }
 export const slug = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 /* the address from a track's name: "Brands Hatch Circuit - Indy" -> brands-hatch-circuit/indy/2519 ; "Watkins Glen International" -> watkins-glen-international/watkins-glen-international/9176 */
