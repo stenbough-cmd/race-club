@@ -79,6 +79,7 @@
         it.status = 'saving'; draw();
         return RR.api('saveResults', { text: it.text, roundId: it.choice || '', fileName: it.name }).then(function (res) {
           if (res && res.ok && res.status === 'stored') { it.status = 'saved'; it.note = ''; done++; }
+          else if (res && res.ok && res.status === 'held') { it.status = 'held'; it.note = ''; done++; }
           else if (res && res.ok && res.status === 'duplicate') { it.status = 'duplicate'; it.note = 'Already uploaded.'; }
           else if (res && res.ok && res.status === 'no-round') { it.status = 'no-round'; it.choice = ''; it.note = 'That round is not in the Sheet.'; }
           else if (res && res.ok) { it.status = 'unreadable'; it.note = 'This is not a RaceRoom results file.'; }
@@ -135,7 +136,7 @@
     checking: ['Checking...', ''], saving: ['Saving...', ''],
     ready: ['Ready to save', 'rr-status-ok'], 'no-round': ['Needs a round', 'rr-status-bad'],
     duplicate: ['Already uploaded, left out', 'rr-status-bad'], unreadable: ['Not a results file, left out', 'rr-status-bad'],
-    saved: ['Saved', 'rr-status-ok'], failed: ['Not saved', 'rr-status-bad']
+    saved: ['Saved', 'rr-status-ok'], held: ['Saved and on hold', 'rr-status-bad'], failed: ['Not saved', 'rr-status-bad']
   };
 
   function panel(item) {
@@ -152,6 +153,8 @@
     if (item.status === 'duplicate' || item.status === 'unreadable') line = (item.note || st[0].replace(/, left out$/, '')) + ' Left out.';
     else if (item.status === 'failed') line = 'Not saved: ' + item.note;
     p.appendChild(el('div', 'rr-label ' + st[1], line));
+    if (item.status === 'ready' && item.note) p.appendChild(el('p', 'rr-body', item.note));
+    if (item.status === 'held') p.appendChild(el('p', 'rr-body', 'This round already had results, so this file is saved but not used yet. In the Sheet, open the Race Club menu and choose Results: use the held file for a round.'));
 
     if (item.status === 'no-round') {
       if (item.rounds.length) {
@@ -164,7 +167,7 @@
         p.appendChild(el('p', 'rr-body', 'No rounds are saved in the Sheet yet. Save a season from the Season Wizard first, then add this file again.'));
       }
     }
-    if (item.status !== 'saved' && item.status !== 'saving' && item.status !== 'checking') {
+    if (item.status !== 'saved' && item.status !== 'held' && item.status !== 'saving' && item.status !== 'checking') {
       p.appendChild(RR.row(RR.button('Cancel', function () { cancelOne(item); })));
     }
     return p;
