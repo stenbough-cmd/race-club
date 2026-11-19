@@ -298,6 +298,7 @@ button, select { font-family: inherit; }
 }
 .rr-step:hover .rr-step-key { background: var(--rr-invert-bg); color: var(--rr-invert-text); }
 .rr-legal { flex: 1 1 0; min-width: 0; font-size: 10.5px; line-height: 1.45; color: var(--rr-muted); }
+.rr-version { flex: none; font-size: 10.5px; line-height: 1.45; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rr-muted); white-space: nowrap; }
 .rr-legal-text { margin-right: 8px; }
 .rr-legal-link { color: var(--rr-text); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .rr-legal-link:hover, .rr-legal-link:focus-visible { text-decoration: underline; }

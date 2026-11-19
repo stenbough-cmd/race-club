@@ -20,6 +20,8 @@
     { id: 'profiles', label: 'Drivers', href: 'drivers.html' }
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
+  /* The site version, shown in the footer of every page. Change it here and nowhere else each time the site is updated. */
+  var VERSION = '0.1.0';
   var LEGAL_SHORT = 'Race Club is an independent community-run sim racing league and is not affiliated with, endorsed by, or sponsored by RaceRoom, KW Studios, RaceRoom Entertainment AG, any racing team, vehicle manufacturer, race circuit, racing series, or trademark owner. All trademarks, logos, team names, liveries, vehicle names, and circuit names are the property of their respective owners and are used for identification and informational purposes only.';
   var TABSETS = {
     leaderboards: [
@@ -196,7 +198,7 @@
   var legalLink = el('a', 'rr-legal-link', 'Legal Disclaimer');
   legalLink.href = 'legal.html';
   legal.appendChild(legalLink);
-  add(bottom, legal);
+  add(bottom, legal, el('div', 'rr-version', 'Version ' + VERSION));
 
   /* Previous / next links that sit just above the footer line. Only the Leaderboards sub-tabs and a news story
      use them (see setSteps); everywhere else the row is empty and not shown. */
@@ -372,6 +374,7 @@
   RR.tip = function (node, text) { node.setAttribute('data-rr-tip', text); return node; };
 
   /* Let a page's content fill the whole content area (used so a paged block keeps one height). */
+  RR.version = VERSION;
   RR.scrollTop = function () { scroller.scrollTop = 0; };
   RR.setSteps = setSteps;
   RR.fillContent = function () { main.classList.add('rr-content-fill'); };
