@@ -1,0 +1,21 @@
+{
+ "source": "r3e",
+ "totals": {
+  "liveries-small": 3923,
+  "liveries-full": 360,
+  "classes": 104,
+  "manufacturers": 51
+ },
+ "have": {
+  "liveries-small": 3921,
+  "liveries-full": 360,
+  "classes": 104,
+  "manufacturers": 51
+ },
+ "notInStore": {
+  "liveries-small": [
+   13585,
+   13586
+  ]
+ }
+}
