@@ -1,0 +1,24 @@
+/* Race Club home: one big tile for each main place on the site, drawn the same way as the news stories.
+   To change a tile's picture, put the new picture in assets/images/home/ and change its file name below.
+   A tile with no "href" is a placeholder for something not built yet (it shows NOT YET and does nothing).
+   When it is built, add its "href" here and nowhere else. */
+(function () {
+  'use strict';
+  var RR = window.RR, el = RR.el, add = RR.add;
+  var IMG = 'assets/images/home/';
+
+  var TILES = [
+    { title: 'League News', desc: 'The latest from the league.', href: 'news.html', photo: IMG + 'league-news.svg' },
+    { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html', photo: IMG + 'leaderboards.svg' },
+    { title: 'File a Protest', desc: 'Ask the stewards to look at an incident.', photo: IMG + 'file-a-protest.svg' },
+    { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html', photo: IMG + 'about-race-club.svg' }
+  ];
+
+  var main = document.querySelector('main');
+  RR.fillContent();
+  var grid = el('div', 'rr-news-grid rr-news-quad');
+  TILES.forEach(function (t) {
+    grid.appendChild(RR.promo({ title: t.title, desc: t.desc, href: t.href, photo: t.photo, button: 'Open' }));
+  });
+  main.appendChild(add(el('div', 'rr-news'), grid));
+})();

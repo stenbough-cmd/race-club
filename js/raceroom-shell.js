@@ -6,7 +6,7 @@
    so every list and option on the site looks the same.
 
    A page tells the shell what it is with attributes on <body>:
-     data-rr-main="news|leaderboards|profiles"   which main menu item is active
+     data-rr-main="news|leaderboards|profiles"   which main menu item is active (any other word, such as home, highlights none)
      data-rr-tabs="leaderboards|profile"         which sub-tab set to show (optional)
      data-rr-title="Page title"                  starting page title
    Sub-tab content lives in <section data-rr-view="tab-id"> inside <main>. */
@@ -15,12 +15,14 @@
 
   /* ---- The one menu list. Change the site menu here and nowhere else. ---- */
   var MENU = [
-    { id: 'news', label: 'News', href: 'index.html' },
+    { id: 'news', label: 'News', href: 'news.html' },
     { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
     { id: 'profiles', label: 'Drivers', href: 'drivers.html' },
     /* Shown only while an admin is logged in. */
     { id: 'admin', label: 'Admin', href: 'admin.html', admin: true }
   ];
+  /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
+  var LEGAL_SHORT = 'Race Club is an independent community-run sim racing league and is not affiliated with, endorsed by, or sponsored by RaceRoom, KW Studios, RaceRoom Entertainment AG, any racing team, vehicle manufacturer, race circuit, racing series, or trademark owner. All trademarks, logos, team names, liveries, vehicle names, and circuit names are the property of their respective owners and are used for identification and informational purposes only.';
   var TABSETS = {
     leaderboards: [
       ['standings', 'Standings'],
@@ -168,7 +170,15 @@
   });
   if (!tabs.length) subtabs.hidden = true;
 
+  /* Bottom bar: the legal notice at the left (the same on every page) and the previous / next sub-tab links at the right. */
   var bottom = el('footer', 'rr-bottombar');
+  var legal = el('div', 'rr-legal');
+  legal.appendChild(el('span', 'rr-legal-text', LEGAL_SHORT));
+  var legalLink = el('a', 'rr-legal-link', 'Legal Disclaimer');
+  legalLink.href = 'legal.html';
+  legal.appendChild(legalLink);
+  var steps = el('div', 'rr-steps');
+  add(bottom, legal, steps);
 
   main.classList.add('rr-content');
   add(app, topbar, head, subtabs, main, bottom);
@@ -242,9 +252,9 @@
     return a;
   }
   function setSteps(prev, next) {
-    bottom.textContent = '';
-    if (prev) bottom.appendChild(step(prev.label, prev.href, '‹'));
-    if (next) bottom.appendChild(step(next.label, next.href, '›'));
+    steps.textContent = '';
+    if (prev) steps.appendChild(step(prev.label, prev.href, '\u2039'));
+    if (next) steps.appendChild(step(next.label, next.href, '\u203A'));
   }
 
   /* ---- Sub-tab switching (no page reload, address keeps the tab) ---- */
@@ -256,7 +266,7 @@
   var shownTab = null;
   function showTab() {
     if (!tabs.length) {
-      /* No sub-tabs here (News, a post, the driver list): the bottom bar stays empty. */
+      /* No sub-tabs here (News, a post, the driver list): no previous / next links. */
       setSteps(null, null);
       return;
     }
