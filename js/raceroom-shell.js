@@ -177,8 +177,7 @@
   var legalLink = el('a', 'rr-legal-link', 'Legal Disclaimer');
   legalLink.href = 'legal.html';
   legal.appendChild(legalLink);
-  var steps = el('div', 'rr-steps');
-  add(bottom, legal, steps);
+  add(bottom, legal);
 
   main.classList.add('rr-content');
   add(app, topbar, head, subtabs, main, bottom);
@@ -244,19 +243,6 @@
   backBtn.addEventListener('click', function () { navGo(-1); });
   forwardBtn.addEventListener('click', function () { navGo(1); });
 
-  /* ---- Bottom bar: previous / next SUB-TAB only. It never links between main sections. ---- */
-  function step(label, href, key) {
-    var a = el('a', 'rr-step');
-    a.href = href;
-    add(a, el('span', 'rr-step-key', key), el('span', '', label));
-    return a;
-  }
-  function setSteps(prev, next) {
-    steps.textContent = '';
-    if (prev) steps.appendChild(step(prev.label, prev.href, '\u2039'));
-    if (next) steps.appendChild(step(next.label, next.href, '\u203A'));
-  }
-
   /* ---- Sub-tab switching (no page reload, address keeps the tab) ---- */
   function currentTab() {
     var want = (location.hash || '').replace('#', '');
@@ -265,11 +251,7 @@
   }
   var shownTab = null;
   function showTab() {
-    if (!tabs.length) {
-      /* No sub-tabs here (News, a post, the driver list): no previous / next links. */
-      setSteps(null, null);
-      return;
-    }
+    if (!tabs.length) return;   /* no sub-tabs here (News, a post, the driver list) */
     var i = currentTab(), id = tabs[i][0];
     Array.prototype.forEach.call(main.querySelectorAll('[data-rr-view]'), function (v) {
       v.hidden = v.getAttribute('data-rr-view') !== id;
@@ -282,10 +264,6 @@
       var only = t.getAttribute('data-rr-for');
       t.hidden = !!only && only !== id;
     });
-    setSteps(
-      tabs[i - 1] && { label: tabs[i - 1][1], href: '#' + tabs[i - 1][0] },
-      tabs[i + 1] && { label: tabs[i + 1][1], href: '#' + tabs[i + 1][0] }
-    );
     /* Go to the top only when a different sub-tab opens. Redrawing the one already open (opening a
        class in the wizard, adding a round) must leave the page exactly where the reader is. */
     if (id !== shownTab) main.scrollTop = 0;
@@ -300,7 +278,6 @@
   RR.dash = dash;
   RR.refresh = showTab;
   RR.setTitle = function (text) { title.textContent = text; document.title = text + ' | Race Club'; };
-  RR.setSteps = setSteps;
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
   RR.param = function (name) { return new URLSearchParams(location.search).get(name); };
 

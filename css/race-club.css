@@ -265,26 +265,6 @@ button, select { font-family: inherit; }
 .rr-legal-text { margin-right: 8px; }
 .rr-legal-link { color: var(--rr-text); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .rr-legal-link:hover, .rr-legal-link:focus-visible { text-decoration: underline; }
-.rr-steps { display: flex; flex: none; gap: 24px; }
-.rr-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.rr-step-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid var(--rr-text);
-  transition: background-color var(--rr-speed) ease, color var(--rr-speed) ease;
-}
-.rr-step:hover .rr-step-key { background: var(--rr-invert-bg); color: var(--rr-invert-text); }
 
 /* ---------- Big block that is a link: stays the same size, white border on hover (like the top buttons) ---------- */
 .rr-block-link { border: 1px solid transparent; transition: border-color var(--rr-speed) ease; }
@@ -755,8 +735,6 @@ button, select { font-family: inherit; }
   .rr-news-grid { flex: 0 0 auto; grid-template-rows: none; grid-auto-rows: 170px; }
   .rr-news-first > :first-child { grid-row: auto; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }
-  .rr-bottombar { flex-direction: column-reverse; gap: 12px; }
-  .rr-steps { align-self: flex-end; }
   .rr-span-2 { grid-column: auto; }
   .rr-row-stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
