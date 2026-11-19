@@ -16,7 +16,7 @@
   /* ---- The one menu list. Change the site menu here and nowhere else. ---- */
   var MENU = [
     { id: 'news', label: 'News', href: 'news.html' },
-    { id: 'leaderboards', label: 'Standings', href: 'leaderboards.html' },
+    { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
     { id: 'profiles', label: 'Drivers', href: 'drivers.html' }
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
