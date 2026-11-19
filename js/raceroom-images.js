@@ -21,6 +21,10 @@
      RR.images.info('class', 12003)    { id, name }
      RR.images.info('manufacturer', 10978)   { id, name }
 
+   Car details from the store (after the first call, which loads assets/r3e/cars.json once):
+     RR.images.details(11342)   -> Promise of { description, engine, aspiration, drivetrain, shifting, gears, downforce,
+                                   difficulty, racedIn, powerHp, torqueNm, weightKg, topSpeedKmh, powerToWeightHpPerT }, or null
+
    The settings (js/config.js, all optional):
      RC_CONFIG.r3eStore   the store's picture address, or false to never use the store
 
@@ -156,5 +160,16 @@
     return node;
   }
 
-  RR.images = { img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
+  var carDetails = null;
+  function details(carId, source) {
+    source = source || 'r3e';
+    if (!carDetails) {
+      carDetails = fetch(SOURCES[source].local + 'cars.json')
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(function () { return { cars: {} }; });
+    }
+    return carDetails.then(function (d) { return d.cars[goodId(carId)] || null; });
+  }
+
+  RR.images = { details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
 })();
