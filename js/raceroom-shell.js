@@ -16,7 +16,7 @@
   /* ---- The one menu list. Change the site menu here and nowhere else. ---- */
   var MENU = [
     { id: 'news', label: 'News', href: 'news.html' },
-    { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
+    { id: 'leaderboards', label: 'Standings', href: 'leaderboards.html' },
     { id: 'profiles', label: 'Drivers', href: 'drivers.html' },
     /* Shown only while an admin is logged in. */
     { id: 'admin', label: 'Admin', href: 'admin.html', admin: true }
@@ -163,12 +163,7 @@
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
     topbar.classList.remove('rr-topbar-stacked');
-    nav.style.zoom = '';
     if (nav.offsetTop > logo.offsetTop + 4 || topEnd.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
-    /* On its own row the buttons shrink together (never wrap or scroll) when the window is too narrow for them. */
-    if (topbar.classList.contains('rr-topbar-stacked') && nav.scrollWidth > nav.clientWidth + 1) {
-      nav.style.zoom = String(Math.floor(nav.clientWidth / nav.scrollWidth * 1000) / 1000);
-    }
   }
   window.addEventListener('resize', fitTopbar);
   window.addEventListener('load', fitTopbar);

@@ -102,7 +102,7 @@ button, select { font-family: inherit; }
    rr-topbar-stacked and the whole row drops under them (also always the case in portrait, see below). */
 .rr-topbar-stacked .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
 .rr-topbar-stacked .rr-topbar-end { order: 2; flex-shrink: 0; }
-.rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow: hidden; }
+.rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
 .rr-topbar-end { display: flex; align-items: center; gap: var(--rr-gap); margin-left: auto; }
 
 /* Top buttons: no border, see-through fill. Hover = light border. Active = solid light. */
@@ -736,7 +736,7 @@ button, select { font-family: inherit; }
   /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
   .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
   .rr-topbar-end { order: 2; flex-shrink: 0; }
-  .rr-nav { order: 3; flex: 0 0 100%; overflow: hidden; }
+  .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
