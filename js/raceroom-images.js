@@ -21,6 +21,10 @@
      RR.images.info('class', 12003)    { id, name }
      RR.images.info('manufacturer', 10978)   { id, name }
 
+   Tracks (our own copy only): RR.images.img('track', trackId, { n: 2 }) is the track's 2nd picture (1 is the first);
+     RR.images.img('layout', layoutId) is a layout map; RR.images.img('venue', venueId) is a venue logo;
+     RR.images.trackLogo(trackId) is the logo of the venue a track belongs to; RR.images.tracks(trackId) gives its details.
+
    Car details from the store (after the first call, which loads assets/r3e/cars.json once):
      RR.images.details(11342)   -> Promise of { description, engine, aspiration, drivetrain, shifting, gears, downforce,
                                    difficulty, racedIn, powerHp, torqueNm, weightKg, topSpeedKmh, powerToWeightHpPerT }, or null
@@ -68,6 +72,10 @@
     }
     if (kind === 'class') return { local: s.local + 'classes/' + id + '.webp', store: s.store && s.store + 'CarClass:' + id + ':small.webp' };
     if (kind === 'manufacturer') return { local: s.local + 'manufacturers/' + id + '.webp', store: s.store && s.store + 'CarManufactor:' + id + ':on_dark_big.webp' };
+    /* Tracks: only our own copy (the store's track addresses carry a code we only know from its page). */
+    if (kind === 'track') return { local: s.local + 'tracks/' + id + '/' + (size > 0 ? size : 1) + '.webp', store: '' };
+    if (kind === 'layout') return { local: s.local + 'layouts/' + id + '.svg', store: '' };
+    if (kind === 'venue') return { local: s.local + 'venues/' + id + '.webp', store: '' };
     return null;
   }
   function pair(list, a, label) { if (a) { if (a.local) list.push([a.local, label === 'own' ? 'local' : label]); if (a.store) list.push([a.store, label === 'own' ? 'store' : label]); } }
@@ -126,7 +134,7 @@
   /* ---- the picture itself ---- */
   function img(kind, id, o) {
     o = o || {};
-    var source = o.source || 'r3e', size = o.size || 'small';
+    var source = o.source || 'r3e', size = kind === 'track' ? (Number(o.n) || 1) : (o.size || 'small');
     var node = document.createElement('img');
     node.className = o.className || 'rr-r3e-img';
     node.loading = 'lazy';
@@ -171,5 +179,38 @@
     return carDetails.then(function (d) { return d.cars[goodId(carId)] || null; });
   }
 
-  RR.images = { details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
+  /* Track details (after the first call, which loads assets/r3e/tracks.json once): a track is what RaceRoom's data calls a
+     track, so Brands Hatch Indy and Brands Hatch Grand Prix are two tracks and Watkins Glen is one track with four layouts.
+       { venue, country, location, versions, description, type, opened, racedIn, venueId, pictures,
+         layouts: [{ id, name, maxCars, map }] }, or null */
+  var trackDetails = null;
+  function tracks(trackId, source) {
+    source = source || 'r3e';
+    if (!trackDetails) {
+      trackDetails = fetch(SOURCES[source].local + 'tracks.json')
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(function () { return { tracks: {} }; });
+    }
+    return trackDetails.then(function (d) { return d.tracks[goodId(trackId)] || null; });
+  }
+  /* The venue's logo for a track: RR.images.trackLogo(2519) returns an <img> that fills in once the track is known. */
+  function trackLogo(trackId, o) {
+    o = o || {};
+    var node = document.createElement('img');
+    node.className = o.className || 'rr-r3e-img';
+    node.alt = o.alt || '';
+    node.setAttribute('data-r3e', 'missing');
+    node.src = PLACEHOLDER;
+    tracks(trackId, o.source).then(function (t) {
+      if (!t || !t.venueId) return;
+      var a = address(o.source || 'r3e', 'venue', t.venueId);
+      node.onerror = function () { node.onerror = null; node.setAttribute('data-r3e', 'missing'); node.src = PLACEHOLDER; };
+      node.setAttribute('data-r3e', 'local');
+      if (!o.alt) node.alt = t.venue;
+      node.src = a.local;
+    });
+    return node;
+  }
+
+  RR.images = { tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
 })();
