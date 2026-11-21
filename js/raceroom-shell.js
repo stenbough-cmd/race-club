@@ -78,11 +78,36 @@
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
     admin: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-    protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>'
+    protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>',
+    save: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3"/><path d="M8 21v-7h8v7"/>',
+    create: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>',
+    startover: '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/>',
+    trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5"/><path d="M14 11v5"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/>'
   };
-  function setIcon(node, name) {
-    node.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+  function iconSvg(name) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>';
+  }
+  function setIcon(node, name) { node.innerHTML = iconSvg(name); }
+
+  /* Two-click confirm. The first click turns the button red and shows `text` in its tooltip; a second click
+     within 3 seconds runs `action`. After 3 seconds the button goes back to normal. */
+  function disarm(node) {
+    clearTimeout(node._rrArm);
+    node._rrArm = null;
+    node.classList.remove('rr-confirming');
+    var was = node._rrWas || {};
+    if (was.tip === null || was.tip === undefined) node.removeAttribute('data-rr-tip'); else node.setAttribute('data-rr-tip', was.tip);
+    if (was.label !== null && was.label !== undefined) node.setAttribute('aria-label', was.label);
+  }
+  function armClick(node, text, action) {
+    if (node._rrArm) { disarm(node); action(); return; }
+    node._rrWas = { tip: node.getAttribute('data-rr-tip'), label: node.getAttribute('aria-label') };
+    node.classList.add('rr-confirming');
+    node.setAttribute('data-rr-tip', text);
+    if (node._rrWas.label !== null) node.setAttribute('aria-label', text);
+    node._rrArm = setTimeout(function () { disarm(node); }, 3000);
   }
   /* Square icon button with a tooltip. tip is also what screen readers read. */
   function iconBtn(tag, name, tip) {
@@ -336,6 +361,7 @@
   RR.setAdmin = function (signedIn) {
     adminLink.hidden = !signedIn;
     setIcon(adminBtn, signedIn ? 'logout' : 'login');
+    disarm(adminBtn);
     adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
     adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');
   };
@@ -343,8 +369,10 @@
   adminBtn.addEventListener('click', function () {
     var a = adminLoad();
     if (!a) { location.href = 'login.html'; return; }
-    adminClear();
-    apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'index.html'; });
+    armClick(adminBtn, 'Confirm log out', function () {
+      adminClear();
+      apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'index.html'; });
+    });
   });
 
   /* The logged-in admin ({ name }) or null. */
@@ -652,11 +680,33 @@
   };
 
   /* Standard button. Outlined; pass save = true only for a button that writes to the sheet. */
-  RR.button = function (text, onClick, save) {
-    var b = el('button', save ? 'rr-btn rr-btn-save' : 'rr-btn', text);
+  RR.button = function (text, onClick, save, icon) {
+    var b = el('button', save ? 'rr-btn rr-btn-save' : 'rr-btn');
     b.type = 'button';
-    b.addEventListener('click', onClick);
+    if (icon) b.innerHTML = iconSvg(icon);
+    b.appendChild(document.createTextNode(text));
+    if (onClick) b.addEventListener('click', onClick);
     return b;
+  };
+  /* Make any button two-click: the first click turns it red with `confirmText` as its tooltip, the second click
+     (within 3 seconds) runs `action`. */
+  RR.arm = function (node, confirmText, action) {
+    node.addEventListener('click', function () { armClick(node, confirmText, action); });
+    return node;
+  };
+  /* Put a red exclamation in a circle behind the names of these sub-tabs, e.g. RR.flagTabs(['season', 'calendar']).
+     An empty list clears every one. */
+  RR.flagTabs = function (ids) {
+    Array.prototype.forEach.call(subtabs.children, function (a) {
+      var on = (ids || []).indexOf(a.getAttribute('data-rr-tab')) >= 0, mark = a.querySelector('.rr-subtab-alert');
+      if (on && !mark) {
+        mark = el('span', 'rr-subtab-alert');
+        mark.setAttribute('role', 'img');
+        mark.setAttribute('aria-label', 'Needs attention');
+        mark.innerHTML = iconSvg('alert');
+        a.appendChild(mark);
+      } else if (!on && mark) a.removeChild(mark);
+    });
   };
 
   /* One-line notice. kind: 'warn' (red edge) or 'ok' (white edge). */

@@ -1,6 +1,6 @@
 /* Race Club RaceRoom site: admin season wizard and server exporter.
    The wizard works in the browser: the season is kept in this browser's storage, and the server
-   files are built here and downloaded as a .zip. "Save season to the Sheet" (Review step) sends the
+   files are built here and downloaded as a .zip. "Save a draft" and "Create a season" (Review step) sends the
    season, with its server passwords, to the league's private Google Sheet through the service,
    which only accepts it from a logged-in admin. Nothing is ever written into the website itself.
 
@@ -126,14 +126,10 @@
     3: { DriveAssistTransmission: -1, DriveAssistEsp: 0, DriveAssistSteer: 0, DriveAssistBrake: 2,
       DriveAssistTractionControl: 2, DriveAssistRaceline: 0, DriveAssistAutopit: -1 }
   };
-  /* The same curated time zone list the LMU season wizard uses (js/reference-data.js, TIMEZONE_LIST). */
-  var TIMEZONES = ['Pacific/Honolulu', 'America/Anchorage', 'America/Los_Angeles', 'America/Tijuana', 'America/Denver', 'America/Phoenix',
-    'America/Chicago', 'America/Mexico_City', 'America/New_York', 'America/Bogota', 'America/Halifax', 'America/La_Paz', 'America/Sao_Paulo',
-    'America/Argentina/Buenos_Aires', 'America/Noronha', 'Atlantic/Cape_Verde', 'Europe/London', 'Africa/Accra', 'Europe/Paris', 'Africa/Lagos',
-    'Europe/Athens', 'Africa/Johannesburg', 'Europe/Moscow', 'Africa/Nairobi', 'Asia/Tehran', 'Asia/Dubai', 'Asia/Baku', 'Asia/Kabul',
-    'Asia/Karachi', 'Asia/Kolkata', 'Asia/Kathmandu', 'Asia/Dhaka', 'Asia/Yangon', 'Asia/Bangkok', 'Asia/Jakarta', 'Asia/Shanghai',
-    'Asia/Singapore', 'Australia/Perth', 'Asia/Tokyo', 'Asia/Seoul', 'Australia/Adelaide', 'Australia/Sydney', 'Pacific/Port_Moresby',
-    'Pacific/Noumea', 'Pacific/Auckland', 'Pacific/Fiji', 'Pacific/Tongatapu', 'Pacific/Kiritimati'];
+  /* The server tool runs in the browser's time zone and cannot be told another one, so the wizard always uses it. */
+  function browserZone() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; }
+  }
 
   /* ---------------- The season being edited ---------------- */
   function session(len, start) { return { len: len, unit: 'M', start: start, tod: 2, clouds: [0, 0, 0, 0, 0] }; }
@@ -147,8 +143,7 @@
       prefix: 'RACE CLUB ONLINE: SEASON 01',
       serverId: 515929,
       motd: '',
-      thumbnail: 'https://r3-live.fra1.digitaloceanspaces.com/mp-thumbnails/3fdcf71c511745e09c5f70c67d2c5e7e.png',
-      zone: 'America/New_York',
+      zone: browserZone(),
       liveries: [],
       rules: { ReverseStartOrderPlaces: 0, MaxNumOfPlayers: 12, FuelUsage: 1, TireWear: 1, TireTemperature: 0, Damage: 2,
         RaceFinishDuration: 30, FlagRules: 2, CutRules: 1, WreckerPrevention: 0, MandatoryPitstop: 0, NonReadyPitlaneStartDelay: 0,
@@ -167,10 +162,12 @@
   var S = newSeason();
   try { var kept = JSON.parse(localStorage.getItem(STORE)); if (kept && kept.version === 1) S = kept; } catch (e) {}
   function tidy() {   /* fill in anything an older saved season does not have */
+    S.zone = browserZone();
+    delete S.thumbnail;   /* the server image is not part of the exported files any more */
     if (!S.calendar) S.calendar = { date: (S.rounds[0] && S.rounds[0].date) || '', time: (S.rounds[0] && S.rounds[0].time) || '20:00', gap: 1 };
     setDates();
   }
-  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} if (typeof flagSteps === 'function' && flagged) flagSteps(); }
   /* true once an export was refused: boxes that fail a check then show a red border until fixed */
   var flagged = false;
 
@@ -252,7 +249,6 @@
     g.Id = id;
     g.Name = serverName(r);
     g.Password = r.password || '';
-    if (S.thumbnail) g.Thumbnail = S.thumbnail;
     g.Experience = 2481;
     if (Number(S.preset)) g.DriveAssistPreset = Number(S.preset);
     ASSISTS.forEach(function (a) { if (Number(S.assists[a[0]])) g[a[0]] = Number(S.assists[a[0]]); });
@@ -299,23 +295,31 @@
   }
 
   /* ---------------- Checks before export ---------------- */
-  function problems() {
+  function problemList() {
     var out = [], cars = carIds();
-    if (!String(S.prefix).trim()) out.push('Step 1: the server name is empty.');
-    if (!Number(S.serverId)) out.push('Step 1: the server ID is missing.');
-    if (!cars.length) out.push('Step 2: no cars are chosen.');
-    if (!races().length) out.push('Step 6: there are no rounds.');
-    else if (!S.calendar.date) out.push('Step 6: the first round date is missing.');
+    function add(step, text) { out.push({ step: step, text: text }); }
+    if (!String(S.prefix).trim()) add('season', 'Step 1: the server name is empty.');
+    if (!Number(S.serverId)) add('season', 'Step 1: the server ID is missing.');
+    if (!cars.length) add('cars', 'Step 2: no cars are chosen.');
+    if (!races().length) add('calendar', 'Step 6: there are no rounds.');
+    else if (!S.calendar.date) add('calendar', 'Step 6: the first round date is missing.');
     races().forEach(function (r, i) {
       var n = 'Round ' + (i + 1) + ': ', w = weekendOf(r), L = layoutIndex[r.layoutId];
-      if (!r.time) out.push(n + 'the server online time is missing.');
-      if (!r.password) out.push(n + 'there is no password.');
-      if (!Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len)) out.push(n + 'no race has a length.');
+      if (!r.time) add('calendar', n + 'the server online time is missing.');
+      if (!r.password) add('calendar', n + 'there is no password.');
+      if (!Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len)) add(r.weekend ? 'calendar' : 'weekend', n + 'no race has a length.');
       if (L && L.max && Number(S.rules.MaxNumOfPlayers) > L.max) {
-        out.push(n + L.track + ' ' + L.layout + ' holds ' + L.max + ' cars, but max players is ' + S.rules.MaxNumOfPlayers + '.');
+        add('calendar', n + L.track + ' ' + L.layout + ' holds ' + L.max + ' cars, but max players is ' + S.rules.MaxNumOfPlayers + '.');
       }
     });
     return out;
+  }
+  function problems() { return problemList().map(function (p) { return p.text; }); }
+  /* After a refused export or create, the sub-tabs with something missing show a red exclamation until it is fixed. */
+  function flagSteps() {
+    var ids = [];
+    if (flagged) problemList().forEach(function (p) { if (ids.indexOf(p.step) < 0) ids.push(p.step); });
+    RR.flagTabs(ids);
   }
 
   /* ---------------- Downloads ---------------- */
@@ -430,11 +434,9 @@
         note('Each round adds its own round ID to the end of the server name. Results are matched to the round by that ID.')),
       panel('Server',
         RR.row(text('Server ID', S, 'serverId', { type: 'number', bad: function () { return !Number(S.serverId); } }),
-          pick('Time zone', TIMEZONES.map(function (z) { return [z, zoneLabel(z)]; }), S, 'zone')),
+          RR.input({ label: 'Time zone', value: zoneLabel(S.zone), readOnly: true })),
         note('The server ID is the number of your server in the RaceRoom server tool. Every round is imported onto that one server.'),
-        note('Choose the time zone of the computer that runs the server. Every server online time in the calendar is in this zone.'),
-        RR.row(text('Server image address', S, 'thumbnail', { wide: true })),
-        note('The address RaceRoom gave your Race Club banner when you uploaded it in the server tool. It is used for every round.')),
+        note('The server tool uses the time zone of this browser and it cannot be changed, so it is fixed here. Every server online time in the calendar is in this zone.')),
       panel('Message of the day',
         RR.textarea({ label: 'Message', value: S.motd, onChange: function (v) { S.motd = v; save(); } }),
         note('Shown to drivers when they join. The same message goes into every round.'))
@@ -677,6 +679,7 @@
     'unreachable': 'The service could not be reached. Check your connection and try again.',
     'bad-season': 'The season needs a name before it can be saved.',
     'not-found': 'That season is no longer in the Sheet.',
+    'has-results': 'Not deleted. This season already has race results in the Sheet.',
     'signed-out': 'Your log in has ended. Log in again.'
   };
   function sheetError(res) {
@@ -685,17 +688,40 @@
     return SHEET_ERRORS[res.error] || 'Not saved. The service answered: ' + (res.detail || res.error || 'nothing') + '.';
   }
   function sheetDone(text, kind) { sheetBusy = false; sheetNote = { text: text, kind: kind || 'ok' }; drawExport(); }
-  function saveToSheet() {
+  function saveToSheet(activate) {
     if (sheetBusy) return;
+    if (activate) {
+      var left = problems();
+      if (left.length) {
+        /* Refused: the steps that need attention get a red mark, and their boxes a red border, until fixed. */
+        flagged = true;
+        sheetNote = { text: 'Not created. Fix the ' + left.length + ' item(s) under Checks first. The steps that need attention have a red mark.', kind: 'warn' };
+        drawAll();
+        return;
+      }
+      flagged = false;
+    }
     var layouts = {};
     races().forEach(function (r) { var L = layoutIndex[r.layoutId]; if (L) layouts[r.layoutId] = { track: L.track, layout: L.layout }; });
-    sheetBusy = true; sheetNote = { text: 'Saving to the Sheet...', kind: 'ok' }; drawExport();
-    RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }) }).then(function (res) {
+    sheetBusy = true; sheetNote = { text: activate ? 'Creating the season in the Sheet...' : 'Saving the draft to the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }), activate: !!activate }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       S.seasonId = res.seasonId;
       save();
       sheetSeasons = null;
-      sheetDone('Saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.');
+      sheetDone(activate
+        ? 'Created. ' + S.name + ' is live in the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.'
+        : 'Draft saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.');
+    });
+  }
+  function deleteFromSheet(seasonId, name) {
+    if (sheetBusy) return;
+    sheetBusy = true; sheetNote = { text: 'Deleting from the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('deleteSeason', { seasonId: seasonId }).then(function (res) {
+      if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
+      if (S.seasonId === seasonId) { delete S.seasonId; save(); }
+      if (sheetSeasons) sheetSeasons = sheetSeasons.filter(function (x) { return x.seasonId !== seasonId; });
+      sheetDone('Deleted "' + name + '" from the Sheet. What is in the wizard was kept.');
     });
   }
   function listFromSheet() {
@@ -709,7 +735,6 @@
   }
   function loadFromSheet(seasonId, name) {
     if (sheetBusy) return;
-    if (!window.confirm('Replace what is in the wizard with "' + name + '" from the Sheet?')) return;
     sheetBusy = true; sheetNote = { text: 'Loading from the Sheet...', kind: 'ok' }; drawExport();
     RR.api('loadSeason', { seasonId: seasonId }).then(function (res) {
       if (!res || !res.ok || !res.season || res.season.version !== 1) { sheetDone(sheetError(res || {}), 'warn'); return; }
@@ -722,9 +747,13 @@
     });
   }
   function sheetPanel() {
+    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), 'Delete this season from the Sheet?', function () { deleteFromSheet(S.seasonId, S.name); });
+    if (!S.seasonId) del.disabled = true;
     var p = panel('Google Sheet', RR.row(
-      RR.button('Save season to the Sheet', saveToSheet, true),
-      RR.button('Show seasons in the Sheet', listFromSheet)));
+      RR.arm(RR.button('Save a draft', null, false, 'save'), 'Save the draft to the Sheet?', function () { saveToSheet(false); }),
+      RR.button('Show saved drafts', listFromSheet),
+      RR.arm(RR.button('Create a season', null, false, 'create'), 'Create this season in the Sheet?', function () { saveToSheet(true); }),
+      del));
     if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
     if (sheetSeasons) {
       p.appendChild(RR.table([
@@ -732,12 +761,14 @@
         { key: 'first', label: 'First round' }, { key: 'rounds', label: 'Rounds', num: true }, { key: 'saved', label: 'Saved' },
         { key: 'by', label: 'Saved by' }, { key: 'load', label: '' }
       ], sheetSeasons.map(function (s) {
+        var load = RR.arm(RR.button('Load', null), 'Replace the wizard with this season?', function () { loadFromSheet(s.seasonId, s.name); });
+        var remove = RR.arm(RR.button('Delete', null, false, 'trash'), 'Delete this season from the Sheet?', function () { deleteFromSheet(s.seasonId, s.name); });
         return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
-          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.button('Load', function () { loadFromSheet(s.seasonId, s.name); }) } };
+          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.row(load, remove) } };
       }), 'No seasons are saved in the Sheet yet.'));
     }
-    p.appendChild(note((S.seasonId ? 'This season is in the Sheet as ' + S.seasonId + '. Saving again updates it.' : 'This season has not been saved to the Sheet yet.') +
-      ' Results are matched to a round by its round ID, so save the season before its first race. The Sheet keeps the server passwords; keep the Sheet private.'));
+    p.appendChild(note((S.seasonId ? 'This season is in the Sheet as ' + S.seasonId + '. Saving a draft again updates it.' : 'This season has not been saved to the Sheet yet.') +
+      ' A draft can be saved at any time. Create a season makes it live once everything under Checks is filled in. Results are matched to a round by its round ID, so create the season before its first race. The Sheet keeps the server passwords; keep the Sheet private.'));
     return p;
   }
 
@@ -803,8 +834,7 @@
             status.textContent = 'Season file saved.';
           }),
           RR.button('Load season file', function () { loader.click(); }),
-          RR.button('Start a new season', function () {
-            if (!window.confirm('Clear everything in the wizard and start a new season?')) return;
+          RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over?', function () {
             S = newSeason();
             flagged = false;
             sheetNote = null;
@@ -816,9 +846,10 @@
         note('The zip and the season file contain your server passwords. Keep them on your computer. Never add them to the website folder.'))
     ));
     RR.refresh();
+    flagSteps();
   }
 
-  function drawAll() { drawSeason(); drawCars(); drawRules(); drawWeekend(); drawPoints(); drawCalendar(); drawExport(); RR.refresh(); }
+  function drawAll() { drawSeason(); drawCars(); drawRules(); drawWeekend(); drawPoints(); drawCalendar(); drawExport(); RR.refresh(); flagSteps(); }
   /* Steps that depend on other steps are redrawn when you open them. */
   window.addEventListener('hashchange', function () {
     var at = location.hash.replace('#', '');

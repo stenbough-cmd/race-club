@@ -207,6 +207,8 @@ button, select { font-family: inherit; }
   white-space: nowrap;
   transition: color var(--rr-speed) ease, border-color var(--rr-speed) ease;
 }
+.rr-subtab-alert { display: inline-flex; margin-left: 6px; vertical-align: middle; color: var(--rr-red); }
+.rr-subtab-alert svg { display: block; width: 14px; height: 14px; }
 .rr-subtab:hover { color: var(--rr-text); border-bottom-color: var(--rr-text); }
 .rr-subtab[aria-current="page"] {
   color: var(--rr-red);
@@ -739,6 +741,16 @@ button, select { font-family: inherit; }
 }
 .rr-btn-save { background: var(--rr-red); border-color: var(--rr-red); color: var(--rr-on-red); }
 .rr-btn[disabled] { opacity: 0.4; cursor: default; pointer-events: none; }
+.rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
+
+/* Two-click confirm: red, white icon and text, tooltip stays up until the button resets (3 seconds). */
+.rr-btn.rr-confirming, .rr-btn.rr-confirming:hover,
+.rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming {
+  background: var(--rr-red);
+  border-color: var(--rr-red);
+  color: var(--rr-on-red);
+}
+.rr-confirming[data-rr-tip]::before, .rr-confirming[data-rr-tip]::after { opacity: 1; }
 
 /* ---------- Upload Results: drop area and file list ---------- */
 .rr-drop { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; padding: 24px; border: 1px dashed var(--rr-line); background: var(--rr-panel); }

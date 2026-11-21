@@ -164,11 +164,24 @@
       fill(RR.view('laptimes'), add(el('div', 'rr-split'), side, right));
     }
 
+    /* Start time of a round in the visitor's own time zone (the browser's), as { date: 'DD.MM.YYYY', time: '20:00', zone: 'EST' }. */
+    function localStart(r) {
+      if (!r.start) return null;
+      var d = new Date(r.start);
+      if (isNaN(d.getTime())) return null;
+      var p = {};
+      new Intl.DateTimeFormat('en-GB', { hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+        timeZoneName: 'short' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+      return { date: p.day + '.' + p.month + '.' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
+    }
     function drawSchedule() {
       fill(RR.view('schedule'), RR.table([
-        { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date', sorted: true }, { key: 'status', label: 'Status' }
+        { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date', sorted: true },
+        { key: 'time', label: 'Time' }, { key: 'status', label: 'Status' }
       ], D.rounds.filter(function (r) { return !onlyUpcoming || !r.done; }).map(function (r) {
-        return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: r.date,
+        var at = localStart(r);
+        return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: at ? at.date : r.date,
+          time: at ? RR.cell(at.time, at.zone) : '-',
           status: r.done ? RR.tag('Finished') : RR.tag('Upcoming', true) } };
       }), onlyUpcoming ? 'No upcoming rounds.' : 'The schedule has not been posted yet.'));
     }

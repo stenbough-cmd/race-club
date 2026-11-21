@@ -25,10 +25,10 @@
       { id: 'sample-driver-8', name: 'Sample Driver 8', team: 'Sample Team D', country: 'Spain', cls: 'st', car: 'Sample Car E' }
     ],
     rounds: [
-      { n: 1, track: 'Sample Circuit One', layout: 'Grand Prix', date: '01.11.2026', done: true, base: 97721 },
-      { n: 2, track: 'Sample Circuit Two', layout: 'National', date: '08.11.2026', done: true, base: 70103 },
-      { n: 3, track: 'Sample Circuit Three', layout: 'Grand Prix', date: '22.11.2026', done: false, base: 127310 },
-      { n: 4, track: 'Sample Circuit Four', layout: 'Road Course', date: '29.11.2026', done: false, base: 99755 }
+      { n: 1, track: 'Sample Circuit One', layout: 'Grand Prix', date: '01.11.2026', start: '2026-11-02T01:00:00Z', done: true, base: 97721 },
+      { n: 2, track: 'Sample Circuit Two', layout: 'National', date: '08.11.2026', start: '2026-11-09T01:00:00Z', done: true, base: 70103 },
+      { n: 3, track: 'Sample Circuit Three', layout: 'Grand Prix', date: '22.11.2026', start: '2026-11-23T01:00:00Z', done: false, base: 127310 },
+      { n: 4, track: 'Sample Circuit Four', layout: 'Road Course', date: '29.11.2026', start: '2026-11-30T01:00:00Z', done: false, base: 99755 }
     ],
     news: [
       { id: 'sample-story-2', kind: 'story', eyebrow: 'Race story', title: 'Sample race story for round 2', date: '08.11.2026',
