@@ -77,7 +77,7 @@
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
-    admin: '<path d="M4 6h9"/><path d="M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h10"/><path d="M18 18h2"/><circle cx="16" cy="18" r="2"/>',
+    admin: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
     protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>'
   };
   function setIcon(node, name) {
@@ -158,7 +158,7 @@
   var searchBtn = iconBtn('button', 'search', 'Search');
   var helpBtn = iconBtn('button', 'help', 'Help');
   var protestBtn = iconBtn('button', 'protest', 'Protest');
-  /* Admin (sliders icon): only shown while an admin is logged in. It opens the admin hub. */
+  /* Admin (cogwheel icon): only shown while an admin is logged in. It opens the admin hub. */
   var adminLink = iconBtn('a', 'admin', 'Admin');
   adminLink.href = 'admin.html';
   if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
