@@ -770,15 +770,17 @@
     }
     var layouts = {};
     races().forEach(function (r) { var L = layoutIndex[r.layoutId]; if (L) layouts[r.layoutId] = { track: L.track, layout: L.layout }; });
-    sheetBusy = true; sheetNote = { text: activate ? 'Creating the season in the Sheet...' : 'Saving the draft to the Sheet...', kind: 'ok' }; drawExport();
+    var firstSave = !S.seasonId;
+    sheetBusy = true; sheetNote = { text: (activate ? 'Creating the season in the Sheet...' : 'Saving the draft to the Sheet...') + (firstSave ? ' The first save also writes the season preview story, so this takes about a minute.' : ''), kind: 'ok' }; drawExport();
     RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }), activate: !!activate }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       S.seasonId = res.seasonId;
       save();
       sheetSeasons = null;
-      sheetDone(activate
+      var storyNote = !res.story || res.story.already ? '' : (res.story.ok ? ' The season preview story was written.' : ' The season preview story could not be written (' + (res.story.error || 'unknown reason') + '). Retry it on the Rounds tab.');
+      sheetDone((activate
         ? 'Created. ' + S.name + ' is live in the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.'
-        : 'Draft saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.');
+        : 'Draft saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.') + storyNote, res.story && !res.story.ok && !res.story.already ? 'warn' : undefined);
     });
   }
   function deleteFromSheet(seasonId, name) {

@@ -239,6 +239,8 @@
     });
   }
   if (window.RR_LIVE && window.RR_LIVE.seasons && window.RR_LIVE.seasons.length) applyLive(window.RR_LIVE);
+  /* Before any season is live (a season only saved so far) the sample seasons stay, but real stories, such as the season preview, still replace the sample posts. */
+  else if (window.RR_LIVE && window.RR_LIVE.news && window.RR_LIVE.news.length) data.news = window.RR_LIVE.news;
 
   /* The current season is the first one. The older pages read these three. */
   data.season = data.seasons[0];

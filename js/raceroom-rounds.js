@@ -3,6 +3,9 @@
    them is public until you Confirm them here. Review shows what the file says; Confirm makes the results live, Deny keeps the
    file but never uses it. A newer file for a round that is already live waits here too and changes nothing until you confirm it.
    A round with no results can be cancelled (and restored). Both Confirm and Deny use the two-click button.
+   Stories: Confirm also writes the round's story (about a minute) once the results are live. The Story button of a round opens its notes
+   (rivalries between drivers who raced, a short note for the writer) and up to 3 photos with captions; a failed story shows Retry story,
+   a written one can be rewritten. The Season preview is written when a season is saved for the first time and is retried here too.
    The list is read when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
@@ -11,7 +14,7 @@
   var el = RR.el, add = RR.add;
   var view = RR.view('rounds');
 
-  var data = null, busy = false, failed = false, seasonId = '', review = null, message = null;
+  var data = null, busy = false, failed = false, seasonId = '', review = null, message = null, panel = null, writing = false;
 
   /* 2026-11-22 08:15 becomes 22.11.2026 08:15 */
   function dmy(text) {
@@ -72,6 +75,154 @@
     load();
   }
 
+  /* ---------------- Stories ---------------- */
+  function storyState(s) {
+    if (!s) return ['-', '', ''];
+    if (s.status === 'published') return ['Written', 'rr-status-ok', s.title];
+    if (s.status === 'writing') return ['Writing...', '', ''];
+    return ['Failed', 'rr-status-bad', (s.error || '').slice(0, 140)];
+  }
+  function storyDone(res, label) {
+    var st = res && res.story;
+    if (!st) return '';
+    if (st.already) return '';
+    return st.ok ? ' The ' + label + ' was written.' : ' The ' + label + ' could not be written: ' + (st.error || 'unknown reason') + ' Use Retry story.';
+  }
+  /* Write, retry or rewrite a story. Takes about a minute: the page says so and waits. */
+  function writeStory(opts, label, rewrite) {
+    writing = true;
+    message = { text: 'Writing the ' + label + '. This takes about a minute.', kind: 'ok' };
+    draw();
+    RR.api('writeStory', { kind: opts.kind, seasonId: opts.seasonId || '', roundId: opts.roundId || '', rewrite: !!rewrite }).then(function (res) {
+      writing = false;
+      if (res && res.ok) done((rewrite ? 'The ' + label + ' was rewritten.' : 'The ' + label + ' was written.'), 'ok', res);
+      else done('The ' + label + ' could not be written: ' + ((res && res.story && res.story.error) || problem(res)), 'warn', res);
+    });
+  }
+  function storyButtons(opts, label, s) {
+    var out = [];
+    if (s && s.status === 'failed') {
+      var retry = RR.button('Retry story', null, false);
+      RR.arm(retry, '', 'Confirm retry story', function () { writeStory(opts, label, false); });
+      retry.disabled = writing;
+      out.push(retry);
+    } else if (!s) {
+      var first = RR.button('Write story', null, false);
+      RR.arm(first, '', 'Confirm write story', function () { writeStory(opts, label, false); });
+      first.disabled = writing;
+      out.push(first);
+    } else if (s.status === 'published') {
+      var again = RR.button('Rewrite story', null, false);
+      RR.arm(again, '', 'Confirm rewrite story', function () { writeStory(opts, label, true); });
+      again.disabled = writing;
+      out.push(again);
+    }
+    return out;
+  }
+
+  /* A photo from the computer: at most 1600 pixels wide, JPEG, small enough to send. Resolves to the base64 text. */
+  function shrink(file) {
+    return new Promise(function (ok, bad) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var w = Math.min(1600, img.naturalWidth), h = Math.round(img.naturalHeight * w / img.naturalWidth);
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        var data = '', q = [0.85, 0.7, 0.55];
+        for (var i = 0; i < q.length; i++) {
+          data = c.toDataURL('image/jpeg', q[i]).replace(/^data:image\/jpeg;base64,/, '');
+          if (data.length < 1300000) break;
+        }
+        data.length < 1300000 ? ok(data) : bad();
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); bad(); };
+      img.src = url;
+    });
+  }
+
+  function openPanel(r) {
+    var riv = [['', ''], ['', ''], ['', '']];
+    (r.rivalries || []).slice(0, 3).forEach(function (p, i) { riv[i] = [String(p[0]), String(p[1])]; });
+    panel = { roundId: r.id, rivals: riv, note: r.note || '', caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
+    message = null; review = null;
+    draw();
+  }
+  function panelFail(res) {
+    var e = res && res.error;
+    message = { text: e === 'bad-photo' ? 'That picture could not be used. Try another one.' : e === 'github' ? 'The picture could not be saved: ' + (res.detail || 'GitHub refused it.') : problem(res), kind: 'warn' };
+    draw();
+  }
+  function photoSlot(r, i) {
+    var p = r.photos && r.photos[i], row = el('div', 'rr-story-photo');
+    row.appendChild(p && p.src ? add(el('span', 'rr-story-thumb'), (function () { var im = el('img'); im.src = p.src; im.alt = ''; return im; })()) : el('span', 'rr-story-thumb rr-story-empty', 'Empty'));
+    row.appendChild(RR.input({ label: 'Photo ' + (i + 1) + ' caption', value: panel.caps[i], wide: true, onChange: function (v) { panel.caps[i] = v; } }));
+    var pick = document.createElement('input');
+    pick.type = 'file'; pick.accept = 'image/*'; pick.hidden = true;
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0];
+      if (!f) return;
+      message = { text: 'Saving photo ' + (i + 1) + '...', kind: 'ok' };
+      draw();
+      shrink(f).then(function (data) {
+        RR.api('saveRoundPhoto', { roundId: r.id, slot: i + 1, caption: panel.caps[i], data: data }).then(function (res) {
+          if (res && res.ok) { message = { text: 'Photo ' + (i + 1) + ' saved.', kind: 'ok' }; load(); } else panelFail(res);
+        });
+      }, function () { message = { text: 'That file is not a picture this page can use.', kind: 'warn' }; draw(); });
+    });
+    row.appendChild(RR.button(p && p.src ? 'Change photo' : 'Choose photo', function () { pick.click(); }));
+    if (p && p.src) {
+      row.appendChild(RR.button('Save caption', function () {
+        RR.api('saveRoundPhoto', { roundId: r.id, slot: i + 1, caption: panel.caps[i] }).then(function (res) {
+          if (res && res.ok) { message = { text: 'Caption saved.', kind: 'ok' }; load(); } else panelFail(res);
+        });
+      }, true));
+      var rm = RR.button('Remove', null, false);
+      RR.arm(rm, '', 'Confirm remove photo', function () {
+        RR.api('saveRoundPhoto', { roundId: r.id, slot: i + 1, remove: true }).then(function (res) {
+          if (res && res.ok) { panel.caps[i] = ''; message = { text: 'Photo ' + (i + 1) + ' removed.', kind: 'ok' }; load(); } else panelFail(res);
+        });
+      });
+      row.appendChild(rm);
+    }
+    row.appendChild(pick);
+    return row;
+  }
+  function storyPanel() {
+    var r = data.rounds.filter(function (x) { return x.id === panel.roundId; })[0];
+    if (!r) { panel = null; return null; }
+    var box = el('div', 'rr-panel rr-stack'), st = storyState(r.story);
+    box.appendChild(RR.heading('Round ' + r.n + ' story · ' + r.track + ' ' + r.layout));
+    box.appendChild(RR.row(RR.kv('Story', st[0]), st[2] ? RR.kv(r.story && r.story.status === 'failed' ? 'Reason' : 'Title', st[2]) : null));
+    var btns = storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story);
+    if (btns.length && (r.status === 'Provisional' || r.status === 'Final')) box.appendChild(RR.row.apply(null, btns));
+    else if (btns.length) box.appendChild(el('p', 'rr-body', 'The story is written when you confirm the results.'));
+    box.appendChild(el('h3', 'rr-card-title', 'Notes for the writer'));
+    box.appendChild(el('p', 'rr-body', 'The writer treats these as true. A rivalry only shows up if the race gives it a way in. The note is never quoted.'));
+    if (!r.drivers || !r.drivers.length) box.appendChild(el('p', 'rr-body', 'Rivalries can be picked once the round’s results have arrived.'));
+    else {
+      var opts = [['', '-']].concat(r.drivers.map(function (d) { return [d.id, d.name]; }));
+      panel.rivals.forEach(function (pair, i) {
+        box.appendChild(RR.row(
+          RR.select('Rivalry ' + (i + 1) + ': driver', opts, function (v) { pair[0] = v; }, pair[0]),
+          RR.select('and driver', opts, function (v) { pair[1] = v; }, pair[1])));
+      });
+    }
+    box.appendChild(RR.textarea({ label: 'Note (up to 500 characters)', value: panel.note, onChange: function (v) { panel.note = v.slice(0, 500); } }));
+    box.appendChild(RR.row(RR.button('Save notes', function () {
+      var riv = panel.rivals.filter(function (p) { return p[0] && p[1] && p[0] !== p[1]; });
+      RR.api('saveRoundNotes', { roundId: r.id, rivalries: riv, note: panel.note }).then(function (res) {
+        if (res && res.ok) { message = { text: 'Notes saved.', kind: 'ok' }; load(); } else panelFail(res);
+      });
+    }, true)));
+    box.appendChild(el('h3', 'rr-card-title', 'Photos'));
+    box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each. A picture of the track is always used as well, unless you add all 3. The writer places them in the story from their captions.'));
+    for (var i = 0; i < 3; i++) box.appendChild(photoSlot(r, i));
+    box.appendChild(RR.row(RR.button('Close', function () { panel = null; draw(); })));
+    return box;
+  }
+
   /* ---------------- Cancel and restore ---------------- */
   function cancelButton(r, cancelled) {
     var b = RR.button(cancelled ? 'Cancel round' : 'Restore round', null, false);
@@ -104,7 +255,7 @@
       if (action === 'denyRound') done('Round ' + r.n + ': the file was denied. It is kept in the Inbox, and nothing was made public.', 'ok');
       else if (res.protestEnds) {
         done('Round ' + r.n + ' is live. Protests close ' + dmy(res.protestEnds) + (res.fromSchedule ? '.' : ' (the round has no usable schedule, so this counts 12 hours from now).') +
-          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : ''), 'ok', res);
+          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : '') + storyDone(res, 'story'), res.story && !res.story.ok ? 'warn' : 'ok', res);
       } else done('Round ' + r.n + ': the results were replaced with the newer file.', 'ok', res);
     });
   }
@@ -188,20 +339,27 @@
       box.appendChild(RR.row(pick, refresh, publish));
       if (message) box.appendChild(RR.notice(message.text, message.kind));
       var rounds = data.rounds.filter(function (r) { return r.season === seasonId; });
+      var thisSeason = data.seasons.filter(function (x) { return x.seasonId === seasonId; })[0] || {}, pv = storyState(thisSeason.preview);
+      box.appendChild(RR.row(RR.kv('Season preview', pv[0] + (pv[2] ? ' · ' + pv[2] : '')),
+        RR.row.apply(null, storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview))));
       box.appendChild(RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Scheduled', sorted: true },
-        { key: 'status', label: 'Status' }, { key: 'act', label: '' }
+        { key: 'status', label: 'Status' }, { key: 'story', label: 'Story' }, { key: 'act', label: '' }
       ], rounds.map(function (r) {
         var st = statusOf(r), act = el('span', 'rr-form-row');
         if (r.waiting || r.held) act.appendChild(RR.button('Review', function () { openReview(r); }));
         else if (r.status === 'Scheduled') act.appendChild(cancelButton(r, true));
         else if (r.status === 'Cancelled') act.appendChild(cancelButton(r, false));
+        var sy = storyState(r.story);
+        if (r.status !== 'Cancelled') act.appendChild(RR.button('Story', function () { openPanel(r); }));
+        if (r.story && r.story.status === 'failed' && (r.status === 'Provisional' || r.status === 'Final')) storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story).forEach(function (b) { act.appendChild(b); });
         return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: RR.cell(dmy(r.date), (r.time ? r.time + ' ' : '') + r.zone),
-          status: RR.cell(el('span', st[1], st[0]), st[2]), act: act } };
+          status: RR.cell(el('span', st[1], st[0]), st[2]), story: RR.cell(el('span', sy[1], sy[0]), sy[2]), act: act } };
       }), 'This season has no rounds.'));
     }
     view.appendChild(box);
     if (review) view.appendChild(reviewPanel());
+    else if (panel && data) { var sp = storyPanel(); if (sp) view.appendChild(sp); }
   }
 
   draw();

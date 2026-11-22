@@ -76,8 +76,30 @@
     var n = posts[at];
     RR.setTitle(n.title);
     var art = el('article', 'rr-article');
-    art.appendChild(add(el('div', 'rr-article-meta'), el('span', 'rr-label rr-red', n.eyebrow), el('span', 'rr-label', n.date)));
-    n.body.forEach(function (p) { art.appendChild(el('p', '', p)); });
+    art.appendChild(add(el('div', 'rr-article-meta'), el('span', 'rr-label rr-red', n.eyebrow), el('span', 'rr-label', n.date),
+      n.byline ? el('span', 'rr-label', 'By ' + n.byline) : null));
+    /* A written story: "## Heading" lines are subheadings, **name** is bold, and each photo is placed inside the paragraph number
+       photo.at (0 is the first paragraph) with the text wrapping around it. A hero photo is at 0. Older posts are plain paragraphs. */
+    var photos = (n.photos || []).slice(), paraNo = 0;
+    function boldInto(node, text) {
+      String(text).split(/\*\*(.+?)\*\*/).forEach(function (part, i) { node.appendChild(i % 2 ? el('strong', '', part) : document.createTextNode(part)); });
+      return node;
+    }
+    function figure(ph) {
+      var fig = el('figure', 'rr-figure rr-figure-' + (ph.side === 'left' ? 'left' : 'right')), img = el('img');
+      img.src = ph.src; img.alt = ph.caption || ''; img.loading = 'lazy';
+      fig.appendChild(img);
+      if (ph.caption) fig.appendChild(el('figcaption', '', ph.caption));
+      return fig;
+    }
+    n.body.forEach(function (text) {
+      if (/^## /.test(text)) { art.appendChild(el('h2', 'rr-article-sub', text.slice(3))); return; }
+      var p = boldInto(el('p'), text);
+      photos = photos.filter(function (ph) { if (Number(ph.at) !== paraNo) return true; art.appendChild(figure(ph)); return false; });
+      art.appendChild(p);
+      paraNo++;
+    });
+    photos.forEach(function (ph) { art.appendChild(figure(ph)); });     // a photo whose paragraph number is past the end goes last
     main.appendChild(art);
     /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
     function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }
