@@ -1,5 +1,5 @@
 /* Race Club RaceRoom site: shared shell and shared building blocks.
-   Draws the top bar (with Home and the admin log in icon),
+   Draws the top bar (with Back, Forward, Home and the admin log in icon),
    page title row, sub-tabs and bottom bar on
    every page from ONE menu list, so they are identical everywhere.
    Also holds the only builders for tables, cards, tiles and options (RR.*),
@@ -17,8 +17,7 @@
   var MENU = [
     { id: 'news', label: 'News', href: 'news.html' },
     { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
-    { id: 'profiles', label: 'Drivers', href: 'drivers.html' },
-    { id: 'about', label: 'About', href: 'about.html' }
+    { id: 'profiles', label: 'Drivers', href: 'drivers.html' }
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
   /* The site version, shown in the footer of every page. Change it here and nowhere else each time the site is updated. */
@@ -166,11 +165,16 @@
   logo.appendChild(logoImg);
   var nav = el('nav', 'rr-nav');
   nav.setAttribute('aria-label', 'Main menu');
+  var backBtn = iconBtn('button', 'back', 'Back');
+  var forwardBtn = iconBtn('button', 'forward', 'Forward');
   var homeBtn = iconBtn('a', 'home', 'Home');
   homeBtn.href = 'index.html';
   homeBtn.classList.add('rr-icon-solid');
   if (mainId === 'home') homeBtn.setAttribute('aria-current', 'page');
-  add(nav, homeBtn);
+  /* Back and Forward are hidden in portrait (phones have their own); see css. */
+  backBtn.classList.add('rr-hide-portrait');
+  forwardBtn.classList.add('rr-hide-portrait');
+  add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
     var a = el('a', 'rr-nav-item', item.label);
     a.href = item.href;
@@ -240,6 +244,67 @@
   add(scroller, main, foot);
   add(app, topbar, head, subtabs, scroller);
 
+  /* ---- Back / Forward: steps through the places visited on this site, in this browser tab ---- */
+  var NAV_KEY = 'rc-nav';   /* renamed when the pages were renamed, so old page names are forgotten */
+  function navLoad() {
+    var raw = '';
+    try { raw = sessionStorage.getItem(NAV_KEY) || ''; } catch (e) {}
+    if (!raw && String(window.name).indexOf(NAV_KEY + ':') === 0) raw = window.name.slice(NAV_KEY.length + 1);
+    try { var v = JSON.parse(raw); if (v && v.list && v.list.length) return v; } catch (e) {}
+    return { list: [], at: -1 };
+  }
+  function navSave(v) {
+    var raw = JSON.stringify(v);
+    try { sessionStorage.setItem(NAV_KEY, raw); } catch (e) {}
+    try { window.name = NAV_KEY + ':' + raw; } catch (e) {}
+  }
+  function navHere() {
+    var file = location.pathname.split('/').pop() || 'index.html';
+    var hash = location.hash;
+    if (tabs.length) hash = '#' + tabs[currentTab()][0];
+    else if (hash === '#' || hash === '#page-1') hash = '';
+    return file + location.search + hash;
+  }
+  function navButtons(v) {
+    backBtn.setAttribute('aria-disabled', v.at > 0 ? 'false' : 'true');
+    forwardBtn.setAttribute('aria-disabled', v.at < v.list.length - 1 ? 'false' : 'true');
+  }
+  var navFirstRecord = true;
+  function navRecord() {
+    var v = navLoad(), here = navHere();
+    var viaOurButtons = v.pending === here;   /* our Back or Forward just brought us here */
+    delete v.pending;
+    /* The browser's own back/forward buttons (only knowable when the page itself loaded that way). */
+    var browserStep = false;
+    if (navFirstRecord) {
+      try { browserStep = performance.getEntriesByType('navigation')[0].type === 'back_forward'; } catch (e) {}
+    }
+    navFirstRecord = false;
+    if (viaOurButtons || v.list[v.at] === here) { /* already at this spot in the list: nothing to add */ }
+    else if (browserStep && v.list[v.at - 1] === here) v.at--;
+    else if (browserStep && v.list[v.at + 1] === here) v.at++;
+    else {
+      /* Any link, tab, pill or the Home button: a new step, even if we have been here before. */
+      v.list = v.list.slice(0, v.at + 1);
+      v.list.push(here);
+      if (v.list.length > 50) v.list.shift();
+      v.at = v.list.length - 1;
+    }
+    navSave(v);
+    navButtons(v);
+  }
+  function navGo(step) {
+    var v = navLoad(), target = v.list[v.at + step];
+    if (!target) return;
+    v.at += step;
+    v.pending = target;
+    navSave(v);
+    navButtons(v);
+    location.href = target;
+  }
+  backBtn.addEventListener('click', function () { navGo(-1); });
+  forwardBtn.addEventListener('click', function () { navGo(1); });
+
   /* ---- Sub-tab switching (no page reload, address keeps the tab) ---- */
   function currentTab() {
     var want = (location.hash || '').replace('#', '');
@@ -285,7 +350,7 @@
     if (id !== shownTab) scroller.scrollTop = 0;
     shownTab = id;
   }
-  window.addEventListener('hashchange', function () { showTab(); });
+  window.addEventListener('hashchange', function () { showTab(); navRecord(); });
 
   /* ================= Shared builders (the only way to make these parts) ================= */
   var RR = {};
@@ -815,4 +880,5 @@
 
   window.RR = RR;
   showTab();
+  navRecord();
 })();
