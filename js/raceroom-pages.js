@@ -324,7 +324,7 @@
         .sort(function (a, b) { return a.name.localeCompare(b.name); });
       var laps = Math.max.apply(null, season.results.filter(function (x) { return x.round === r.n; }).map(function (x) { return x.laps; }));
       var f = { me: '', other: '', self: false, reason: '', lap: '', note: '', password: '' };
-      var box = el('div', 'rr-panel rr-stack'), needs = el('div', 'rr-note');
+      var box = el('div', 'rr-panel rr-stack');
       var submit = RR.button('Submit protest', null, false), warn = el('div');
       var otherBox = el('div'), submitWrap = el('div', 'rr-form-row');
 
@@ -343,7 +343,6 @@
       function refresh() {
         var m = missing();
         submit.disabled = m.length > 0;
-        needs.textContent = m.length ? 'Still needed: ' + m.join(', ') + '.' : '';
       }
       function drawOther() {
         fill(otherBox, RR.select(f.self ? 'Driver you collided with' : 'Driver you are reporting', drivers(f.me), function (v) { f.other = v; refresh(); }, f.other));
@@ -381,7 +380,7 @@
         RR.row(reasonSelect, lapSelect),
         narrative,
         RR.row(passwordBox),
-        needs, warn, submitWrap);
+        warn, submitWrap);
       return box;
     }
 
