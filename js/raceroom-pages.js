@@ -109,7 +109,29 @@
   function resultCell(x) {
     return RR.cell(x.status === 'Finished' ? RR.pos(x.pos) : x.status, 'of ' + x.of);
   }
+  /* Places gained (green +n) or lost (red -n) from the start to the finish. A driver who did not finish shows a dash. */
+  function diffPos(x) {
+    if (x.status !== 'Finished' || !x.start) return '-';
+    var n = x.start - x.pos;
+    if (!n) return '0';
+    return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '+' : '-') + Math.abs(n));
+  }
   function penaltyText(x) { return x.penalty ? '+' + x.penalty + 's' : '-'; }
+  /* Protests filed for one round of one season (newest first as stored). */
+  function protestsFor(season, n) { return (D.protests || []).filter(function (p) { return p.season === season.id && p.round === n; }); }
+  /* The rulings table for a round: who, against whom, the lap, why, the ruling and the penalty. null when nobody protested. */
+  function protestTable(season, n) {
+    var list = protestsFor(season, n);
+    if (!list.length) return null;
+    return RR.table([
+      { key: 'by', label: 'Filed by' }, { key: 'against', label: 'Against' }, { key: 'lap', label: 'Lap', num: true },
+      { key: 'reason', label: 'Reason' }, { key: 'ruling', label: 'Ruling' }, { key: 'pen', label: 'Penalty' }
+    ], list.map(function (p) {
+      var by = driver(p.by), against = driver(p.against);
+      return { cells: { by: RR.cell(RR.nameWithFlag(by.name, by.country), p.self ? 'Self report' : ''), against: RR.nameWithFlag(against.name, against.country),
+        lap: p.lap, reason: p.reason, ruling: p.ruling === 'Pending' ? RR.tag('Pending', true) : RR.tag(p.ruling, p.ruling === 'Dismissed'), pen: p.penalty || '-' } };
+    }), 'No protests.');
+  }
   /* Mark the row of a sidebar list that matches `index` as the chosen one (the list starts with its first row chosen). */
   function pressRow(list, index) {
     Array.prototype.forEach.call(list.children, function (b, i) { b.setAttribute('aria-pressed', i === index ? 'true' : 'false'); });
@@ -165,15 +187,16 @@
             RR.label(final ? 'Protest window closed' : 'Protests close ' + r.protestCloses)),
           RR.table([
             { key: 'pos', label: 'Result', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'cls', label: 'Class' },
-            { key: 'best', label: 'Best lap', num: true }, { key: 'gap', label: 'Gap', num: true },
-            { key: 'inc', label: 'Incidents', num: true }, { key: 'pen', label: 'Penalty', num: true }, { key: 'pts', label: 'Points', num: true }
+            { key: 'best', label: 'Best lap', num: true }, { key: 'gap', label: 'Gap', num: true }, { key: 'diff', label: 'Diff pos', num: true },
+            { key: 'inc', label: 'Inc', num: true }, { key: 'pen', label: 'Pen', num: true }, { key: 'pts', label: 'Points', num: true }
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
               pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), cls: className(x.cls),
-              best: RR.lap(x.best), gap: RR.gap(x.gap), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
+              best: RR.lap(x.best), gap: RR.gap(x.gap), diff: diffPos(x), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
             } };
-          }), 'No results for this class.'));
+          }), 'No results for this class.'),
+          protestTable(season, pickedRound) ? RR.heading('Protests') : null, protestTable(season, pickedRound));
       }
       drawTable();
       fill(RR.view('results'), add(el('div', 'rr-split'), add(el('div'), list), right));
@@ -204,15 +227,16 @@
       function drawTable() {
         var r = roundOf(season, pickedTrack);
         var rows = season.results.filter(function (x) { return x.round === pickedTrack && (cls === 'all' || x.cls === cls); })
-          .sort(function (a, b) { return a.best - b.best; });
-        var fastest = rows.length ? rows[0].best : 0;
+          .filter(function (x) { return x.avg; }).sort(function (a, b) { return a.avg - b.avg; });
+        var fastest = rows.length ? rows[0].avg : 0;
         fill(right, RR.heading(r.track + ' · ' + r.layout), RR.table([
-          { key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }, { key: 'lap', label: 'Lap time', num: true, sorted: true },
+          { key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }, { key: 'time', label: 'Race time', num: true },
+          { key: 'lap', label: 'Avg lap time', num: true, sorted: true },
           { key: 'delta', label: 'Delta leader', num: true }, { key: 'car', label: 'Car / Class' }
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
-            pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), lap: RR.lap(x.best), delta: RR.gap(x.best - fastest),
+            pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), time: RR.raceTime(x.time), lap: RR.lap(x.avg), delta: RR.gap(x.avg - fastest),
             car: RR.cell(x.car, className(x.cls))
           } };
         }), 'No lap times for this class.'));
@@ -265,6 +289,102 @@
     RR.headTool(RR.checkbox('Only upcoming', function (on) { onlyUpcoming = on; drawSchedule(); }), 'schedule');
     drawClassSelect();
     drawAll();
+  };
+
+  /* ---------------- PROTEST (protest.html): file a protest during the 12 hours after a race, and read past rulings ---------------- */
+  PAGES.protest = function () {
+    var season = D.seasons[0], pickedRound = null;
+    var holder = el('div', 'rr-stack');
+    var message = null;
+
+    function drawBody() {
+      var done = doneRounds(season);
+      if (!done.length) { fill(holder, RR.empty('No races have been run yet.')); return; }
+      if (!pickedRound || !roundOf(season, pickedRound) || !roundOf(season, pickedRound).done) pickedRound = done[done.length - 1].n;
+      var items = done.map(function (r) { return [r.n, 'Round ' + r.n, r.date]; }).reverse();
+      var list = RR.sidelist(items, function (n) { pickedRound = n; message = null; drawRound(); });
+      pressRow(list, items.map(function (i) { return i[0]; }).indexOf(pickedRound));
+      var right = el('div', 'rr-stack');
+      function drawRound() {
+        var r = roundOf(season, pickedRound), open = r.status === 'Provisional', rulings = protestTable(season, r.n);
+        fill(right, message, RR.heading(r.track + ' · ' + r.layout),
+          add(el('div', 'rr-form-row'), RR.tag(open ? 'Protests open' : 'Protests closed', !open),
+            RR.label(open ? 'Protests close ' + r.protestCloses : 'The 12 hour protest window is over')),
+          open ? protestForm(r) : null,
+          RR.heading('Protests and rulings'),
+          rulings || RR.empty(open ? 'No protests have been filed for this race yet.' : 'No protests were filed for this race.'));
+      }
+      drawRound();
+      fill(holder, add(el('div', 'rr-split'), add(el('div'), list), right));
+    }
+
+    /* The form. Nothing is saved yet: submitting adds the protest to this page as Pending so the layout can be seen. */
+    function protestForm(r) {
+      var field = D.drivers.filter(function (d) { return season.results.some(function (x) { return x.round === r.n && x.driver === d.id; }); })
+        .sort(function (a, b) { return a.name.localeCompare(b.name); });
+      var laps = Math.max.apply(null, season.results.filter(function (x) { return x.round === r.n; }).map(function (x) { return x.laps; }));
+      var f = { me: '', other: '', self: false, reason: '', lap: '', note: '' };
+      var box = el('div', 'rr-panel rr-stack'), needs = el('div', 'rr-note');
+      var submit = RR.button('Submit protest', null, true);
+      var otherBox = el('div'), submitWrap = el('div', 'rr-form-row');
+
+      function drivers(exclude) {
+        return [['', 'Choose a driver']].concat(field.filter(function (d) { return d.id !== exclude; }).map(function (d) { return [d.id, d.name]; }));
+      }
+      function missing() {
+        var m = [];
+        if (!f.me) m.push('who you are');
+        if (!f.other) m.push(f.self ? 'the driver you collided with' : 'the driver you are reporting');
+        if (!f.reason) m.push('a reason');
+        if (!f.lap) m.push('the lap');
+        if (!f.note.trim()) m.push('what happened');
+        return m;
+      }
+      function refresh() {
+        var m = missing();
+        submit.disabled = m.length > 0;
+        needs.textContent = m.length ? 'Still needed: ' + m.join(', ') + '.' : '';
+      }
+      function drawOther() {
+        fill(otherBox, RR.select(f.self ? 'Driver you collided with' : 'Driver you are reporting', drivers(f.me), function (v) { f.other = v; refresh(); }, f.other));
+      }
+
+      var meSelect = RR.select('Who are you', drivers(''), function (v) {
+        f.me = v;
+        if (f.other === v) f.other = '';
+        drawOther(); refresh();
+      }, f.me);
+      var selfBox = RR.checkbox('Self report', function (on) { f.self = on; drawOther(); refresh(); }, false);
+      var reasonSelect = RR.select('Reason', [['', 'Choose a reason']].concat(D.protestReasons.map(function (x) { return [x, x]; })), function (v) { f.reason = v; refresh(); }, f.reason);
+      var lapOptions = [['', 'Choose a lap']];
+      for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
+      var lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
+      var narrative = RR.textarea({ label: 'What happened (required, keep it short)', value: '', onChange: function (v) { f.note = v; refresh(); } });
+
+      RR.arm(submit, 'Submit your protest', 'Confirm protest', function () {
+        if (missing().length) return;
+        D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, lap: Number(f.lap), reason: f.reason, narrative: f.note.trim(), ruling: 'Pending', penalty: '' });
+        message = RR.notice('Protest submitted. The stewards will rule on it after the 12 hour window closes.', 'ok');
+        pickedRound = r.n;
+        drawBody();
+      });
+      add(submitWrap, submit);
+      drawOther();
+      refresh();
+      add(box, RR.label('File a protest'),
+        RR.row(meSelect, selfBox),
+        otherBox,
+        RR.row(reasonSelect, lapSelect),
+        narrative,
+        needs, submitWrap);
+      return box;
+    }
+
+    RR.headTool(RR.select('Season', D.seasons.map(function (s) { return [s.id, seasonLabel(s)]; }), function (v) {
+      season = seasonById(v); pickedRound = null; drawBody();
+    }, season.id));
+    document.querySelector('main').appendChild(holder);
+    drawBody();
   };
 
   /* ---------------- PROFILES LIST (drivers.html) ---------------- */
@@ -481,11 +601,11 @@
       var show = rows.filter(function (r) { return clsFilter === 'all' || r.x.cls === clsFilter; });
       fill(historyBox, RR.table([
         { key: 'pos', label: 'Result' }, { key: 'track', label: 'Track' }, { key: 'cls', label: 'Class' }, { key: 'best', label: 'Best lap', num: true },
-        { key: 'gap', label: 'Gap', num: true }, { key: 'inc', label: 'Incidents', num: true }, { key: 'pen', label: 'Penalty', num: true },
+        { key: 'gap', label: 'Gap', num: true }, { key: 'diff', label: 'Diff pos', num: true }, { key: 'inc', label: 'Inc', num: true }, { key: 'pen', label: 'Pen', num: true },
         { key: 'pts', label: 'Points', num: true }, { key: 'when', label: 'When', sorted: true }
       ], show.map(function (r) {
         return { cells: { pos: resultCell(r.x), track: RR.cell(r.round.track, r.round.layout + ' · ' + r.x.car), cls: className(r.x.cls),
-          best: RR.lap(r.x.best), gap: RR.gap(r.x.gap), inc: r.x.incidents, pen: penaltyText(r.x), pts: pointsNode(r.x),
+          best: RR.lap(r.x.best), gap: RR.gap(r.x.gap), diff: diffPos(r.x), inc: r.x.incidents, pen: penaltyText(r.x), pts: pointsNode(r.x),
           when: RR.cell(r.round.date, sel === 'all' ? r.season.name : '') } };
       }), 'No races yet.'));
     }

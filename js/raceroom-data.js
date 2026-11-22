@@ -117,6 +117,7 @@
             season: def.id, round: round.n, cls: cls.id, driver: d.id, pos: i + 1, of: order.length, start: ((i + 2) % order.length) + 1,
             points: dnf ? 0 : (POINTS[i] || 0), pole: i === ((round.n + def.shift) % order.length),
             fastest: false, best: lap, gap: i * 3510, gapPct: 0,
+            time: dnf ? 0 : (fastest + 800) * 15 + i * 3510, avg: dnf ? 0 : Math.round(((fastest + 800) * 15 + i * 3510) / 15),
             incidents: (i * 3 + round.n + def.shift) % 7, penalty: (i + round.n) % 9 === 0 ? 5 : 0,
             status: dnf ? 'DNF' : 'Finished', laps: dnf ? 9 : 15, led: i === 0 ? 11 : (i === 1 ? 4 : 0),
             car: classCar(cls.id, d, round.n).name, livery: classCar(cls.id, d, round.n).livery,
@@ -154,6 +155,25 @@
       season.champion = top.id;
     }
     return season;
+  });
+
+  /* Protests (sample). ruling: 'Pending', 'Upheld' or 'Dismissed'; penalty is what was given when upheld.
+     self: true means the driver reported their own collision with the driver named in "against". */
+  var PROTEST_REASONS = ['Bad Rejoin', 'Blocking or Weaving', 'Reckless Driving', 'Intentional Wrecking'];
+  data.protestReasons = PROTEST_REASONS;
+  data.protests = [];
+  data.seasons.forEach(function (season) {
+    season.rounds.forEach(function (round) {
+      if (!round.done) return;
+      var field = data.drivers.filter(function (d) { return d.cls === 'dtm92'; });
+      var a = field[(round.n + 1) % field.length], b = field[(round.n + 2) % field.length];
+      var open = round.status === 'Provisional';
+      var self = round.n % 2 === 0;
+      data.protests.push({ season: season.id, round: round.n, by: a.id, against: b.id, self: self, lap: 3 + round.n,
+        reason: PROTEST_REASONS[round.n % 4], narrative: self ? 'I went in too deep into the braking zone and hit the car ahead.' : 'Moved across on the straight while I was alongside and we touched.',
+        ruling: open ? 'Pending' : (round.n % 3 === 0 ? 'Dismissed' : 'Upheld'),
+        penalty: open || round.n % 3 === 0 ? '' : (round.n % 2 === 0 ? '+5s' : 'Drive-through') });
+    });
   });
 
   /* The current season is the first one. The older pages read these three. */

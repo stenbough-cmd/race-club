@@ -181,10 +181,12 @@
     nav.appendChild(a);
   });
   /* Icon area at the far right (not part of the navbar): Help, Protest, then admin Log in / Log out.
-     Help and Protest do nothing yet. Each will be wired up when its feature is designed. */
+     Protest opens the protest page. Help does nothing yet. */
   var topEnd = el('div', 'rr-topbar-end');
   var helpBtn = iconBtn('button', 'help', 'Help');
-  var protestBtn = iconBtn('button', 'protest', 'Protest');
+  var protestBtn = iconBtn('a', 'protest', 'Protest');
+  protestBtn.href = 'protest.html';
+  if (mainId === 'protest') protestBtn.setAttribute('aria-current', 'page');
   /* Admin (cogwheel icon): only shown while an admin is logged in. It opens the admin hub. */
   var adminLink = iconBtn('a', 'admin', 'Admin');
   adminLink.href = 'admin.html';
@@ -349,50 +351,6 @@
   }
   window.addEventListener('hashchange', function () { showTab(); navRecord(); });
 
-  /* ---- Button tick: a very short click sound on every button, and on links that look like buttons ---- */
-  var tickAudio = null;
-  function tick() {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      tickAudio = tickAudio || new AC();
-      if (tickAudio.state === 'suspended') tickAudio.resume();
-      /* A soft tick: a few thousandths of a second of filtered noise that dies away at once, like a clock. */
-      var t = tickAudio.currentTime, rate = tickAudio.sampleRate || 44100, len = Math.floor(rate * 0.018);
-      var buf = tickAudio.createBuffer(1, len, rate), data = buf.getChannelData(0);
-      for (var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 6);
-      var src = tickAudio.createBufferSource(), filter = tickAudio.createBiquadFilter(), gain = tickAudio.createGain();
-      src.buffer = buf;
-      filter.type = 'bandpass';
-      filter.frequency.value = 1500;
-      filter.Q.value = 0.8;
-      gain.gain.value = 0.22;
-      src.connect(filter);
-      filter.connect(gain);
-      gain.connect(tickAudio.destination);
-      src.start(t);
-    } catch (e) {}
-  }
-  /* Every click on something clickable ticks: buttons, links, the menu, tabs, tiles, cards, table rows, dropdown options, check boxes.
-     A link that opens another page waits a moment (70 thousandths of a second) so the tick is heard before the page changes. */
-  var CLICKABLE = 'button, a[href], [role="button"], [role="option"], [role="tab"], label, summary, select, input[type="checkbox"], input[type="radio"], tr.rr-row-link, .rr-rank-tile, .rr-card, .rr-promo, .rr-select';
-  function go(url) { setTimeout(function () { location.href = url; }, 70); }
-  document.addEventListener('click', function (e) {
-    var n = e.target && e.target.closest ? e.target.closest(CLICKABLE) : null;
-    if (!n || n.disabled || n.getAttribute('aria-disabled') === 'true') return;
-    tick();
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var link = n.tagName === 'A' ? n : null, row = n.tagName === 'TR' && !e.target.closest('a') ? n.querySelector('a[href]') : null;
-    var a = link || row;
-    if (!a) return;
-    var raw = a.getAttribute('href') || '';
-    if (!raw || raw.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(raw) || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
-    if (a.origin !== location.origin) return;
-    e.preventDefault();
-    e.stopPropagation();
-    go(a.href);
-  }, true);
-
   /* ================= Shared builders (the only way to make these parts) ================= */
   var RR = {};
   RR.el = el;
@@ -483,6 +441,13 @@
     if (!ms) return '-';
     var m = Math.floor(ms / 60000), s = (ms % 60000) / 1000;
     return m + 'm ' + (s < 10 ? '0' : '') + s.toFixed(3) + 's';
+  };
+  /* A whole race time: 23m 41.250s, or 1h 05m 02.500s for a long race */
+  RR.raceTime = function (ms) {
+    if (!ms) return '-';
+    var h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), sec = (ms % 60000) / 1000;
+    var secText = (sec < 10 ? '0' : '') + sec.toFixed(3) + 's';
+    return h ? h + 'h ' + (m < 10 ? '0' : '') + m + 'm ' + secText : m + 'm ' + secText;
   };
   RR.gap = function (ms) { return ms ? '+' + (ms / 1000).toFixed(3) : '-'; };
   RR.num = function (n) { return Number(n).toLocaleString('en-US'); };
