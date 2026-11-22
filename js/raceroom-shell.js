@@ -84,7 +84,8 @@
     create: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>',
     startover: '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/>',
     trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5"/><path d="M14 11v5"/>',
-    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/>'
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/>',
+    trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
   };
   function iconSvg(name) {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
@@ -356,17 +357,20 @@
       if (!AC) return;
       tickAudio = tickAudio || new AC();
       if (tickAudio.state === 'suspended') tickAudio.resume();
-      var t = tickAudio.currentTime, osc = tickAudio.createOscillator(), gain = tickAudio.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(1800, t);
-      osc.frequency.exponentialRampToValueAtTime(900, t + 0.03);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.05, t + 0.002);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-      osc.connect(gain);
+      /* A soft tick: a few thousandths of a second of filtered noise that dies away at once, like a clock. */
+      var t = tickAudio.currentTime, rate = tickAudio.sampleRate || 44100, len = Math.floor(rate * 0.018);
+      var buf = tickAudio.createBuffer(1, len, rate), data = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 6);
+      var src = tickAudio.createBufferSource(), filter = tickAudio.createBiquadFilter(), gain = tickAudio.createGain();
+      src.buffer = buf;
+      filter.type = 'bandpass';
+      filter.frequency.value = 1500;
+      filter.Q.value = 0.8;
+      gain.gain.value = 0.22;
+      src.connect(filter);
+      filter.connect(gain);
       gain.connect(tickAudio.destination);
-      osc.start(t);
-      osc.stop(t + 0.04);
+      src.start(t);
     } catch (e) {}
   }
   document.addEventListener('click', function (e) {
@@ -541,7 +545,15 @@
     if (o.href) c.href = o.href;
     c.appendChild(el('h3', 'rr-card-title', o.title));
     var s = o.status || {};
-    if (s.earned) c.appendChild(RR.label('Earned ' + s.earned));
+    if (s.earned) {
+      c.classList.add('rr-card-earned');
+      var trophy = el('span', 'rr-card-trophy');
+      trophy.innerHTML = iconSvg('trophy');
+      trophy.setAttribute('role', 'img');
+      trophy.setAttribute('aria-label', 'Earned');
+      c.appendChild(trophy);
+      c.appendChild(RR.label('Earned ' + s.earned));
+    }
     else if (s.progress) {
       c.appendChild(RR.label(RR.num(s.progress[0]) + ' / ' + RR.num(s.progress[1])));
     } else if (s.notYet) c.appendChild(RR.tag('Not yet', true));
