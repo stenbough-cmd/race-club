@@ -365,7 +365,7 @@
       var lapOptions = [['', 'Choose a lap']];
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
       lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
-      passwordBox = RR.input({ label: 'Race password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
+      passwordBox = RR.input({ label: 'Round ' + r.n + ' password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
       var narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
       RR.arm(submit, '', 'Confirm protest', function () {
