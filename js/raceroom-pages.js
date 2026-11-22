@@ -323,9 +323,9 @@
       var field = D.drivers.filter(function (d) { return season.results.some(function (x) { return x.round === r.n && x.driver === d.id; }); })
         .sort(function (a, b) { return a.name.localeCompare(b.name); });
       var laps = Math.max.apply(null, season.results.filter(function (x) { return x.round === r.n; }).map(function (x) { return x.laps; }));
-      var f = { me: '', other: '', self: false, reason: '', lap: '', note: '' };
+      var f = { me: '', other: '', self: false, reason: '', lap: '', note: '', password: '' };
       var box = el('div', 'rr-panel rr-stack'), needs = el('div', 'rr-note');
-      var submit = RR.button('Submit protest', null, true);
+      var submit = RR.button('Submit protest', null, false), warn = el('div');
       var otherBox = el('div'), submitWrap = el('div', 'rr-form-row');
 
       function drivers(exclude) {
@@ -337,6 +337,7 @@
         if (!f.other) m.push(f.self ? 'the driver you collided with' : 'the driver you are reporting');
         if (!f.reason) m.push('a reason');
         if (!f.lap) m.push('the lap');
+        if (!f.password) m.push('the race password');
         return m;
       }
       function refresh() {
@@ -358,12 +359,16 @@
       var lapOptions = [['', 'Choose a lap']];
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
       var lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
+      var passwordBox = RR.input({ label: 'Race password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
       var narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
       RR.arm(submit, 'Submit your protest', 'Confirm protest', function () {
         if (missing().length) return;
+        /* SAMPLE check. The real one is done by the service, so the password is never in the page. */
+        if (f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the race password. Only league members have it.', 'warn')); return; }
+        fill(warn);
         D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, lap: Number(f.lap), reason: f.reason, narrative: f.note.trim(), ruling: 'Pending', penalty: '' });
-        message = RR.notice('Protest submitted. The stewards will rule on it after the 12 hour window closes.', 'ok');
+        message = RR.notice('Your protest was submitted. The stewards will rule on it after the 12 hour window closes.', 'ok');
         pickedRound = r.n;
         drawBody();
       });
@@ -375,7 +380,8 @@
         otherBox,
         RR.row(reasonSelect, lapSelect),
         narrative,
-        needs, submitWrap);
+        RR.row(passwordBox),
+        needs, warn, submitWrap);
       return box;
     }
 

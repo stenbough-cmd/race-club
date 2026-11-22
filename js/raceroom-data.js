@@ -161,6 +161,8 @@
      self: true means the driver reported their own collision with the driver named in "against". */
   var PROTEST_REASONS = ['Bad Rejoin', 'Blocking or Weaving', 'Reckless Driving', 'Intentional Wrecking'];
   data.protestReasons = PROTEST_REASONS;
+  /* SAMPLE ONLY: a stand-in so the protest page can be tried. The real race password is never in the page: the service checks it. */
+  data.sampleRacePassword = 'sample';
   data.protests = [];
   data.seasons.forEach(function (season) {
     season.rounds.forEach(function (round) {

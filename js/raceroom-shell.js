@@ -814,11 +814,11 @@
     if (onClick) b.addEventListener('click', onClick);
     return b;
   };
-  /* Make any button two-click. `hoverText` is its tooltip on hover (what it does). The first click turns it red with
+  /* Make any button two-click. `hoverText` is no longer shown. The first click turns it red with
      `confirmText` (for example "Confirm start over") as its tooltip; the second click within 3 seconds runs `action`.
      After 3 seconds it goes back to normal. */
   RR.arm = function (node, hoverText, confirmText, action) {
-    node.setAttribute('data-rr-tip', hoverText);
+    /* No tooltip on hover: the confirm tooltip shows only after the first click. (hoverText is kept so old calls still work.) */
     node.addEventListener('click', function () { armClick(node, confirmText, action); });
     return node;
   };
