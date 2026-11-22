@@ -60,8 +60,14 @@
     if (e === 'has-results') return 'This round has results, so it cannot be cancelled.';
     return 'Could not do that. Try again.';
   }
+  /* What happened to the public website data after a change: Apps Script sends it to GitHub right after the change. */
+  function publishNote(res) {
+    if (!res || res.published === undefined) return '';
+    if (res.published) return ' The website data was updated; GitHub Pages shows it in 1 to 2 minutes.';
+    return res.publishError ? ' The website data was NOT updated: ' + res.publishError : ' The website data was not updated because GitHub is not set up yet.';
+  }
   function done(text, kind, res) {
-    message = { text: text, kind: kind };
+    message = { text: text + publishNote(res), kind: res && res.published === false && res.publishError ? 'warn' : kind };
     review = null;
     load();
   }
@@ -71,7 +77,7 @@
     var b = RR.button(cancelled ? 'Cancel round' : 'Restore round', null, false);
     RR.arm(b, '', cancelled ? 'Confirm cancel round' : 'Confirm restore round', function () {
       RR.api('cancelRound', { roundId: r.id, cancelled: cancelled }).then(function (res) {
-        if (res && res.ok) done(cancelled ? 'Round ' + r.n + ' is cancelled.' : 'Round ' + r.n + ' is back on the schedule.', 'ok');
+        if (res && res.ok) done(cancelled ? 'Round ' + r.n + ' is cancelled.' : 'Round ' + r.n + ' is back on the schedule.', 'ok', res);
         else { message = { text: problem(res), kind: 'warn' }; draw(); }
       });
     });
@@ -98,8 +104,8 @@
       if (action === 'denyRound') done('Round ' + r.n + ': the file was denied. It is kept in the Inbox, and nothing was made public.', 'ok');
       else if (res.protestEnds) {
         done('Round ' + r.n + ' is live. Protests close ' + dmy(res.protestEnds) + (res.fromSchedule ? '.' : ' (the round has no usable schedule, so this counts 12 hours from now).') +
-          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : ''), 'ok');
-      } else done('Round ' + r.n + ': the results were replaced with the newer file.', 'ok');
+          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : ''), 'ok', res);
+      } else done('Round ' + r.n + ': the results were replaced with the newer file.', 'ok', res);
     });
   }
 
@@ -158,6 +164,13 @@
     view.textContent = '';
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
+    var publish = RR.button('Publish site data', function () {
+      RR.api('publishSite').then(function (r) {
+        message = r && r.ok ? { text: r.unchanged ? 'The website data is already up to date.' : 'The website data was updated. GitHub Pages shows it in 1 to 2 minutes.', kind: 'ok' }
+          : { text: 'Not published. ' + ((r && r.error) || 'Try again.'), kind: 'warn' };
+        draw();
+      });
+    });
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Rounds'),
       el('p', 'rr-body', 'Results the server sends wait here. Look at a round, then confirm or deny it. Nothing is public until you confirm.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
@@ -166,7 +179,7 @@
     else {
       var pick = RR.select('Season', data.seasons.map(function (s) { return [s.seasonId, s.name + (s.status ? ' (' + s.status + ')' : '')]; }),
         function (v) { seasonId = v; review = null; message = null; draw(); }, seasonId);
-      box.appendChild(RR.row(pick, refresh));
+      box.appendChild(RR.row(pick, refresh, publish));
       if (message) box.appendChild(RR.notice(message.text, message.kind));
       var rounds = data.rounds.filter(function (r) { return r.season === seasonId; });
       box.appendChild(RR.table([

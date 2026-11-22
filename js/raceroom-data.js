@@ -1,7 +1,7 @@
-/* Race Club RaceRoom site: SAMPLE DATA ONLY.
-   Everything in this file is made up so the skeleton has something to show.
-   When the admin backend exists, this file is replaced by real league data
-   in the same shape. Nothing else on the site needs to change. */
+/* Race Club RaceRoom site: the data every public page reads (window.RR_DATA).
+   SAMPLE DATA: everything built below is made up so the pages have something to show until the league has real results.
+   REAL DATA: raceroom-data/league.js (written by the league's Apps Script after every confirmed round) sets window.RR_LIVE in the same
+   shape. When it holds a season, applyLive (further down) replaces the sample with it. */
 (function () {
   'use strict';
 
@@ -214,6 +214,32 @@
     });
   });
 
+  /* REAL DATA. When raceroom-data/league.js exists (the league's Apps Script writes it after every confirmed round) the page uses it
+     instead of the sample above. It is already in this same shape. Two things are decided here, from the clock, because nothing runs
+     on a timer: a round counts toward the standings once its protest window has ended and no protest is open (until then the page
+     uses the standings without it), and "Protests close" disappears once the window has ended. */
+  function applyLive(live) {
+    var now = Date.now();
+    data.sample = false;
+    data.classes = live.classes || [];
+    data.drivers = live.drivers || [];
+    data.news = live.news || [];
+    data.protests = live.protests || [];
+    data.sampleRacePassword = '';
+    data.seasons = live.seasons.map(function (s) {
+      var settled = !(s.windowEnd > now) && !(s.openProtests > 0);
+      s.totals = settled ? s.totalsWith : s.totals;
+      s.rounds.forEach(function (r) {
+        var inWindow = r.done && r.windowEnd > now;
+        r.counts = r.done && !inWindow;
+        if (r.done) r.status = inWindow ? 'Waiting' : 'Settled';
+        if (r.done && !inWindow) r.protestCloses = '';
+      });
+      return s;
+    });
+  }
+  if (window.RR_LIVE && window.RR_LIVE.seasons && window.RR_LIVE.seasons.length) applyLive(window.RR_LIVE);
+
   /* The current season is the first one. The older pages read these three. */
   data.season = data.seasons[0];
   data.rounds = data.season.rounds;
@@ -228,7 +254,7 @@
     var mine = data.results.filter(function (r) { return r.driver === d.id; });
     var s = sum(mine);
     d.races = s.races; d.wins = s.wins; d.podiums = s.podiums;
-    d.points = data.season.totals[d.id].total;
+    d.points = data.season.totals[d.id] ? data.season.totals[d.id].total : 0;
   });
 
   window.RR_DATA = data;

@@ -88,6 +88,9 @@
   function seasonById(id) { return byId(D.seasons, id) || D.seasons[0]; }
   function roundOf(season, n) { return season.rounds.filter(function (r) { return r.n === n; })[0]; }
   function doneRounds(season) { return season.rounds.filter(function (r) { return r.done; }); }
+  /* A round counts toward the standings and the lap time boards once its protest window is over (the sample data has no such wait). */
+  function countedRounds(season) { return season.rounds.filter(function (r) { return r.done && r.counts !== false; }); }
+  function roundCounts(season, n) { var r = season.rounds.filter(function (q) { return q.n === n; })[0]; return !!r && r.counts !== false; }
   function classesIn(season) { return D.classes.filter(function (c) { return season.results.some(function (r) { return r.cls === c.id; }); }); }
   function seasonLabel(s) { return s.name + (s.status === 'Active' ? ' (current)' : ''); }
   function resultOf(season, n, driverId) {
@@ -160,9 +163,9 @@
         ]),
         RR.table(cols, rows.map(function (r, i) {
           var cells = { pos: RR.pos(i + 1), driver: RR.cell(RR.nameWithFlag(r.d.name, r.d.country)),
-            wins: season.results.filter(function (x) { return x.driver === r.d.id && x.pos === 1 && x.status === 'Finished'; }).length,
+            wins: season.results.filter(function (x) { return x.driver === r.d.id && x.pos === 1 && x.status === 'Finished' && roundCounts(season, x.round); }).length,
             total: r.t.total };
-          season.rounds.forEach(function (rd, k) { cells['r' + rd.n] = rd.done ? pointsNode(resultOf(season, rd.n, r.d.id), r.t.drop.indexOf(k) >= 0) : '-'; });
+          season.rounds.forEach(function (rd, k) { cells['r' + rd.n] = rd.done && rd.counts !== false ? pointsNode(resultOf(season, rd.n, r.d.id), r.t.drop.indexOf(k) >= 0) : '-'; });
           return { href: profileLink(r.d), linkCol: 1, cells: cells };
         }), 'No drivers in this class yet.'),
         season.dropWeeks ? RR.empty('The ' + season.dropWeeks + ' lowest round' + (season.dropWeeks > 1 ? 's are' : ' is') + ' struck through and not counted. A small red number is a bonus point.') : null
@@ -202,15 +205,15 @@
     }
 
     function drawLapTimes() {
-      var done = doneRounds(season);
+      var done = countedRounds(season);
       if (!done.length) { fill(RR.view('laptimes'), RR.empty('No lap times have been set yet.')); return; }
-      if (!pickedTrack || !roundOf(season, pickedTrack) || !roundOf(season, pickedTrack).done) pickedTrack = done[0].n;
+      if (!pickedTrack || !done.some(function (q) { return q.n === pickedTrack; })) pickedTrack = done[0].n;
       var items = done.map(function (r) { return [r.n, r.track]; });
       var list = RR.sidelist(items, function (n) { pickedTrack = n; drawTable(); });
       pressRow(list, items.map(function (i) { return i[0]; }).indexOf(pickedTrack));
       var right = el('div', 'rr-stack');
       /* Season tiles: fastest lap, the driver with the most fastest laps, and who closed the gap the most from the first race to the latest. */
-      var all = season.results.filter(function (x) { return cls === 'all' || x.cls === cls; });
+      var all = season.results.filter(function (x) { return (cls === 'all' || x.cls === cls) && roundCounts(season, x.round); });
       var quick = all.slice().sort(function (a, b) { return a.best - b.best; })[0];
       var counts = {};
       all.forEach(function (x) { if (x.fastest) counts[x.driver] = (counts[x.driver] || 0) + 1; });
@@ -271,11 +274,11 @@
       fill(RR.view('schedule'), RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date', sorted: true },
         { key: 'time', label: 'Time' }, { key: 'status', label: 'Status' }
-      ], season.rounds.filter(function (r) { return !onlyUpcoming || !r.done; }).map(function (r) {
+      ], season.rounds.filter(function (r) { return !onlyUpcoming || (!r.done && !r.cancelled); }).map(function (r) {
         var at = localStart(r);
         return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
           time: at ? RR.cell(at.time, at.zone) : '-',
-          status: r.done ? RR.tag('Finished') : RR.tag('Upcoming', true) } };
+          status: r.cancelled ? RR.tag('Cancelled', true) : (r.done ? RR.tag('Finished') : RR.tag('Upcoming', true)) } };
       }), onlyUpcoming ? 'No upcoming rounds.' : 'The schedule has not been posted yet.'));
     }
 
