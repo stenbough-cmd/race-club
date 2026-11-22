@@ -821,3 +821,6 @@ button, select { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* A button that stands for the current choice (for example the points table in use) */
+.rr-btn[aria-pressed="true"] { background: var(--rr-invert-bg); color: var(--rr-invert-text); border-color: var(--rr-invert-bg); }

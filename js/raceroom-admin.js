@@ -576,15 +576,56 @@
   }
 
   /* ---------------- Step 5: Points ---------------- */
+  /* Common points tables, one button each. A press fills the table, the box shows it and can still be edited. */
+  function countdown(top, step1, n) { var a = []; for (var i = 0; i < n; i++) a.push(i === 0 ? top : Math.max(1, step1 - i + 1)); return a; }
+  var POINT_PRESETS = [
+    ['F1 now', [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]],
+    ['F1 2003-09', [10, 8, 6, 5, 4, 3, 2, 1]],
+    ['F1 1991-02', [10, 6, 4, 3, 2, 1]],
+    ['F1 sprint', [8, 7, 6, 5, 4, 3, 2, 1]],
+    ['MotoGP', [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]],
+    ['IndyCar', [50, 40, 35, 32, 30, 28, 26, 24, 22, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5]],
+    ['IMSA', [35, 32, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]],
+    ['NASCAR', [40].concat(countdown(0, 35, 36).slice(1))],
+    ['Top 10', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]],
+    ['Top 20', [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]]
+  ];
+  function presetText(list) { return list.join(', '); }
+  function normPoints(v) { return String(v || '').replace(/\s+/g, '').replace(/,+$/, ''); }
+  function presetRow(applyTo, marks) {
+    var row = RR.row();
+    POINT_PRESETS.forEach(function (p) {
+      var b = RR.button(p[0], function () { applyTo(presetText(p[1])); drawPoints(); });
+      var tip = p[1].slice(0, 10).join(', ') + (p[1].length > 10 ? ' ...' : '');
+      b.setAttribute('data-rr-tip', tip);
+      marks.push(function () { b.setAttribute('aria-pressed', normPoints(applyTo.current()) === normPoints(presetText(p[1])) ? 'true' : 'false'); });
+      row.appendChild(b);
+    });
+    return row;
+  }
   function drawPoints() {
     var tables = panel('Points per class');
     var ids = classIds();
+    var marks = [];
+    function refreshMarks() { marks.forEach(function (m) { m(); }); }
     if (!ids.length) tables.appendChild(note('Choose cars in step 2 first. Each class gets its own points table.'));
     ids.forEach(function (id) {
-      if (!S.points.tables[id]) S.points.tables[id] = '25, 18, 15, 12, 10, 8, 6, 4, 2, 1';
-      tables.appendChild(RR.row(text(classById(id).n, S.points.tables, id, { wide: true })));
+      if (!S.points.tables[id]) S.points.tables[id] = presetText(POINT_PRESETS[0][1]);
     });
-    tables.appendChild(note('Points for 1st place, 2nd place and so on, with commas between them. Race 2 and Race 3 score the same table every time they are run.'));
+    if (ids.length > 1) {
+      var all = function (v) { ids.forEach(function (id) { S.points.tables[id] = v; }); };
+      all.current = function () { var f = S.points.tables[ids[0]]; return ids.every(function (id) { return normPoints(S.points.tables[id]) === normPoints(f); }) ? f : ''; };
+      tables.appendChild(RR.heading('All classes'));
+      tables.appendChild(presetRow(all, marks));
+    }
+    ids.forEach(function (id) {
+      var one = function (v) { S.points.tables[id] = v; };
+      one.current = function () { return S.points.tables[id]; };
+      tables.appendChild(RR.row(text(classById(id).n, S.points.tables, id, { wide: true, after: refreshMarks })));
+      tables.appendChild(presetRow(one, marks));
+    });
+    refreshMarks();
+    tables.appendChild(note('Press a button to fill a points table, or type your own: points for 1st place, 2nd place and so on, with commas between them. Race 2 and Race 3 score the same table every time they are run.'));
     fill(RR.view('points'), stack(tables,
       panel('Bonuses and drop weeks',
         RR.row(text('Pole', S.points, 'pole', { type: 'number', min: 0 }), text('Fastest lap', S.points, 'fastestLap', { type: 'number', min: 0 }),
