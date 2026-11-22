@@ -373,10 +373,24 @@
       src.start(t);
     } catch (e) {}
   }
+  /* Every click on something clickable ticks: buttons, links, the menu, tabs, tiles, cards, table rows, dropdown options, check boxes.
+     A link that opens another page waits a moment (70 thousandths of a second) so the tick is heard before the page changes. */
+  var CLICKABLE = 'button, a[href], [role="button"], [role="option"], [role="tab"], label, summary, select, input[type="checkbox"], input[type="radio"], tr.rr-row-link, .rr-rank-tile, .rr-card, .rr-promo, .rr-select';
+  function go(url) { setTimeout(function () { location.href = url; }, 70); }
   document.addEventListener('click', function (e) {
-    var n = e.target && e.target.closest ? e.target.closest('button, a.rr-btn, a.rr-icon-btn, a.rr-nav-item, a.rr-subtab, a.rr-step, a.rr-promo, a.rr-logo') : null;
+    var n = e.target && e.target.closest ? e.target.closest(CLICKABLE) : null;
     if (!n || n.disabled || n.getAttribute('aria-disabled') === 'true') return;
     tick();
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var link = n.tagName === 'A' ? n : null, row = n.tagName === 'TR' && !e.target.closest('a') ? n.querySelector('a[href]') : null;
+    var a = link || row;
+    if (!a) return;
+    var raw = a.getAttribute('href') || '';
+    if (!raw || raw.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(raw) || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+    if (a.origin !== location.origin) return;
+    e.preventDefault();
+    e.stopPropagation();
+    go(a.href);
   }, true);
 
   /* ================= Shared builders (the only way to make these parts) ================= */
