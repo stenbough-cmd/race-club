@@ -752,7 +752,24 @@
     drawAll();
   };
 
+  /* SAMPLE ONLY: asks RaceRoom's user-info page for each sample driver's banner (and avatar) so the pages can be seen with real pictures.
+     The real site gets these from the Sheet (the service saves them). If the browser is not allowed to read RaceRoom's page, or the
+     driver has no banner (null), nothing is shown and the page still draws normally. Waits at most 3 seconds. */
+  function loadSamplePictures() {
+    function clean(v) { v = String(v || ''); if (v.indexOf('//') === 0) v = 'https:' + v; return /^https:\/\/[^\s"'<>]+$/.test(v) ? v : ''; }
+    var jobs = D.drivers.filter(function (d) { return d.userId !== undefined; }).map(function (d) {
+      return fetch('https://game.raceroom.com/utils/user-info/' + d.userId)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (info) { if (info) { d.banner = clean(info.banner); d.avatar = clean(info.avatar); } })
+        .catch(function () {});
+    });
+    return Promise.race([Promise.all(jobs), new Promise(function (done) { setTimeout(done, 3000); })]);
+  }
+
   var run = PAGES[document.body.getAttribute('data-rr-page')];
-  if (run) run();
-  RR.refresh();
+  if (run) {
+    if (D.sample && window.fetch && /^(leaderboards|profile)$/.test(document.body.getAttribute('data-rr-page'))) {
+      loadSamplePictures().then(function () { run(); RR.refresh(); });
+    } else { run(); RR.refresh(); }
+  }
 })();
