@@ -128,7 +128,7 @@
       cols.push({ key: 'wins', label: 'Wins', num: true }, { key: 'total', label: 'Total', num: true, sorted: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
         RR.strip(rows.slice(0, 7).map(function (r) {
-          return { title: r.d.name, country: r.d.country, livery: r.d.banner || r.d.livery, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
+          return { title: r.d.name, country: r.d.country, livery: r.d.banner, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
         RR.statRow([
           RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
@@ -464,7 +464,7 @@
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
-        RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.banner || d.livery }),
+        d.banner ? RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.banner }) : null,
         add(el('div', 'rr-grid-2'), card, hero),
         add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
         RR.statRow([
