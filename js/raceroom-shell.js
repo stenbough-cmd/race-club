@@ -625,12 +625,22 @@
     return w;
   };
 
-  /* Fill a box with a RaceRoom picture behind its text (a livery by its ID), under a dark fade so the text stays readable.
+  /* Fill a box with a RaceRoom picture behind its text (a livery by its ID, or a picture address starting with https://), under a dark fade so the text stays readable.
      Needs raceroom-images.js on the page. The box keeps working with no picture. */
   RR.photo = function (node, liveryId, size) {
-    if (!liveryId || !RR.images) return node;
+    if (!liveryId) return node;
+    var pic;
+    if (/^https:\/\//.test(String(liveryId))) {
+      /* A picture address (a driver's RaceRoom banner). If it fails to load, the box goes back to plain. */
+      pic = el('img', 'rr-photo-img');
+      pic.alt = '';
+      pic.loading = 'lazy';
+      pic.onerror = function () { pic.remove(); node.classList.remove('rr-has-photo'); };
+      pic.src = liveryId;
+    } else if (RR.images) {
+      pic = RR.images.img('livery', liveryId, { size: size || 'small', className: 'rr-photo-img' });
+    } else return node;
     node.classList.add('rr-has-photo');
-    var pic = RR.images.img('livery', liveryId, { size: size || 'small', className: 'rr-photo-img' });
     node.insertBefore(pic, node.firstChild);
     return node;
   };

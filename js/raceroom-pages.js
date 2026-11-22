@@ -128,7 +128,7 @@
       cols.push({ key: 'wins', label: 'Wins', num: true }, { key: 'total', label: 'Total', num: true, sorted: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
         RR.strip(rows.slice(0, 7).map(function (r) {
-          return { title: r.d.name, country: r.d.country, livery: r.d.livery, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
+          return { title: r.d.name, country: r.d.country, livery: r.d.banner || r.d.livery, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
         RR.statRow([
           RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
@@ -208,12 +208,12 @@
         var fastest = rows.length ? rows[0].best : 0;
         fill(right, RR.heading(r.track + ' · ' + r.layout), RR.table([
           { key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }, { key: 'lap', label: 'Lap time', num: true, sorted: true },
-          { key: 'delta', label: 'Delta leader', num: true }, { key: 'car', label: 'Car / Class' }, { key: 'date', label: 'Date' }
+          { key: 'delta', label: 'Delta leader', num: true }, { key: 'car', label: 'Car / Class' }
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
             pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), lap: RR.lap(x.best), delta: RR.gap(x.best - fastest),
-            car: RR.cell(x.car, className(x.cls)), date: r.date
+            car: RR.cell(x.car, className(x.cls))
           } };
         }), 'No lap times for this class.'));
       }
@@ -464,7 +464,7 @@
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
-        RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.livery }),
+        RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.banner || d.livery }),
         add(el('div', 'rr-grid-2'), card, hero),
         add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
         RR.statRow([
