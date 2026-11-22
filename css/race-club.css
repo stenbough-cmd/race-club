@@ -752,6 +752,7 @@ button, select { font-family: inherit; }
 }
 .rr-btn-save { background: var(--rr-red); border-color: var(--rr-red); color: var(--rr-on-red); }
 .rr-btn[disabled] { opacity: 0.4; cursor: default; pointer-events: none; }
+.rr-icon-solid svg { fill: currentColor; }
 .rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
 
 /* Two-click confirm: red, white icon and text, tooltip stays up until the button resets (3 seconds). */
@@ -762,6 +763,18 @@ button, select { font-family: inherit; }
   color: var(--rr-on-red);
 }
 .rr-confirming[data-rr-tip]::before, .rr-confirming[data-rr-tip]::after { opacity: 1; }
+/* Buttons inside a table: the tooltip opens ABOVE the button and lines up with its right edge, so it is never cut off
+   by the table's edge and never makes the table scroll. */
+.rr-table [data-rr-tip]::before {
+  top: auto;
+  bottom: calc(100% + 2px);
+  left: auto;
+  right: 12px;
+  margin-left: 0;
+  border-bottom: 0;
+  border-top: 6px solid var(--rr-invert-bg);
+}
+.rr-table [data-rr-tip]::after { top: auto; bottom: calc(100% + 8px); left: auto; right: 0; transform: none; }
 
 /* ---------- Upload Results: drop area and file list ---------- */
 .rr-drop { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; padding: 24px; border: 1px dashed var(--rr-line); background: var(--rr-panel); }

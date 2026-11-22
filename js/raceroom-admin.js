@@ -747,13 +747,13 @@
     });
   }
   function sheetPanel() {
-    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), 'Delete this season from the Sheet?', function () { deleteFromSheet(S.seasonId, S.name); });
+    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), 'Delete this season from the Sheet', 'Confirm delete season', function () { deleteFromSheet(S.seasonId, S.name); });
     if (!S.seasonId) del.disabled = true;
     var p = panel('Google Sheet', RR.row(
-      RR.arm(RR.button('Save a draft', null, false, 'save'), 'Save the draft to the Sheet?', function () { saveToSheet(false); }),
-      RR.button('Show saved drafts', listFromSheet),
-      RR.arm(RR.button('Create a season', null, false, 'create'), 'Create this season in the Sheet?', function () { saveToSheet(true); }),
-      del));
+      RR.arm(RR.button('Create a season', null, false, 'create'), 'Create this season in the Sheet', 'Confirm create season', function () { saveToSheet(true); }),
+      del,
+      RR.arm(RR.button('Save a draft', null, false, 'save'), 'Save the draft to the Sheet', 'Confirm save draft', function () { saveToSheet(false); }),
+      RR.button('Show saved drafts', listFromSheet)));
     if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
     if (sheetSeasons) {
       p.appendChild(RR.table([
@@ -761,8 +761,8 @@
         { key: 'first', label: 'First round' }, { key: 'rounds', label: 'Rounds', num: true }, { key: 'saved', label: 'Saved' },
         { key: 'by', label: 'Saved by' }, { key: 'load', label: '' }
       ], sheetSeasons.map(function (s) {
-        var load = RR.arm(RR.button('Load', null), 'Replace the wizard with this season?', function () { loadFromSheet(s.seasonId, s.name); });
-        var remove = RR.arm(RR.button('Delete', null, false, 'trash'), 'Delete this season from the Sheet?', function () { deleteFromSheet(s.seasonId, s.name); });
+        var load = RR.arm(RR.button('Load', null), 'Replace the wizard with this season', 'Confirm load season', function () { loadFromSheet(s.seasonId, s.name); });
+        var remove = RR.arm(RR.button('Delete', null, false, 'trash'), 'Delete this season from the Sheet', 'Confirm delete season', function () { deleteFromSheet(s.seasonId, s.name); });
         return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
           rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.row(load, remove) } };
       }), 'No seasons are saved in the Sheet yet.'));
@@ -777,23 +777,6 @@
     var issues = problems(), checks = panel('Checks');
     if (!issues.length) checks.appendChild(RR.notice('Everything needed for the export is filled in.', 'ok'));
     issues.forEach(function (t) { checks.appendChild(RR.notice(t, 'warn')); });
-    var loader = el('input');
-    loader.type = 'file';
-    loader.accept = '.json,application/json';
-    loader.hidden = true;
-    loader.addEventListener('change', function () {
-      var f = loader.files[0];
-      if (!f) return;
-      f.text().then(function (t) {
-        var got = JSON.parse(t);
-        if (!got || got.version !== 1 || !got.rounds) throw new Error('not a season file');
-        S = got;
-        flagged = false;
-        tidy();
-        save();
-        drawAll();
-      }).catch(function () { status.textContent = 'That file is not a Race Club season file.'; });
-    });
     var status = el('p', 'rr-body', (window.RR_ADMIN && window.RR_ADMIN.lastStatus) || '');
     if (window.RR_ADMIN) window.RR_ADMIN.lastStatus = '';
     var rows = S.rounds.map(function (r) {
@@ -829,21 +812,15 @@
             download(makeZip(exportFiles()), slug(S.name || 'season') + '-server-files.zip');
             status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip.';
           }),
-          RR.button('Save season file', function () {
-            download(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }), slug(S.name || 'season') + '-season.json');
-            status.textContent = 'Season file saved.';
-          }),
-          RR.button('Load season file', function () { loader.click(); }),
-          RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over?', function () {
+          RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
             S = newSeason();
             flagged = false;
             sheetNote = null;
             save();
             drawAll();
-          }),
-          loader),
+          })),
         status,
-        note('The zip and the season file contain your server passwords. Keep them on your computer. Never add them to the website folder.'))
+        note('The zip contains your server passwords. Keep them on your computer. Never add them to the website folder.'))
     ));
     RR.refresh();
     flagSteps();

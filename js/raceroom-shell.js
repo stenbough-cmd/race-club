@@ -167,6 +167,7 @@
   var forwardBtn = iconBtn('button', 'forward', 'Forward');
   var homeBtn = iconBtn('a', 'home', 'Home');
   homeBtn.href = 'index.html';
+  homeBtn.classList.add('rr-icon-solid');
   /* Back and Forward are hidden in portrait (phones have their own); see css. */
   backBtn.classList.add('rr-hide-portrait');
   forwardBtn.classList.add('rr-hide-portrait');
@@ -346,6 +347,33 @@
     shownTab = id;
   }
   window.addEventListener('hashchange', function () { showTab(); navRecord(); });
+
+  /* ---- Button tick: a very short click sound on every button, and on links that look like buttons ---- */
+  var tickAudio = null;
+  function tick() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      tickAudio = tickAudio || new AC();
+      if (tickAudio.state === 'suspended') tickAudio.resume();
+      var t = tickAudio.currentTime, osc = tickAudio.createOscillator(), gain = tickAudio.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1800, t);
+      osc.frequency.exponentialRampToValueAtTime(900, t + 0.03);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.05, t + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      osc.connect(gain);
+      gain.connect(tickAudio.destination);
+      osc.start(t);
+      osc.stop(t + 0.04);
+    } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var n = e.target && e.target.closest ? e.target.closest('button, a.rr-btn, a.rr-icon-btn, a.rr-nav-item, a.rr-subtab, a.rr-step, a.rr-promo, a.rr-logo') : null;
+    if (!n || n.disabled || n.getAttribute('aria-disabled') === 'true') return;
+    tick();
+  }, true);
 
   /* ================= Shared builders (the only way to make these parts) ================= */
   var RR = {};
@@ -688,9 +716,11 @@
     if (onClick) b.addEventListener('click', onClick);
     return b;
   };
-  /* Make any button two-click: the first click turns it red with `confirmText` as its tooltip, the second click
-     (within 3 seconds) runs `action`. */
-  RR.arm = function (node, confirmText, action) {
+  /* Make any button two-click. `hoverText` is its tooltip on hover (what it does). The first click turns it red with
+     `confirmText` (for example "Confirm start over") as its tooltip; the second click within 3 seconds runs `action`.
+     After 3 seconds it goes back to normal. */
+  RR.arm = function (node, hoverText, confirmText, action) {
+    node.setAttribute('data-rr-tip', hoverText);
     node.addEventListener('click', function () { armClick(node, confirmText, action); });
     return node;
   };
