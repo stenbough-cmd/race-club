@@ -140,6 +140,9 @@
   function newWeekend() {
     return { multiplier: 0, warmup: 0, Practice: session(15, 1), Qualify: session(15, 1), Race1: session(20, 1), Race2: session(0, 1), Race3: session(0, 1) };
   }
+  /* How a season's nights are run. A season is either single-race (races: 1) or multi-race (races: 2 or 3); never mixed.
+     race2 / race3: that race scores points. pole: the pole bonus, once per night. fastest, clean: those bonuses in each race. */
+  function newFormat() { return { multi: false, races: 1, race2: true, race3: true, pole: true, fastest: true, clean: true }; }
   function newSeason() {
     return {
       version: 1,
@@ -159,6 +162,7 @@
       assists: { DriveAssistTransmission: -1, DriveAssistEsp: 1, DriveAssistSteer: 0, DriveAssistBrake: 1,
         DriveAssistTractionControl: 1, DriveAssistRaceline: -1, DriveAssistAutopit: -1 },
       weekend: newWeekend(),
+      format: newFormat(),
       points: { tables: {}, pole: 0, fastestLap: 0, clean: 0, dropWeeks: 0 },
       calendar: { date: '', time: '20:00', gap: 1 },
       rounds: []   /* in calendar order; an entry with bye: true is a week off, not a race */
@@ -170,6 +174,11 @@
     S.zone = browserZone();
     delete S.thumbnail;   /* the picture address is a fixed setting above, never kept per season */
     if (S.showBanner === undefined) S.showBanner = true;
+    if (!S.format) {   /* a season saved before formats existed: more than one race length set means multi-race */
+      S.format = newFormat();
+      var n = Number(S.weekend.Race3.len) > 0 ? 3 : (Number(S.weekend.Race2.len) > 0 ? 2 : 1);
+      S.format.races = n; S.format.multi = n > 1;
+    }
     if (!S.calendar) S.calendar = { date: (S.rounds[0] && S.rounds[0].date) || '', time: (S.rounds[0] && S.rounds[0].time) || '20:00', gap: 1 };
     setDates();
   }
@@ -231,6 +240,21 @@
     return new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).replace(',', '');
   }
   function weekendOf(r) { return r.weekend || S.weekend; }
+  /* Races each night: 1 for a single-race season, 2 or 3 for a multi-race season. */
+  function raceCount() { return S.format && S.format.multi ? Math.min(3, Math.max(2, Number(S.format.races) || 2)) : 1; }
+  /* Change the number of races: races beyond the count get length 0 (not run); a race that is switched on gets Race 1's length. */
+  function setRaceCount(n) {
+    S.format.multi = n > 1;
+    S.format.races = n;
+    [S.weekend].concat(S.rounds.map(function (r) { return r.weekend; })).forEach(function (w) {
+      if (!w) return;
+      [1, 2, 3].forEach(function (i) {
+        var s = w['Race' + i];
+        if (i > n) s.len = 0;
+        else if (!Number(s.len)) { s.len = Number(w.Race1.len) || 20; s.unit = w.Race1.unit; }
+      });
+    });
+  }
   /* When qualifying and Race 1 start, if practice and qualifying are timed in minutes. */
   function startTimes(r) {
     var w = weekendOf(r), out = { quali: '-', race: '-' };
@@ -249,6 +273,7 @@
     o.Clouds = s.clouds.map(Number);
     return o;
   }
+  function notRun(s) { var o = JSON.parse(JSON.stringify(s)); o.len = 0; return o; }
   function serverName(r) { return S.prefix + ' ' + r.id; }
   /* bans: the User IDs to blacklist, read from the Member Management list when the files are exported. */
   function buildRoundFile(r, bans) {
@@ -265,8 +290,8 @@
     sessions.Qualify = sessionOut(w.Qualify);
     sessions.Practice = sessionOut(w.Practice, true);
     sessions.Race1 = sessionOut(w.Race1);
-    sessions.Race2 = sessionOut(w.Race2);
-    sessions.Race3 = sessionOut(w.Race3);
+    sessions.Race2 = sessionOut(raceCount() >= 2 ? w.Race2 : notRun(w.Race2));
+    sessions.Race3 = sessionOut(raceCount() >= 3 ? w.Race3 : notRun(w.Race3));
     var layout = { LayoutId: Number(r.layoutId), EventPackId: 0, Sessions: sessions };
     if (Number(w.multiplier)) layout.TimeOfDayMultiplier = Number(w.multiplier);
     g.TrackLayouts = [layout];
@@ -315,7 +340,9 @@
       var n = 'Round ' + (i + 1) + ': ', w = weekendOf(r), L = layoutIndex[r.layoutId];
       if (!r.time) add('calendar', n + 'the server online time is missing.');
       if (!r.password) add('calendar', n + 'there is no password.');
-      if (!Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len)) add(r.weekend ? 'calendar' : 'weekend', n + 'no race has a length.');
+      for (var q = 1; q <= raceCount(); q++) {
+        if (!Number(w['Race' + q].len)) add(r.weekend ? 'calendar' : 'weekend', n + (raceCount() > 1 ? 'Race ' + q + ' has no length.' : 'no race has a length.'));
+      }
       if (L && L.max && Number(S.rules.MaxNumOfPlayers) > L.max) {
         add('calendar', n + L.track + ' ' + L.layout + ' holds ' + L.max + ' cars, but max players is ' + S.rules.MaxNumOfPlayers + '.');
       }
@@ -435,7 +462,7 @@
     mark();
     return box;
   }
-  function noRaceLength(w) { return !Number(w.Race1.len) && !Number(w.Race2.len) && !Number(w.Race3.len); }
+  function noRaceLength(w) { for (var q = 1; q <= raceCount(); q++) if (!Number(w['Race' + q].len)) return true; return false; }
   function tooManyPlayers() {
     return races().some(function (r) { var L = layoutIndex[r.layoutId]; return L && L.max && Number(S.rules.MaxNumOfPlayers) > L.max; });
   }
@@ -566,6 +593,7 @@
       text('Warmup minutes', w, 'warmup', { type: 'number', min: 0, after: changed })));
     SESSIONS.forEach(function (def) {
       var s = w[def[0]], isRace = def[0].indexOf('Race') === 0, weather = el('div', 'rr-form-row');
+      if (isRace && Number(def[0].slice(4)) > raceCount()) return;
       function drawWeather() {
         fill(weather, RR.select('Set all', [['', 'Mixed']].concat(CLOUDS), function (v) {
           if (v === '') return;
@@ -585,12 +613,28 @@
           def[0] === 'Practice' ? null : pick('Start', isRace ? RACE_START : QUALI_START, s, 'start', changed),
           pick('Starts at', TIMES, s, 'tod', changed)),
         weather,
-        isRace ? note('A race with a length of 0 is not run.') : null));
+        isRace ? note(raceCount() > 1 ? 'Every race needs a length. The number of races is set in Season format.' : 'The race needs a length.') : null));
     });
     return box;
   }
+  function formatPanel() {
+    var f = S.format, multi = raceCount() > 1;
+    function flag(label, key) { return RR.checkbox(label, function (on) { f[key] = on; save(); }, f[key] !== false); }
+    return panel('Season format',
+      RR.row(RR.select('Races each night', [[1, 'Single race'], [2, 'Multi-race: 2 races'], [3, 'Multi-race: 3 races']], function (v) {
+        setRaceCount(Number(v));
+        save();
+        drawAll();
+      }, raceCount())),
+      multi ? RR.row(flag('Race 2 scores points', 'race2'), raceCount() > 2 ? flag('Race 3 scores points', 'race3') : null) : null,
+      multi ? RR.row(flag('Pole bonus, once per night', 'pole'), flag('Fastest lap bonus, in each race', 'fastest'), flag('Clean race bonus, in each race', 'clean')) : null,
+      note(multi
+        ? 'A season is either single-race or multi-race, never both. Race 1 always scores points. A night\'s points are its races added together. The bonus values are set in the Points step; a bonus left unticked here is not given.'
+        : 'One race each night. Choose a multi-race format to run two or three races a night.'));
+  }
   function drawWeekend() {
     fill(RR.view('weekend'), stack(
+      formatPanel(),
       note('This is the weekend every round starts from. Any round can be given its own format in the Calendar step.'),
       weekendEditor(S.weekend)));
   }
@@ -606,12 +650,12 @@
       if (!S.points.tables[id]) S.points.tables[id] = DEFAULT_POINTS;
       tables.appendChild(RR.row(text(classById(id).n, S.points.tables, id, { wide: true })));
     });
-    tables.appendChild(note('Points for 1st place, 2nd place and so on, with commas between them. Race 2 and Race 3 score the same table every time they are run.'));
+    tables.appendChild(note('Points for 1st place, 2nd place and so on, with commas between them. Every race that scores uses this table.'));
     fill(RR.view('points'), stack(tables,
       panel('Bonuses',
         RR.row(text('Pole', S.points, 'pole', { type: 'number', min: 0 }), text('Fastest lap', S.points, 'fastestLap', { type: 'number', min: 0 }),
           text('Clean race', S.points, 'clean', { type: 'number', min: 0 })),
-        note('A bonus of 0 is switched off. Clean race means no incident points in the race. Points are saved with the season now and used when results are connected.'))));
+        note('A bonus of 0 is switched off. Clean race means no incident points in that race. In a multi-race season pole is given once per night, and fastest lap and clean race in each race. Points are saved with the season now and used when results are connected.'))));
     save();
   }
 

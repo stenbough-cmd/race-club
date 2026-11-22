@@ -109,6 +109,12 @@
     });
   }
 
+  /* The server calls the first race just Race; the site always says Race 1, Race 2, Race 3. */
+  function sessionLabel(name) {
+    var m = /^race\s*(\d*)$/i.exec(String(name || '').trim());
+    if (m) return 'Race ' + (Number(m[1]) || 1);
+    return /^qualify$/i.test(String(name)) ? 'Qualifying' : String(name);
+  }
   function sessionTable(session, rows, carNodes) {
     return RR.table([
       { key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }, { key: 'car', label: 'Car' },
@@ -142,7 +148,7 @@
     var carNodes = [], order = [];
     p.rows.forEach(function (x) { if (order.indexOf(x.session) < 0) order.push(x.session); });
     order.forEach(function (s) {
-      box.appendChild(el('h3', 'rr-card-title', s));
+      box.appendChild(el('h3', 'rr-card-title', sessionLabel(s)));
       box.appendChild(sessionTable(s, p.rows.filter(function (x) { return x.session === s; }), carNodes));
     });
     if (RR.images) RR.images.ready().then(function () {
