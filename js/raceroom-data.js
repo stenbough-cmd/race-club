@@ -1,6 +1,6 @@
 /* Race Club RaceRoom site: the data every public page reads (window.RR_DATA).
    SAMPLE DATA: everything built below is made up so the pages have something to show until the league has real results.
-   REAL DATA: league.js in the race-club-data repository (https://stenbough-cmd.github.io/race-club-data/raceroom/league.js, written by the league's Apps Script after every confirmed round and loaded by a script tag in each public page) sets window.RR_LIVE in the same
+   REAL DATA: league.js in the race-club-data repository (https://stenbough-cmd.github.io/race-club-data/league.js, written by the league's Apps Script after every confirmed round and loaded by a script tag in each public page) sets window.RR_LIVE in the same
    shape. When it holds a season, applyLive (further down) replaces the sample with it. */
 (function () {
   'use strict';
