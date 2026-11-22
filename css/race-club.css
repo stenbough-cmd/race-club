@@ -25,6 +25,7 @@
   --rr-font: "Montserrat", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --rr-pad: 32px;
   --rr-gap: 8px;
+  --rr-gap-tiles: 16px;   /* space between photo tiles and news tiles */
   --rr-control: rgba(23, 23, 23, 0.06);
   --rr-well: rgba(23, 23, 23, 0.05);
   --rr-pill: rgba(23, 23, 23, 0.12);
@@ -549,7 +550,7 @@ button, select { font-family: inherit; }
 .rr-news-grid {
   display: grid;
   flex: 1 0 auto;
-  gap: var(--rr-gap);
+  gap: var(--rr-gap-tiles);
   grid-template-rows: repeat(2, minmax(170px, 1fr));
 }
 .rr-news-grid .rr-promo { min-height: 0; }
@@ -708,6 +709,16 @@ button, select { font-family: inherit; }
   color: var(--rr-photo-text);
 }
 .rr-promo-feature { min-height: 300px; }
+/* Large photo and news blocks that are links lift off the page on hover (no border change). */
+.rr-promo.rr-block-link { transition: transform var(--rr-speed) ease, box-shadow var(--rr-speed) ease; }
+.rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible {
+  border-color: transparent;
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px #D8DDE1, 0 12px 24px rgba(23, 23, 23, 0.28);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible { transform: none; }
+}
 .rr-promo-soon { cursor: default; }
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .rr-promo-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
