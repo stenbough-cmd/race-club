@@ -462,7 +462,7 @@
         .sort(function (a, b) { return b.status.progress[0] / b.status.progress[1] - a.status.progress[0] / a.status.progress[1]; }).slice(0, 3);
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
-      fill(RR.view('overview'), add(el('div', 'rr-stack'),
+      fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
         add(el('div', 'rr-grid-2'), card, hero),
         add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
         RR.statRow([
