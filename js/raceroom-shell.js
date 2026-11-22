@@ -611,12 +611,22 @@
     return node;
   };
 
-  /* Wide banner at the top of a page: a livery picture with a name (and flag), a small line above and a line below. */
+  /* Wide banner at the top of a driver's page. o: { eyebrow, title, country, sub, banner (picture address or ''), avatar (picture address or '') }.
+     With a banner picture it fills the box; with none the box is black and carries a small Race Club R in the lower right corner.
+     The profile picture (RaceRoom's helmet unless the driver uploaded one) sits on top at the left; with no picture, a dark square with the R. */
   RR.banner = function (o) {
-    var b = el('div', 'rr-banner');
-    add(b, o.eyebrow ? el('div', 'rr-label', o.eyebrow) : null, add(el('h2', 'rr-banner-title'), RR.nameWithFlag(o.title, o.country)),
-      o.sub ? el('div', 'rr-note', o.sub) : null);
-    return RR.photo(b, o.livery, 'full');
+    var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar');
+    function fallback() { pic.textContent = ''; var r = el('img', 'rr-banner-avatar-mark'); r.src = 'assets/images/Race Club R White.webp'; r.alt = ''; pic.appendChild(r); }
+    if (/^https:\/\//.test(String(o.avatar || ''))) {
+      var a = el('img'); a.alt = o.title + ' profile picture'; a.onerror = fallback; a.src = o.avatar; pic.appendChild(a);
+    } else fallback();
+    add(who, pic, add(el('div', 'rr-banner-text'), o.eyebrow ? el('div', 'rr-label', o.eyebrow) : null,
+      add(el('h2', 'rr-banner-title'), RR.nameWithFlag(o.title, o.country)), o.sub ? el('div', 'rr-note', o.sub) : null));
+    var mark = el('img', 'rr-banner-mark');
+    mark.src = 'assets/images/Race Club R White.webp';
+    mark.alt = '';
+    add(b, who, mark);
+    return RR.photo(b, o.banner, 'full');
   };
 
   /* Ranking strip: the top of a table as tiles. Rank 1 is large, 2 and 3 medium, 4 to 7 small.

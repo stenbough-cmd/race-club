@@ -896,8 +896,8 @@ button, select { font-family: inherit; }
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.15) 80%);
 }
-.rr-rank-tile.rr-has-photo > :not(.rr-photo-img), .rr-banner.rr-has-photo > :not(.rr-photo-img) { position: relative; z-index: 1; }
-.rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo {
+.rr-rank-tile.rr-has-photo > :not(.rr-photo-img), .rr-banner > :not(.rr-photo-img) { position: relative; z-index: 1; }
+.rr-rank-tile.rr-has-photo, .rr-banner {
   --rr-text: var(--rr-photo-text);
   --rr-muted: var(--rr-photo-muted);
   --rr-line: var(--rr-photo-line);
@@ -912,7 +912,15 @@ button, select { font-family: inherit; }
 .rr-hero .rr-photo-img { position: absolute; top: 0; bottom: 0; right: 0; left: auto; width: 50%; height: 100%; object-fit: contain; object-position: center; padding: 8px 8px 8px 0; box-sizing: border-box; }
 
 /* Wide banner at the top of a page */
-.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-height: 220px; padding: 16px; overflow: hidden; background: var(--rr-panel); box-shadow: var(--rr-shadow); }
+.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-bar); box-shadow: var(--rr-shadow); }
+.rr-banner-who { display: flex; align-items: flex-end; gap: 16px; }
+.rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; overflow: hidden; background: var(--rr-bar); box-shadow: 0 0 0 2px var(--rr-photo-text); }
+.rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.rr-banner-avatar .rr-banner-avatar-mark { width: 56%; height: auto; object-fit: contain; }
+.rr-banner-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .rr-banner-title { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
 .rr-banner-title .rr-flag { width: 30px; height: 21px; }
-@media (orientation: portrait) { .rr-banner { min-height: 170px; } }
+/* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
+.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 28px; height: auto; opacity: 0.6; }
+.rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
+@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } .rr-banner-title { font-size: 22px; } }

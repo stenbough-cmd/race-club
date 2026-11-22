@@ -600,7 +600,7 @@
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
-        d.banner ? RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.banner }) : null,
+        RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, banner: d.banner, avatar: d.avatar }),
         add(el('div', 'rr-grid-2'), card, hero),
         add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
         RR.statRow([
