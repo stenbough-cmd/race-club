@@ -45,7 +45,7 @@
 }
 
 /* ---------- Cards and panels: white with a thin silver outline ---------- */
-.rr-panel, .rr-card, .rr-stat, .rr-hero, .rr-barlist, .rr-article, .rr-empty, .rr-notice, .rr-tile, .rr-promo { box-shadow: var(--rr-shadow); }
+.rr-panel, .rr-card, .rr-stat, .rr-hero, .rr-rank-tile, .rr-barlist, .rr-article, .rr-empty, .rr-notice, .rr-tile, .rr-promo { box-shadow: var(--rr-shadow); }
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
@@ -710,14 +710,14 @@ button, select { font-family: inherit; }
 }
 .rr-promo-feature { min-height: 300px; }
 /* Large photo and news blocks that are links lift off the page on hover (no border change). */
-.rr-promo.rr-block-link { transition: transform var(--rr-speed) ease, box-shadow var(--rr-speed) ease; }
-.rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible {
+.rr-promo.rr-block-link, .rr-rank-tile.rr-block-link { transition: transform var(--rr-speed) ease, box-shadow var(--rr-speed) ease; }
+.rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible, .rr-rank-tile.rr-block-link:hover, .rr-rank-tile.rr-block-link:focus-visible {
   border-color: transparent;
   transform: translateY(-4px);
   box-shadow: 0 0 0 1px #D8DDE1, 0 12px 24px rgba(23, 23, 23, 0.28);
 }
 @media (prefers-reduced-motion: reduce) {
-  .rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible { transform: none; }
+  .rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible, .rr-rank-tile.rr-block-link:hover, .rr-rank-tile.rr-block-link:focus-visible { transform: none; }
 }
 .rr-promo-soon { cursor: default; }
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
@@ -822,5 +822,50 @@ button, select { font-family: inherit; }
   * { transition: none !important; }
 }
 
-/* A button that stands for the current choice (for example the points table in use) */
-.rr-btn[aria-pressed="true"] { background: var(--rr-invert-bg); color: var(--rr-invert-text); border-color: var(--rr-invert-bg); }
+
+/* ---------- Ranking strip: rank 1 large, 2 and 3 medium, 4 to 7 small ---------- */
+.rr-strip { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: 2fr 1.3fr 1fr 1fr; grid-template-rows: repeat(2, 136px); }
+.rr-rank-tile { display: flex; flex-direction: column; gap: 2px; padding: 16px; background: var(--rr-panel); color: var(--rr-text); text-decoration: none; position: relative; min-width: 0; overflow: hidden; }
+.rr-rank-no { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--rr-red); }
+.rr-rank-name { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.15; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rr-rank-value { display: flex; align-items: baseline; gap: 8px; margin-top: auto; }
+.rr-rank-value .rr-stat-value { font-size: 22px; }
+.rr-rank-1 { grid-column: 1; grid-row: 1 / span 2; }
+.rr-rank-1 .rr-rank-name { font-size: 24px; white-space: normal; }
+.rr-rank-1 .rr-rank-value .rr-stat-value { font-size: 44px; }
+.rr-rank-2 { grid-column: 2; grid-row: 1; }
+.rr-rank-3 { grid-column: 2; grid-row: 2; }
+.rr-rank-2 .rr-rank-value .rr-stat-value, .rr-rank-3 .rr-rank-value .rr-stat-value { font-size: 28px; }
+.rr-rank-4 { grid-column: 3; grid-row: 1; }
+.rr-rank-5 { grid-column: 4; grid-row: 1; }
+.rr-rank-6 { grid-column: 3; grid-row: 2; }
+.rr-rank-7 { grid-column: 4; grid-row: 2; }
+
+/* ---------- Totals block: four columns of label and value rows ---------- */
+.rr-totals { display: grid; gap: var(--rr-gap); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rr-totals-col { display: flex; flex-direction: column; gap: 0; padding: 16px; }
+.rr-totals-col .rr-heading { margin-bottom: 8px; }
+.rr-totals-col .rr-kv-row { border-top: 1px solid var(--rr-line); }
+
+/* ---------- Radar chart ---------- */
+.rr-radar { display: flex; align-items: center; justify-content: center; padding: 16px; }
+.rr-radar-svg { width: 100%; max-width: 420px; height: auto; }
+.rr-radar-web { fill: none; stroke: var(--rr-line); stroke-width: 1; }
+.rr-radar-shape { fill: var(--rr-red); fill-opacity: 0.35; stroke: var(--rr-red); stroke-width: 1.5; }
+.rr-radar-label { fill: var(--rr-muted); font-family: var(--rr-font); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.rr-radar-value { fill: var(--rr-text); font-family: var(--rr-font); font-size: 16px; font-weight: 800; }
+
+/* Standings by round: the points of a round dropped from the total are struck through, a bonus is a small raised number */
+.rr-drop { text-decoration: line-through; color: var(--rr-muted); }
+.rr-bonus { font-size: 9px; font-weight: 700; vertical-align: super; margin-left: 2px; color: var(--rr-red); }
+.rr-group-title { margin: 8px 0 0; }
+
+@media (orientation: portrait) {
+  .rr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: 136px; }
+  .rr-strip .rr-rank-tile { grid-column: auto; grid-row: auto; }
+  .rr-strip .rr-rank-1 { grid-column: 1 / span 2; grid-row: auto; min-height: 176px; }
+  .rr-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Seven stat tiles in a row (profile Leaderboards tab) */
+.rr-row-stats-compact .rr-stat-value { font-size: 20px; }

@@ -34,7 +34,8 @@
       ['overview', 'Overview'],
       ['history', 'Race History'],
       ['statistics', 'Statistics'],
-      ['achievements', 'Achievements']
+      ['achievements', 'Achievements'],
+      ['boards', 'Leaderboards']
     ],
     /* Admin Website Options: reminders for changing parts of the site. */
     options: [
@@ -524,8 +525,8 @@
     return add(el('div', 'rr-stat'), RR.label(label), el('div', 'rr-stat-value', dash(value)),
       note ? el('div', 'rr-note', note) : null);
   };
-  RR.statRow = function (tiles) {
-    var row = el('div', 'rr-row-stats');
+  RR.statRow = function (tiles, compact) {
+    var row = el('div', 'rr-row-stats' + (compact ? ' rr-row-stats-compact' : ''));
     tiles.forEach(function (t) { row.appendChild(t); });
     return row;
   };
@@ -570,6 +571,56 @@
     add(foot, el('p', 'rr-body', o.desc || ''), soon ? null : el('span', 'rr-btn', o.button || 'Read'));
     a.appendChild(foot);
     return a;
+  };
+
+
+  /* Ranking strip: the top of a table as tiles. Rank 1 is large, 2 and 3 medium, 4 to 7 small.
+     items: [{ title, sub, value, valueLabel, href }] in rank order (up to 7). Every tile is a link and lifts on hover. */
+  RR.strip = function (items) {
+    var box = el('div', 'rr-strip');
+    items.slice(0, 7).forEach(function (it, i) {
+      var t = el(it.href ? 'a' : 'div', 'rr-rank-tile rr-rank-' + (i + 1) + (it.href ? ' rr-block-link' : ''));
+      if (it.href) t.href = it.href;
+      add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), el('h3', 'rr-rank-name', it.title), it.sub ? el('div', 'rr-note', it.sub) : null,
+        add(el('div', 'rr-rank-value'), el('span', 'rr-stat-value', dash(it.value)), it.valueLabel ? RR.label(it.valueLabel) : null));
+      box.appendChild(t);
+    });
+    return box;
+  };
+
+  /* Four-column totals block. columns: [{ title, rows: [[label, value]] }] */
+  RR.totals = function (columns) {
+    var box = el('div', 'rr-totals');
+    columns.forEach(function (c) {
+      var col = el('div', 'rr-panel rr-totals-col');
+      col.appendChild(RR.heading(c.title));
+      c.rows.forEach(function (r) { col.appendChild(RR.kv(r[0], r[1], true)); });
+      box.appendChild(col);
+    });
+    return box;
+  };
+
+  /* Radar chart. axes: [{ label, value }] with value 0 to 100. Draws a thin web, a red shape, and label plus value at each point. */
+  RR.radar = function (axes) {
+    var NS = 'http://www.w3.org/2000/svg', W = 380, H = 280, cx = W / 2, cy = H / 2, R = 88, n = axes.length;
+    function node(tag, attrs, text) {
+      var x = document.createElementNS(NS, tag);
+      Object.keys(attrs || {}).forEach(function (k) { x.setAttribute(k, attrs[k]); });
+      if (text !== undefined) x.textContent = text;
+      return x;
+    }
+    function point(i, f) { var a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * f, cy + Math.sin(a) * R * f]; }
+    function poly(f) { return axes.map(function (_, i) { return point(i, f).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '); }
+    var svg = node('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'rr-radar-svg', role: 'img', 'aria-label': 'Driver profile: ' + axes.map(function (a) { return a.label + ' ' + a.value; }).join(', ') });
+    [0.25, 0.5, 0.75, 1].forEach(function (f) { svg.appendChild(node('polygon', { points: poly(f), class: 'rr-radar-web' })); });
+    axes.forEach(function (_, i) { var p = point(i, 1); svg.appendChild(node('line', { x1: cx, y1: cy, x2: p[0].toFixed(1), y2: p[1].toFixed(1), class: 'rr-radar-web' })); });
+    svg.appendChild(node('polygon', { points: axes.map(function (a, i) { return point(i, Math.max(0, Math.min(100, a.value)) / 100).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '), class: 'rr-radar-shape' }));
+    axes.forEach(function (a, i) {
+      var p = point(i, 1.22), anchor = Math.abs(p[0] - cx) < 4 ? 'middle' : (p[0] > cx ? 'start' : 'end'), dy = p[1] < cy - 4 ? -6 : (p[1] > cy + 4 ? 14 : 4);
+      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy - 14).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-label' }, a.label));
+      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, Math.round(a.value)));
+    });
+    return add(el('div', 'rr-panel rr-radar'), svg);
   };
 
   /* Ranked bar list. items: [{name, value}] */
