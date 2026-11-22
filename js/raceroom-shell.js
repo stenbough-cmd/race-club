@@ -179,10 +179,9 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Icon area at the far right (not part of the navbar): Search, Help, Protest, then admin Log in / Log out.
-     Search, Help and Protest do nothing yet. Each will be wired up when its feature is designed. */
+  /* Icon area at the far right (not part of the navbar): Help, Protest, then admin Log in / Log out.
+     Help and Protest do nothing yet. Each will be wired up when its feature is designed. */
   var topEnd = el('div', 'rr-topbar-end');
-  var searchBtn = iconBtn('button', 'search', 'Search');
   var helpBtn = iconBtn('button', 'help', 'Help');
   var protestBtn = iconBtn('button', 'protest', 'Protest');
   /* Admin (cogwheel icon): only shown while an admin is logged in. It opens the admin hub. */
@@ -191,7 +190,7 @@
   if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
   var adminBtn = iconBtn('button', 'login', 'Log in');
   adminBtn.classList.add('rr-tip-end');
-  add(topEnd, searchBtn, helpBtn, protestBtn, adminLink, adminBtn);
+  add(topEnd, helpBtn, protestBtn, adminLink, adminBtn);
   add(topbar, logo, nav, topEnd);
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */

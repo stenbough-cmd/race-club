@@ -588,9 +588,9 @@
     });
     tables.appendChild(note('Points for 1st place, 2nd place and so on, with commas between them. Race 2 and Race 3 score the same table every time they are run.'));
     fill(RR.view('points'), stack(tables,
-      panel('Bonuses and drop weeks',
+      panel('Bonuses',
         RR.row(text('Pole', S.points, 'pole', { type: 'number', min: 0 }), text('Fastest lap', S.points, 'fastestLap', { type: 'number', min: 0 }),
-          text('Clean race', S.points, 'clean', { type: 'number', min: 0 }), text('Drop weeks', S.points, 'dropWeeks', { type: 'number', min: 0 })),
+          text('Clean race', S.points, 'clean', { type: 'number', min: 0 })),
         note('A bonus of 0 is switched off. Clean race means no incident points in the race. Points are saved with the season now and used when results are connected.'))));
     save();
   }
@@ -630,8 +630,9 @@
         save();
         drawCalendar();
       } }),
-      pick('Every', [[1, 'Week'], [2, 'Second week'], [3, 'Third week'], [4, 'Fourth week']], S.calendar, 'gap', changed)),
-      note('Every date below is worked out from the first round and the gap, in calendar order. Changing the server online time here sets it for every round; one round can still be given a different time below.'));
+      pick('Every', [[1, 'Week'], [2, 'Second week'], [3, 'Third week'], [4, 'Fourth week']], S.calendar, 'gap', changed),
+      text('Drop weeks', S.points, 'dropWeeks', { type: 'number', min: 0 })),
+      note('Every date below is worked out from the first round and the gap, in calendar order. Changing the server online time here sets it for every round; one round can still be given a different time below. Drop weeks is how many of a driver\'s lowest rounds are not counted in the season total (0 is off).'));
     var list = stack();
     if (!S.rounds.length) list.appendChild(RR.empty('Nothing in the calendar yet. Pick a track and layout, then Add round.'));
     S.rounds.forEach(function (r, i) {
