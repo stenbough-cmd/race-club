@@ -1,4 +1,4 @@
-/* Race Club admin: Results Management, the "Posted by the server" tab.
+/* Race Club admin: League Management, the "Posted by the server" tab.
    Lists what the RaceRoom server has posted by itself (newest first, the last 100), read from the Sheet's Inbox tab.
    Every post is listed, including repeats and files that could not be read, so a test post shows up here too.
    Files added by hand are not listed. Nothing is changed from this tab. The list is read when the page opens and
@@ -11,7 +11,10 @@
 
   /* The Inbox status word, as the Sheet writes it, then the words shown here and the colour. */
   var STATUS = {
-    'PROCESSED': ['Read into the Sheet', 'rr-status-ok'],
+    'PROCESSED': ['Confirmed and live', 'rr-status-ok'],
+    'AWAITING': ['Waiting for your decision', 'rr-status-bad'],
+    'DENIED': ['Denied, file kept', ''],
+    'REPLACED': ['Replaced by a newer file', ''],
     'RECEIVED': ['Saved, not read', ''],
     'HELD': ['On hold', 'rr-status-bad'],
     'DUPLICATE (ignored)': ['Duplicate, ignored', ''],

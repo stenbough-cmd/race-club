@@ -1,4 +1,4 @@
-/* Race Club admin: Results Management, the "Upload by hand" tab (the "Posted by the server" tab is raceroom-posted.js).
+/* Race Club admin: League Management, the "Upload by hand" tab (the "Posted by the server" tab is raceroom-posted.js).
    Add a race by hand from its results file (the .json the server keeps after a race).
    Each file is checked first and nothing is saved until the admin presses Save:
      - it belongs to a round (the number at the end of the server name matches a round in the Sheet): ready
@@ -136,7 +136,7 @@
     checking: ['Checking...', ''], saving: ['Saving...', ''],
     ready: ['Ready to save', 'rr-status-ok'], 'no-round': ['Needs a round', 'rr-status-bad'],
     duplicate: ['Already uploaded, left out', 'rr-status-bad'], unreadable: ['Not a results file, left out', 'rr-status-bad'],
-    saved: ['Saved', 'rr-status-ok'], held: ['Saved and on hold', 'rr-status-bad'], failed: ['Not saved', 'rr-status-bad']
+    saved: ['Saved, waiting in Rounds', 'rr-status-ok'], held: ['Saved and on hold', 'rr-status-bad'], failed: ['Not saved', 'rr-status-bad']
   };
 
   function panel(item) {
@@ -154,7 +154,7 @@
     else if (item.status === 'failed') line = 'Not saved: ' + item.note;
     p.appendChild(el('div', 'rr-label ' + st[1], line));
     if (item.status === 'ready' && item.note) p.appendChild(el('p', 'rr-body', item.note));
-    if (item.status === 'held') p.appendChild(el('p', 'rr-body', 'This round already had results, so this file is saved but not used yet. In the Sheet, open the Race Club menu and choose Results: use the held file for a round.'));
+    if (item.status === 'held') p.appendChild(el('p', 'rr-body', 'This round is already live, so this file is saved but changes nothing yet. Open Rounds to use it or deny it.'));
 
     if (item.status === 'no-round') {
       if (item.rounds.length) {

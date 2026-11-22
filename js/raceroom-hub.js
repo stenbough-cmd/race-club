@@ -12,7 +12,7 @@
     { title: 'News Generator', desc: 'Write the news and the race stories.', photo: IMG + 'news-generator.jpg' },
     { title: 'Stewarding', desc: 'Look at protests and give penalties.', photo: IMG + 'stewarding.jpg' },
     { title: 'Member Management', desc: 'Blacklist drivers and hide names from stories.', href: 'members.html', photo: IMG + 'member-management.jpg' },
-    { title: 'Results Management', desc: 'See what the server posted and add a race by hand.', href: 'upload-results.html', photo: IMG + 'upload-results.jpg' },
+    { title: 'League Management', desc: 'Confirm results, cancel a round, see what the server posted and add a race by hand.', href: 'league-management.html', photo: IMG + 'upload-results.jpg' },
     { title: 'Website Options', desc: 'Reminders for changing the site.', href: 'website-options.html', photo: IMG + 'website-options.jpg' }
   ];
 

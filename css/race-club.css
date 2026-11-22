@@ -134,6 +134,9 @@ button, select { font-family: inherit; }
 /* Icons at the far right are not part of the navbar: icon only, no fill, same white border on hover. */
 .rr-topbar-end .rr-icon-btn { background: transparent; }
 .rr-icon-btn[aria-current="page"] { border-color: var(--rr-text); }
+/* The small icons at the far right never keep a border for the page you are on; the border only shows on hover. */
+.rr-topbar-end .rr-icon-btn[aria-current="page"] { border-color: transparent; }
+.rr-topbar-end .rr-icon-btn[aria-current="page"]:hover { border-color: var(--rr-text); }
 /* Home button while on the home pages: white button, black filled icon */
 .rr-icon-btn.rr-icon-solid[aria-current="page"], .rr-topbar-end .rr-icon-btn.rr-icon-solid[aria-current="page"] {
   background: var(--rr-invert-bg);
@@ -762,11 +765,13 @@ button, select { font-family: inherit; }
 .rr-icon-solid svg { fill: currentColor; }
 .rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
 
-/* Two-click confirm: red, white icon and text, tooltip stays up until the button resets (3 seconds). */
+/* Two-click confirm: red fill with a white border around it, white icon and text. It keeps this look, with its tooltip up,
+   until the second click or until the button resets (3 seconds). */
 .rr-btn.rr-confirming, .rr-btn.rr-confirming:hover,
-.rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming {
+.rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming,
+.rr-topbar-end .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn[aria-current="page"].rr-confirming {
   background: var(--rr-red);
-  border-color: var(--rr-red);
+  border-color: var(--rr-on-red);
   color: var(--rr-on-red);
 }
 .rr-confirming[data-rr-tip]::before, .rr-confirming[data-rr-tip]::after { opacity: 1; }

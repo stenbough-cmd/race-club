@@ -38,8 +38,9 @@
       ['achievements', 'Achievements'],
       ['boards', 'Leaderboards']
     ],
-    /* Admin Results Management: what the server posted by itself, and adding a race by hand. */
-    results: [
+    /* Admin League Management: the rounds (confirm or deny results, cancel a round), what the server posted by itself, and adding a race by hand. */
+    league: [
+      ['rounds', 'Rounds'],
       ['server', 'Posted by the server'],
       ['upload', 'Upload by hand']
     ],
