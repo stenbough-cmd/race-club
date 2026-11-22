@@ -338,6 +338,7 @@
         if (!f.reason) m.push('a reason');
         if (!f.lap) m.push('the lap');
         if (!f.password) m.push('the race password');
+        if (!f.note.trim()) m.push('what happened');
         return m;
       }
       function refresh() {
@@ -345,10 +346,10 @@
         mark();
       }
       /* After a click on Submit with something missing, each missing box gets a red border until it is filled. */
-      var flagged = false, meSelect, reasonSelect, lapSelect, passwordBox;
+      var flagged = false, meSelect, reasonSelect, lapSelect, passwordBox, narrative;
       function mark() {
         function set(box, bad) { if (!box) return; if (flagged && bad) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
-        set(meSelect, !f.me); set(otherBox.firstChild, !f.other); set(reasonSelect, !f.reason); set(lapSelect, !f.lap); set(passwordBox, !f.password);
+        set(meSelect, !f.me); set(otherBox.firstChild, !f.other); set(reasonSelect, !f.reason); set(lapSelect, !f.lap); set(passwordBox, !f.password); set(narrative, !f.note.trim());
       }
       function drawOther() {
         fill(otherBox, RR.select(f.self ? 'Driver you collided with' : 'Driver you are reporting', drivers(f.me), function (v) { f.other = v; refresh(); }, f.other));
@@ -366,7 +367,7 @@
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
       lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
       passwordBox = RR.input({ label: 'Round ' + r.n + ' password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
-      var narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
+      narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
       RR.arm(submit, '', 'Confirm protest', function () {
         /* SAMPLE check. The real one is done by the service, so the password is never in the page. */
