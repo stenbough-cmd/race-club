@@ -100,8 +100,9 @@
   }
   function setIcon(node, name) { node.innerHTML = iconSvg(name); }
 
-  /* Two-click confirm. The first click turns the button red and shows `text` in its tooltip; a second click
-     within 3 seconds runs `action`. After 3 seconds the button goes back to normal. */
+  /* Two-click confirm. The first click turns the button red and sets `text` as its tooltip; a second click
+     within 3 seconds runs `action`. After 3 seconds the button goes back to normal. The white border and the tooltip
+     show only while the pointer is over the button (css/race-club.css), the red fill stays either way. */
   function disarm(node) {
     clearTimeout(node._rrArm);
     node._rrArm = null;
@@ -837,9 +838,9 @@
     if (onClick) b.addEventListener('click', onClick);
     return b;
   };
-  /* Make any button two-click. `hoverText` is no longer shown. The first click turns it red with
-     `confirmText` (for example "Confirm start over") as its tooltip; the second click within 3 seconds runs `action`.
-     After 3 seconds it goes back to normal. */
+  /* Make any button two-click. `hoverText` is not used (a button only has a hover tooltip if its own design has one,
+     like the top-right icons). The first click turns it red with `confirmText` (for example "Confirm start over") as its
+     tooltip, shown while hovering; the second click within 3 seconds runs `action`. After 3 seconds it goes back to normal. */
   RR.arm = function (node, hoverText, confirmText, action, canArm) {
     /* No tooltip on hover: the confirm tooltip shows only after the first click. (hoverText is kept so old calls still work.) */
     node.addEventListener('click', function () {
