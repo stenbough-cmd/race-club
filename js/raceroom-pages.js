@@ -105,7 +105,7 @@
   /* A points number with its bonus as a small raised number. Dropped rounds are struck through. */
   function pointsNode(x, dropped) {
     if (!x) return '-';
-    var span = el('span', dropped ? 'rr-drop' : '', x.points);
+    var span = el('span', dropped ? 'rr-dropped' : '', x.points);
     if (x.bonus) span.appendChild(el('span', 'rr-bonus', '+' + x.bonus));
     return span;
   }

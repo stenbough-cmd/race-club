@@ -874,7 +874,7 @@ button, select { font-family: inherit; }
 .rr-radar-value { fill: var(--rr-text); font-family: var(--rr-font); font-size: 16px; font-weight: 800; }
 
 /* Standings by round: the points of a round dropped from the total are struck through, a bonus is a small raised number */
-.rr-drop { text-decoration: line-through; color: var(--rr-muted); }
+.rr-dropped { text-decoration: line-through; color: var(--rr-muted); }
 .rr-bonus { font-size: 9px; font-weight: 700; vertical-align: super; margin-left: 2px; color: var(--rr-red); }
 .rr-group-title { margin: 8px 0 0; }
 
