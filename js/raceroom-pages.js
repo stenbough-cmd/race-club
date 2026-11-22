@@ -128,7 +128,7 @@
       cols.push({ key: 'wins', label: 'Wins', num: true }, { key: 'total', label: 'Total', num: true, sorted: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
         RR.strip(rows.slice(0, 7).map(function (r) {
-          return { title: r.d.name, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
+          return { title: r.d.name, country: r.d.country, livery: r.d.livery, sub: r.d.team + ' · ' + className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
         RR.statRow([
           RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
@@ -137,7 +137,7 @@
           cls === 'all' && classesIn(season).length > 1 ? RR.stat('Lead', '-', 'Choose a class') : RR.stat('Lead', lead && second ? '+' + (lead.t.total - second.t.total) : '-', 'Points over second place')
         ]),
         RR.table(cols, rows.map(function (r, i) {
-          var cells = { pos: RR.pos(i + 1), driver: RR.cell(r.d.name, r.d.team),
+          var cells = { pos: RR.pos(i + 1), driver: RR.cell(RR.nameWithFlag(r.d.name, r.d.country), r.d.team),
             wins: season.results.filter(function (x) { return x.driver === r.d.id && x.pos === 1 && x.status === 'Finished'; }).length,
             total: r.t.total };
           season.rounds.forEach(function (rd, k) { cells['r' + rd.n] = rd.done ? pointsNode(resultOf(season, rd.n, r.d.id), r.t.drop.indexOf(k) >= 0) : '-'; });
@@ -170,7 +170,7 @@
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
-              pos: resultCell(x), driver: RR.cell(d.name, d.team), cls: className(x.cls),
+              pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), cls: className(x.cls),
               best: RR.lap(x.best), gap: RR.gap(x.gap), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
             } };
           }), 'No results for this class.'));
@@ -212,7 +212,7 @@
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
-            pos: i + 1, driver: RR.cell(d.name, d.team), lap: RR.lap(x.best), delta: RR.gap(x.best - fastest),
+            pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), lap: RR.lap(x.best), delta: RR.gap(x.best - fastest),
             car: RR.cell(x.car, className(x.cls)), date: r.date
           } };
         }), 'No lap times for this class.'));
@@ -279,7 +279,7 @@
         { key: 'car', label: 'Car' }, { key: 'races', label: 'Races', num: true }, { key: 'wins', label: 'Wins', num: true },
         { key: 'podiums', label: 'Podiums', num: true }, { key: 'points', label: 'Points', num: true }
       ], rows.map(function (d) {
-        return { href: profileLink(d), cells: { driver: RR.cell(d.name, d.team), country: d.country, cls: className(d.cls),
+        return { href: profileLink(d), cells: { driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), country: d.country, cls: className(d.cls),
           car: d.car, races: d.races, wins: d.wins, podiums: d.podiums, points: d.points } };
       }), 'No drivers yet.'));
     }
@@ -435,6 +435,7 @@
       return;
     }
     RR.setTitle(d.name);
+    (function () { var f = RR.flag(d.country), h = document.querySelector('.rr-page-title'); if (f && h) { h.classList.add('rr-name'); h.insertBefore(f, h.firstChild); f.style.width = '30px'; f.style.height = '21px'; } })();
     var sel = 'all', clsFilter = 'all', achFilter = 'all', statPick = 'highlights', boardTrack = 'all', boardCls = 'all';
     var careerClasses = D.classes.filter(function (c) { return profileRows(d, 'all').some(function (r) { return r.x.cls === c.id; }); });
     var historyBox = el('div'), achBox = el('div', 'rr-stack'), statsRight = el('div', 'rr-stack'), boardBox = el('div', 'rr-stack');
@@ -451,8 +452,8 @@
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points))));
       var fav = st.favouriteCar;
-      var hero = add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
-        el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet'));
+      var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
+        el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');
       var standing = add(el('div', 'rr-panel rr-stack'), RR.label('Season standing'),
         add(el('div', 'rr-kv-list'), RR.kv('Season', season.name), RR.kv('Class', className(d.cls)), RR.kv('Position', place ? RR.pos(place) + ' of ' + table.length : '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Points', mineRow ? mineRow.t.total : '-'),
@@ -463,6 +464,7 @@
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
+        RR.banner({ eyebrow: className(d.cls), title: d.name, country: d.country, sub: d.team + ' · ' + d.car, livery: d.livery }),
         add(el('div', 'rr-grid-2'), card, hero),
         add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
         RR.statRow([

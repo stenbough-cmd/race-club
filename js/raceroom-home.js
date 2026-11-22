@@ -10,7 +10,7 @@
   var TILES = [
     { title: 'League News', desc: 'The latest from the league.', href: 'news.html', photo: IMG + 'league-news.jpg' },
     { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html', photo: IMG + 'leaderboards.jpg' },
-    { title: 'Driver List', desc: 'Every driver in the league.', href: 'drivers.html', photo: IMG + 'driver-list.jpg' },
+    { title: 'Driver List', desc: 'Comprehensive race reports.', href: 'drivers.html', photo: IMG + 'driver-list.jpg' },
     { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html', photo: IMG + 'about-race-club.jpg' }
   ];
 

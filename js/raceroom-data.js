@@ -26,6 +26,15 @@
       starts: ['2026-08-03T01:00:00Z', '2026-08-10T01:00:00Z', '2026-08-17T01:00:00Z', '2026-08-24T01:00:00Z'], tracks: [0, 3, 1, 4], shift: 5 }
   ];
 
+  /* Real RaceRoom cars and their default liveries (RaceRoom's own IDs), so the sample pages show real pictures.
+     The league's real data will carry the livery each driver used, straight from the results file. */
+  var CLASS_CARS = {
+    dtm92: [{ name: 'Mercedes 190E Evo II DTM', livery: 3541 }, { name: 'BMW M3 Sport Evolution', livery: 3557 },
+      { name: 'Audi V8 DTM', livery: 3664 }, { name: 'Ford Mustang GT DTM', livery: 3846 }],
+    st: [{ name: 'Honda Accord Super Touring', livery: 9848 }, { name: 'BMW 320i E36 Super Touring', livery: 12614 },
+      { name: 'Audi A4 Super Touring 1995', livery: 12563 }, { name: 'Volvo 850 Super Touring', livery: 12654 }]
+  };
+
   var data = {
     sample: true,
     classes: [
@@ -33,14 +42,14 @@
       { id: 'st', name: 'Super Touring' }
     ],
     drivers: [
-      { id: 'sample-driver-1', name: 'Sample Driver 1', team: 'Sample Team A', country: 'United States', cls: 'dtm92', car: 'Sample Car A' },
-      { id: 'sample-driver-2', name: 'Sample Driver 2', team: 'Sample Team A', country: 'Canada', cls: 'dtm92', car: 'Sample Car B' },
-      { id: 'sample-driver-3', name: 'Sample Driver 3', team: 'Sample Team B', country: 'Germany', cls: 'dtm92', car: 'Sample Car C' },
-      { id: 'sample-driver-4', name: 'Sample Driver 4', team: 'Sample Team B', country: 'United Kingdom', cls: 'dtm92', car: 'Sample Car A' },
-      { id: 'sample-driver-5', name: 'Sample Driver 5', team: 'Sample Team C', country: 'United States', cls: 'st', car: 'Sample Car D' },
-      { id: 'sample-driver-6', name: 'Sample Driver 6', team: 'Sample Team C', country: 'Italy', cls: 'st', car: 'Sample Car E' },
-      { id: 'sample-driver-7', name: 'Sample Driver 7', team: 'Sample Team D', country: 'France', cls: 'st', car: 'Sample Car D' },
-      { id: 'sample-driver-8', name: 'Sample Driver 8', team: 'Sample Team D', country: 'Spain', cls: 'st', car: 'Sample Car E' }
+      { id: 'sample-driver-1', name: 'Sample Driver 1', team: 'Sample Team A', country: 'United States', cls: 'dtm92', car: CLASS_CARS.dtm92[0].name, livery: CLASS_CARS.dtm92[0].livery },
+      { id: 'sample-driver-2', name: 'Sample Driver 2', team: 'Sample Team A', country: 'Canada', cls: 'dtm92', car: CLASS_CARS.dtm92[1].name, livery: CLASS_CARS.dtm92[1].livery },
+      { id: 'sample-driver-3', name: 'Sample Driver 3', team: 'Sample Team B', country: 'Germany', cls: 'dtm92', car: CLASS_CARS.dtm92[2].name, livery: CLASS_CARS.dtm92[2].livery },
+      { id: 'sample-driver-4', name: 'Sample Driver 4', team: 'Sample Team B', country: 'United Kingdom', cls: 'dtm92', car: CLASS_CARS.dtm92[3].name, livery: CLASS_CARS.dtm92[3].livery },
+      { id: 'sample-driver-5', name: 'Sample Driver 5', team: 'Sample Team C', country: 'United States', cls: 'st', car: CLASS_CARS.st[0].name, livery: CLASS_CARS.st[0].livery },
+      { id: 'sample-driver-6', name: 'Sample Driver 6', team: 'Sample Team C', country: 'Italy', cls: 'st', car: CLASS_CARS.st[1].name, livery: CLASS_CARS.st[1].livery },
+      { id: 'sample-driver-7', name: 'Sample Driver 7', team: 'Sample Team D', country: 'France', cls: 'st', car: CLASS_CARS.st[2].name, livery: CLASS_CARS.st[2].livery },
+      { id: 'sample-driver-8', name: 'Sample Driver 8', team: 'Sample Team D', country: 'Spain', cls: 'st', car: CLASS_CARS.st[3].name, livery: CLASS_CARS.st[3].livery }
     ],
     news: [
       { id: 'sample-story-2', kind: 'story', eyebrow: 'Race story', title: 'Sample race story for round 2', date: '08.11.2026',
@@ -81,7 +90,11 @@
   /* Make up seasons, rounds and results so every page agrees with every other page.
      Each result carries everything the leaderboard and profile pages need. All of it can be worked out
      from the real results files and the Rounds tab, nothing here is a field the files do not have. */
-  var OTHER_CARS = ['Sample Car A', 'Sample Car B', 'Sample Car C', 'Sample Car D', 'Sample Car E'];
+  /* Each driver has a main car; from round 3 they try the next one in the class. */
+  function classCar(clsId, d, roundNo) {
+    var list = CLASS_CARS[clsId], mainAt = Math.max(0, list.map(function (c) { return c.name; }).indexOf(d.car));
+    return list[(mainAt + (roundNo > 2 ? 1 : 0)) % list.length];
+  }
   data.seasons = SEASON_DEFS.map(function (def) {
     var season = { id: def.id, name: def.name, status: def.status, dropWeeks: def.dropWeeks, rounds: [], results: [], champion: null };
     def.dates.forEach(function (date, i) {
@@ -106,7 +119,7 @@
             fastest: false, best: lap, gap: i * 3510, gapPct: 0,
             incidents: (i * 3 + round.n + def.shift) % 7, penalty: (i + round.n) % 9 === 0 ? 5 : 0,
             status: dnf ? 'DNF' : 'Finished', laps: dnf ? 9 : 15, led: i === 0 ? 11 : (i === 1 ? 4 : 0),
-            car: OTHER_CARS[(data.drivers.indexOf(d) + (round.n > 2 ? 1 : 0)) % OTHER_CARS.length],
+            car: classCar(cls.id, d, round.n).name, livery: classCar(cls.id, d, round.n).livery,
             invalid: (i + round.n) % 4
           });
         });

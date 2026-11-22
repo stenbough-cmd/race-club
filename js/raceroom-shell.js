@@ -499,7 +499,9 @@
   /* Two-line cell: main line + small second line */
   RR.cell = function (mainText, subText) {
     var w = el('span');
-    add(w, el('span', 'rr-cell-main', dash(mainText)), subText ? el('span', 'rr-cell-sub', subText) : null);
+    var main = el('span', 'rr-cell-main');
+    if (mainText && mainText.nodeType) main.appendChild(mainText); else main.textContent = dash(mainText);
+    add(w, main, subText ? el('span', 'rr-cell-sub', subText) : null);
     return w;
   };
 
@@ -599,6 +601,48 @@
   };
 
 
+  /* ---- Flags: a driver's country name (as the league writes it) to the flag picture in assets/flags/ ---- */
+  var COUNTRY_CODES = {"united states":"us","united states of america":"us","usa":"us","canada":"ca","mexico":"mx","germany":"de","united kingdom":"gb","great britain":"gb","uk":"gb","england":"gb","scotland":"gb","wales":"gb","northern ireland":"gb","france":"fr","italy":"it","spain":"es","portugal":"pt","netherlands":"nl","the netherlands":"nl","belgium":"be","luxembourg":"lu","switzerland":"ch","austria":"at","sweden":"se","norway":"no","denmark":"dk","finland":"fi","iceland":"is","ireland":"ie","poland":"pl","czech republic":"cz","czechia":"cz","slovakia":"sk","hungary":"hu","romania":"ro","bulgaria":"bg","greece":"gr","turkey":"tr","croatia":"hr","serbia":"rs","slovenia":"si","bosnia and herzegovina":"ba","montenegro":"me","north macedonia":"mk","albania":"al","estonia":"ee","latvia":"lv","lithuania":"lt","ukraine":"ua","belarus":"by","russia":"ru","moldova":"md","cyprus":"cy","malta":"mt","monaco":"mc","andorra":"ad","liechtenstein":"li","australia":"au","new zealand":"nz","japan":"jp","china":"cn","south korea":"kr","korea":"kr","north korea":"kp","taiwan":"tw","singapore":"sg","malaysia":"my","thailand":"th","vietnam":"vn","philippines":"ph","indonesia":"id","india":"in","pakistan":"pk","bangladesh":"bd","sri lanka":"lk","nepal":"np","israel":"il","jordan":"jo","lebanon":"lb","saudi arabia":"sa","united arab emirates":"ae","uae":"ae","qatar":"qa","bahrain":"bh","kuwait":"kw","oman":"om","iran":"ir","iraq":"iq","kazakhstan":"kz","georgia":"ge","armenia":"am","azerbaijan":"az","brazil":"br","argentina":"ar","chile":"cl","colombia":"co","peru":"pe","uruguay":"uy","paraguay":"py","bolivia":"bo","ecuador":"ec","venezuela":"ve","costa rica":"cr","panama":"pa","guatemala":"gt","honduras":"hn","el salvador":"sv","nicaragua":"ni","cuba":"cu","dominican republic":"do","jamaica":"jm","trinidad and tobago":"tt","bahamas":"bs","barbados":"bb","south africa":"za","egypt":"eg","morocco":"ma","algeria":"dz","tunisia":"tn","nigeria":"ng","ghana":"gh","kenya":"ke","ethiopia":"et","tanzania":"tz","uganda":"ug","zimbabwe":"zw","namibia":"na","botswana":"bw","mauritius":"mu","angola":"ao","mozambique":"mz","senegal":"sn","cameroon":"cm","ivory coast":"ci","cote d'ivoire":"ci"};
+  RR.countryCode = function (country) { return COUNTRY_CODES[String(country || '').trim().toLowerCase()] || ''; };
+  /* RR.flag('Canada') is a small <img> of the flag, or null when the country is not known. */
+  RR.flag = function (country) {
+    var code = RR.countryCode(country);
+    if (!code) return null;
+    var f = el('img', 'rr-flag');
+    f.src = 'assets/flags/' + code + '.svg';
+    f.alt = country;
+    f.title = country;
+    f.width = 20;
+    f.height = 14;
+    f.onerror = function () { f.remove(); };
+    return f;
+  };
+  /* A name with the driver's flag in front of it. */
+  RR.nameWithFlag = function (name, country) {
+    var w = el('span', 'rr-name'), f = RR.flag(country);
+    if (f) w.appendChild(f);
+    w.appendChild(document.createTextNode(name));
+    return w;
+  };
+
+  /* Fill a box with a RaceRoom picture behind its text (a livery by its ID), under a dark fade so the text stays readable.
+     Needs raceroom-images.js on the page. The box keeps working with no picture. */
+  RR.photo = function (node, liveryId, size) {
+    if (!liveryId || !RR.images) return node;
+    node.classList.add('rr-has-photo');
+    var pic = RR.images.img('livery', liveryId, { size: size || 'small', className: 'rr-photo-img' });
+    node.insertBefore(pic, node.firstChild);
+    return node;
+  };
+
+  /* Wide banner at the top of a page: a livery picture with a name (and flag), a small line above and a line below. */
+  RR.banner = function (o) {
+    var b = el('div', 'rr-banner');
+    add(b, o.eyebrow ? el('div', 'rr-label', o.eyebrow) : null, add(el('h2', 'rr-banner-title'), RR.nameWithFlag(o.title, o.country)),
+      o.sub ? el('div', 'rr-note', o.sub) : null);
+    return RR.photo(b, o.livery, 'full');
+  };
+
   /* Ranking strip: the top of a table as tiles. Rank 1 is large, 2 and 3 medium, 4 to 7 small.
      items: [{ title, sub, value, valueLabel, href }] in rank order (up to 7). Every tile is a link and lifts on hover. */
   RR.strip = function (items) {
@@ -606,8 +650,11 @@
     items.slice(0, 7).forEach(function (it, i) {
       var t = el(it.href ? 'a' : 'div', 'rr-rank-tile rr-rank-' + (i + 1) + (it.href ? ' rr-block-link' : ''));
       if (it.href) t.href = it.href;
-      add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), el('h3', 'rr-rank-name', it.title), it.sub ? el('div', 'rr-note', it.sub) : null,
+      var name = el('h3', 'rr-rank-name');
+      name.appendChild(it.country ? RR.nameWithFlag(it.title, it.country) : document.createTextNode(it.title));
+      add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), name, it.sub ? el('div', 'rr-note', it.sub) : null,
         add(el('div', 'rr-rank-value'), el('span', 'rr-stat-value', dash(it.value)), it.valueLabel ? RR.label(it.valueLabel) : null));
+      if (it.livery) RR.photo(t, it.livery, i < 3 ? 'full' : 'small');
       box.appendChild(t);
     });
     return box;
