@@ -170,6 +170,7 @@
   var homeBtn = iconBtn('a', 'home', 'Home');
   homeBtn.href = 'index.html';
   homeBtn.classList.add('rr-icon-solid');
+  if (mainId === 'home') homeBtn.setAttribute('aria-current', 'page');
   /* Back and Forward are hidden in portrait (phones have their own); see css. */
   backBtn.classList.add('rr-hide-portrait');
   forwardBtn.classList.add('rr-hide-portrait');
@@ -817,9 +818,13 @@
   /* Make any button two-click. `hoverText` is no longer shown. The first click turns it red with
      `confirmText` (for example "Confirm start over") as its tooltip; the second click within 3 seconds runs `action`.
      After 3 seconds it goes back to normal. */
-  RR.arm = function (node, hoverText, confirmText, action) {
+  RR.arm = function (node, hoverText, confirmText, action, canArm) {
     /* No tooltip on hover: the confirm tooltip shows only after the first click. (hoverText is kept so old calls still work.) */
-    node.addEventListener('click', function () { armClick(node, confirmText, action); });
+    node.addEventListener('click', function () {
+      /* canArm (optional) is asked on the first click; when it says false (for example, a box is empty) the button does not turn red. */
+      if (!node._rrArm && canArm && canArm() === false) return;
+      armClick(node, confirmText, action);
+    });
     return node;
   };
   /* Put a red exclamation in a circle behind the names of these sub-tabs, e.g. RR.flagTabs(['season', 'calendar']).

@@ -342,27 +342,33 @@
       }
       function refresh() {
         var m = missing();
-        submit.disabled = m.length > 0;
+        mark();
+      }
+      /* After a click on Submit with something missing, each missing box gets a red border until it is filled. */
+      var flagged = false, meSelect, reasonSelect, lapSelect, passwordBox;
+      function mark() {
+        function set(box, bad) { if (!box) return; if (flagged && bad) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
+        set(meSelect, !f.me); set(otherBox.firstChild, !f.other); set(reasonSelect, !f.reason); set(lapSelect, !f.lap); set(passwordBox, !f.password);
       }
       function drawOther() {
         fill(otherBox, RR.select(f.self ? 'Driver you collided with' : 'Driver you are reporting', drivers(f.me), function (v) { f.other = v; refresh(); }, f.other));
+        mark();
       }
 
-      var meSelect = RR.select('Who are you', drivers(''), function (v) {
+      meSelect = RR.select('Who are you', drivers(''), function (v) {
         f.me = v;
         if (f.other === v) f.other = '';
         drawOther(); refresh();
       }, f.me);
       var selfBox = RR.checkbox('Self report', function (on) { f.self = on; drawOther(); refresh(); }, false);
-      var reasonSelect = RR.select('Reason', [['', 'Choose a reason']].concat(D.protestReasons.map(function (x) { return [x, x]; })), function (v) { f.reason = v; refresh(); }, f.reason);
+      reasonSelect = RR.select('Reason', [['', 'Choose a reason']].concat(D.protestReasons.map(function (x) { return [x, x]; })), function (v) { f.reason = v; refresh(); }, f.reason);
       var lapOptions = [['', 'Choose a lap']];
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
-      var lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
-      var passwordBox = RR.input({ label: 'Race password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
+      lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
+      passwordBox = RR.input({ label: 'Race password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
       var narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
-      RR.arm(submit, 'Submit your protest', 'Confirm protest', function () {
-        if (missing().length) return;
+      RR.arm(submit, '', 'Confirm protest', function () {
         /* SAMPLE check. The real one is done by the service, so the password is never in the page. */
         if (f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the race password. Only league members have it.', 'warn')); return; }
         fill(warn);
@@ -370,6 +376,11 @@
         message = RR.notice('Your protest was submitted. The stewards will rule on it after the 12 hour window closes.', 'ok');
         pickedRound = r.n;
         drawBody();
+      }, function () {
+        if (!missing().length) return true;
+        flagged = true;
+        mark();
+        return false;
       });
       add(submitWrap, submit);
       drawOther();
