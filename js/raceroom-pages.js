@@ -181,10 +181,9 @@
         var r = roundOf(season, pickedRound);
         var rows = season.results.filter(function (x) { return x.round === pickedRound && (cls === 'all' || x.cls === cls); })
           .sort(function (a, b) { return a.cls.localeCompare(b.cls) || a.pos - b.pos; });
-        var final = r.status === 'Final';
+        var open = !!r.protestCloses;
         fill(right, RR.heading(r.track + ' · ' + r.layout),
-          add(el('div', 'rr-form-row'), RR.tag(final ? 'Final' : 'Provisional', !final),
-            RR.label(final ? 'Protest window closed' : 'Protests close ' + r.protestCloses)),
+          open ? add(el('div', 'rr-form-row'), RR.label('Protests close ' + r.protestCloses)) : null,
           RR.table([
             { key: 'pos', label: 'Result', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'cls', label: 'Class' },
             { key: 'best', label: 'Best lap', num: true }, { key: 'gap', label: 'Gap', num: true }, { key: 'diff', label: 'Diff pos', num: true },
@@ -261,19 +260,84 @@
         timeZoneName: 'short' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
       return { date: p.day + '.' + p.month + '.' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
     }
+    /* The small track layout picture next to the track name. */
+    function trackCell(r) {
+      var w = el('span', 'rr-track-cell');
+      if (r.layoutId) w.appendChild(RR.images.img('layout', r.layoutId, { className: 'rr-layout-img', alt: r.track + ' layout' }));
+      w.appendChild(RR.cell(r.track, r.layout));
+      return w;
+    }
     function drawSchedule() {
       fill(RR.view('schedule'), RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date', sorted: true },
         { key: 'time', label: 'Time' }, { key: 'status', label: 'Status' }
       ], season.rounds.filter(function (r) { return !onlyUpcoming || !r.done; }).map(function (r) {
         var at = localStart(r);
-        return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: at ? at.date : r.date,
+        return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
           time: at ? RR.cell(at.time, at.zone) : '-',
           status: r.done ? RR.tag('Finished') : RR.tag('Upcoming', true) } };
       }), onlyUpcoming ? 'No upcoming rounds.' : 'The schedule has not been posted yet.'));
     }
 
-    function drawAll() { drawStandings(); drawResults(); drawLapTimes(); drawSchedule(); RR.refresh(); }
+    /* Season: what the season is made of, from what the season wizard saved. Each class with its cars and liveries,
+       then the race rules, the weekend format and the points. */
+    function seasonPanel(title) {
+      var box = el('div', 'rr-panel rr-stack');
+      if (title) box.appendChild(RR.heading(title));
+      for (var i = 1; i < arguments.length; i++) if (arguments[i]) box.appendChild(arguments[i]);
+      return box;
+    }
+    function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+    function seasonCar(k) {
+      var info = el('div', 'rr-season-info'), strip = el('div', 'rr-season-liveries');
+      k.liveries.forEach(function (id) { strip.appendChild(RR.images.img('livery', id, { className: 'rr-season-livery' })); });
+      RR.images.details(k.carId).then(function (d) {
+        if (!d) return;
+        [['Power', d.powerHp ? d.powerHp + ' hp' : ''], ['Weight', d.weightKg ? RR.num(d.weightKg) + ' kg' : ''],
+          ['Drivetrain', d.drivetrain], ['Top speed', d.topSpeedKmh ? d.topSpeedKmh + ' km/h' : '']].forEach(function (x) {
+          if (x[1]) info.appendChild(RR.kv(x[0], x[1], true));
+        });
+      });
+      return add(el('div', 'rr-season-car'),
+        add(el('div', 'rr-season-car-pic'), RR.images.img('livery', k.liveries[0], { size: 'full', className: 'rr-season-car-img', alt: k.name })),
+        el('h3', 'rr-card-title', k.name), info, strip);
+    }
+    function seasonClass(c) {
+      var liveries = c.cars.reduce(function (n, k) { return n + k.liveries.length; }, 0), cars = el('div', 'rr-season-cars');
+      c.cars.forEach(function (k) { cars.appendChild(seasonCar(k)); });
+      return seasonPanel(null,
+        add(el('div', 'rr-season-head'), RR.images.img('class', c.classId, { className: 'rr-season-class-img', alt: c.name }),
+          add(el('div'), RR.heading(c.name), RR.label(plural(c.cars.length, 'car', 'cars') + ' \u00B7 ' + plural(liveries, 'livery', 'liveries')))),
+        cars);
+    }
+    function drawSeason() {
+      var setup = season.setup, node = RR.view('season');
+      if (!setup) { fill(node, RR.empty('The details for this season have not been posted yet.')); return; }
+      var out = el('div', 'rr-stack');
+      setup.classes.filter(function (c) { return cls === 'all' || c.id === cls; }).forEach(function (c) { out.appendChild(seasonClass(c)); });
+      var rules = el('div', 'rr-season-rules');
+      setup.rules.forEach(function (g) {
+        var col = el('div', 'rr-stack-tight');
+        col.appendChild(RR.label(g.group));
+        g.items.forEach(function (x) { col.appendChild(RR.kv(x[0], x[1], true)); });
+        rules.appendChild(col);
+      });
+      out.appendChild(seasonPanel('Race rules', rules));
+      out.appendChild(seasonPanel('Race weekend', RR.table(
+        [{ key: 'session', label: 'Session' }, { key: 'length', label: 'Length' }, { key: 'start', label: 'Start' }],
+        setup.weekend.map(function (w) { return { cells: { session: w.session, length: w.length, start: w.start } }; }),
+        'The weekend format has not been posted yet.')));
+      var pts = setup.points, bonus = el('div', 'rr-kv-list');
+      pts.bonuses.forEach(function (b) { bonus.appendChild(RR.kv(b[0], b[1])); });
+      bonus.appendChild(RR.kv('Dropped rounds', pts.dropWeeks ? String(pts.dropWeeks) : 'None'));
+      out.appendChild(seasonPanel('Points', RR.table(
+        [{ key: 'name', label: 'Class' }, { key: 'table', label: 'Points by finishing position' }],
+        pts.classes.filter(function (c) { return cls === 'all' || className(cls) === c.name; })
+          .map(function (c) { return { cells: { name: c.name, table: c.table } }; }), 'No points table posted yet.'), bonus));
+      fill(node, out);
+    }
+
+    function drawAll() { drawStandings(); drawResults(); drawLapTimes(); drawSchedule(); drawSeason(); RR.refresh(); }
     /* The Class dropdown only lists classes that raced in the chosen season. */
     function drawClassSelect() {
       var here = classesIn(season);
@@ -306,7 +370,7 @@
       pressRow(list, items.map(function (i) { return i[0]; }).indexOf(pickedRound));
       var right = el('div', 'rr-stack');
       function drawRound() {
-        var r = roundOf(season, pickedRound), open = r.status === 'Provisional', rulings = protestTable(season, r.n);
+        var r = roundOf(season, pickedRound), open = !!r.protestCloses, rulings = protestTable(season, r.n);
         fill(right, message, RR.heading(r.track + ' · ' + r.layout),
           add(el('div', 'rr-form-row'), RR.tag(open ? 'Protests open' : 'Protests closed', !open),
             RR.label(open ? 'Protests close ' + r.protestCloses : 'The 12 hour protest window is over')),

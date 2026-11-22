@@ -9,11 +9,11 @@
 
   /* The tracks the sample seasons use. Different seasons reuse them so lap boards have something to compare. */
   var TRACKS = [
-    { track: 'Sample Circuit One', layout: 'Grand Prix', base: 97721 },
-    { track: 'Sample Circuit Two', layout: 'National', base: 70103 },
-    { track: 'Sample Circuit Three', layout: 'Grand Prix', base: 127310 },
-    { track: 'Sample Circuit Four', layout: 'Road Course', base: 99755 },
-    { track: 'Sample Circuit Five', layout: 'Short', base: 61408 }
+    { track: 'Sample Circuit One', layout: 'Grand Prix', layoutId: 1671, base: 97721 },
+    { track: 'Sample Circuit Two', layout: 'National', layoutId: 1674, base: 70103 },
+    { track: 'Sample Circuit Three', layout: 'Grand Prix', layoutId: 1678, base: 127310 },
+    { track: 'Sample Circuit Four', layout: 'Road Course', layoutId: 1684, base: 99755 },
+    { track: 'Sample Circuit Five', layout: 'Short', layoutId: 1691, base: 61408 }
   ];
 
   /* Newest season first. Draft seasons are never shown to visitors, so none are listed here. */
@@ -33,6 +33,38 @@
       { name: 'Audi V8 DTM', livery: 3664 }, { name: 'Ford Mustang GT DTM', livery: 3846 }],
     st: [{ name: 'Honda Accord Super Touring', livery: 9848 }, { name: 'BMW 320i E36 Super Touring', livery: 12614 },
       { name: 'Audi A4 Super Touring 1995', livery: 12563 }, { name: 'Volvo 850 Super Touring', livery: 12654 }]
+  };
+
+  /* Sample season setup (real RaceRoom class, car and livery IDs so the pictures show). */
+  var SETUP = {
+    classes: [
+      { id: 'dtm92', classId: 3499, name: 'DTM 1992', cars: [
+        { carId: 3539, name: CLASS_CARS.dtm92[0].name, liveries: [3541, 3542, 3543] },
+        { carId: 3549, name: CLASS_CARS.dtm92[1].name, liveries: [3557, 3558, 3559] },
+        { carId: 3662, name: CLASS_CARS.dtm92[2].name, liveries: [3664, 3665, 3666] },
+        { carId: 3842, name: CLASS_CARS.dtm92[3].name, liveries: [3846, 3847] }] },
+      { id: 'st', classId: 1710, name: 'Super Touring', cars: [
+        { carId: 8645, name: CLASS_CARS.st[0].name, liveries: [9848, 11291, 11292] },
+        { carId: 12556, name: CLASS_CARS.st[1].name, liveries: [12614, 12558, 12600] },
+        { carId: 12561, name: CLASS_CARS.st[2].name, liveries: [12563, 12581, 12584] },
+        { carId: 12652, name: CLASS_CARS.st[3].name, liveries: [12654, 12664, 12666] }] }
+    ],
+    rules: [
+      { group: 'Grid and sessions', items: [['Max players', '12'], ['Reverse grid', 'Off'], ['Join qualifying late', 'Yes']] },
+      { group: 'Car and wear', items: [['Fuel usage', 'Normal'], ['Tyre wear', 'Normal'], ['Damage', 'Full'], ['Mandatory pit stop', 'Off'], ['Fixed setup', 'Yes']] },
+      { group: 'Race rules', items: [['Flag rules', 'Visual only'], ['Cut rules', 'Slow down'], ['Wrecker prevention', 'Off'], ['Max incident points', '30']] },
+      { group: 'Drive assists', items: [['Preset', 'Custom'], ['Traction control', 'On'], ['Stability control', 'On'], ['Brake assist', 'On']] }
+    ],
+    weekend: [
+      { session: 'Practice', length: '15 minutes', start: 'Standing' },
+      { session: 'Qualify', length: '15 minutes', start: 'Standing' },
+      { session: 'Race 1', length: '20 minutes', start: 'Standing' }
+    ],
+    points: [
+      { name: 'DTM 1992', table: POINTS.join(', ') },
+      { name: 'Super Touring', table: POINTS.join(', ') }
+    ],
+    bonuses: [['Pole position', '1 point'], ['Fastest lap', '1 point'], ['Clean race', '1 point']]
   };
 
   var data = {
@@ -96,11 +128,15 @@
     return list[(mainAt + (roundNo > 2 ? 1 : 0)) % list.length];
   }
   data.seasons = SEASON_DEFS.map(function (def) {
-    var season = { id: def.id, name: def.name, status: def.status, dropWeeks: def.dropWeeks, rounds: [], results: [], champion: null };
+    var season = { id: def.id, name: def.name, status: def.status, dropWeeks: def.dropWeeks, rounds: [], results: [], champion: null,
+      /* What the season is made of, as the season wizard saved it: classes with cars and liveries, rules, weekend and points.
+         Every value is already readable text, so the Season page only displays it. */
+      setup: { classes: SETUP.classes, rules: SETUP.rules, weekend: SETUP.weekend,
+        points: { classes: SETUP.points, bonuses: SETUP.bonuses, dropWeeks: def.dropWeeks } } };
     def.dates.forEach(function (date, i) {
       var t = TRACKS[def.tracks[i]];
-      season.rounds.push({ n: i + 1, track: t.track, layout: t.layout, date: date, start: def.starts[i], done: i < def.doneCount,
-        base: t.base, status: i < def.doneCount ? (def.status === 'Active' && i === def.doneCount - 1 ? 'Provisional' : 'Final') : 'Scheduled',
+      season.rounds.push({ n: i + 1, track: t.track, layout: t.layout, layoutId: t.layoutId, date: date, start: def.starts[i], done: i < def.doneCount,
+        base: t.base, status: i < def.doneCount ? (def.status === 'Active' && i === def.doneCount - 1 ? 'Waiting' : 'Settled') : 'Scheduled',
         protestCloses: def.status === 'Active' && i === def.doneCount - 1 ? '09.11.2026 08:00' : '' });
     });
     season.rounds.forEach(function (round) {
@@ -169,7 +205,7 @@
       if (!round.done) return;
       var field = data.drivers.filter(function (d) { return d.cls === 'dtm92'; });
       var a = field[(round.n + 1) % field.length], b = field[(round.n + 2) % field.length];
-      var open = round.status === 'Provisional';
+      var open = round.status === 'Waiting';
       var self = round.n % 2 === 0;
       data.protests.push({ season: season.id, round: round.n, by: a.id, against: b.id, self: self, lap: 3 + round.n,
         reason: PROTEST_REASONS[round.n % 4], narrative: self ? 'I went in too deep into the braking zone and hit the car ahead.' : 'Moved across on the straight while I was alongside and we touched.',

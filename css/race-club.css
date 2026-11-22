@@ -924,3 +924,21 @@ button, select { font-family: inherit; }
 .rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 28px; height: auto; opacity: 0.6; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
 @media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } }
+
+
+/* ---------- Season sub-tab and track layout pictures ---------- */
+.rr-track-cell { display: flex; align-items: center; gap: 12px; }
+.rr-layout-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.rr-season-head { display: flex; align-items: center; gap: 16px; }
+.rr-season-class-img { height: 40px; width: auto; max-width: 120px; object-fit: contain; flex: none; }
+.rr-season-cars { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rr-season-car { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--rr-well); }
+.rr-season-car-pic { aspect-ratio: 16 / 9; display: flex; }
+.rr-season-car-img { width: 100%; height: 100%; object-fit: contain; }
+.rr-season-info:empty { display: none; }
+.rr-season-liveries { display: flex; flex-wrap: wrap; gap: 4px; }
+.rr-season-livery { width: 56px; height: 32px; object-fit: cover; }
+.rr-season-rules { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (orientation: portrait) {
+  .rr-season-cars, .rr-season-rules { grid-template-columns: minmax(0, 1fr); }
+}
