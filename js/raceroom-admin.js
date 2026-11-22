@@ -11,6 +11,10 @@
   var RR = window.RR, R3E = window.RR_R3E;
   var el = RR.el, add = RR.add;
   var STORE = 'rr-admin-season';
+  /* The Race Club server picture, uploaded once in the RaceRoom server tool. Every server file carries this same address
+     (unless "Show server banner" is turned off). It is not editable in the wizard. If the picture is ever uploaded again in
+     the tool it gets a new address: copy the new one from an exported file's "Thumbnail" and paste it here. */
+  var SERVER_IMAGE = 'https://r3-live.fra1.digitaloceanspaces.com/mp-thumbnails/019f5f983be54b1dbf705b6b4890335d.png';
 
   /* ---------------- Lookup helpers ---------------- */
   var layoutIndex = {};
@@ -141,7 +145,8 @@
       version: 1,
       name: 'Season 01',
       prefix: 'RACE CLUB ONLINE: SEASON 01',
-      serverId: 515929,
+      serverId: 516491,
+      showBanner: true,
       motd: '',
       zone: browserZone(),
       liveries: [],
@@ -163,7 +168,8 @@
   try { var kept = JSON.parse(localStorage.getItem(STORE)); if (kept && kept.version === 1) S = kept; } catch (e) {}
   function tidy() {   /* fill in anything an older saved season does not have */
     S.zone = browserZone();
-    delete S.thumbnail;   /* the server image is not part of the exported files any more */
+    delete S.thumbnail;   /* the picture address is a fixed setting above, never kept per season */
+    if (S.showBanner === undefined) S.showBanner = true;
     if (!S.calendar) S.calendar = { date: (S.rounds[0] && S.rounds[0].date) || '', time: (S.rounds[0] && S.rounds[0].time) || '20:00', gap: 1 };
     setDates();
   }
@@ -244,11 +250,13 @@
     return o;
   }
   function serverName(r) { return S.prefix + ' ' + r.id; }
-  function buildRoundFile(r) {
+  /* bans: the User IDs to blacklist, read from the Member Management list when the files are exported. */
+  function buildRoundFile(r, bans) {
     var w = weekendOf(r), g = {}, id = Number(S.serverId);
     g.Id = id;
     g.Name = serverName(r);
     g.Password = r.password || '';
+    if (S.showBanner !== false) g.Thumbnail = SERVER_IMAGE;
     g.Experience = 2481;
     if (Number(S.preset)) g.DriveAssistPreset = Number(S.preset);
     ASSISTS.forEach(function (a) { if (Number(S.assists[a[0]])) g[a[0]] = Number(S.assists[a[0]]); });
@@ -287,7 +295,7 @@
       BackupTime: Math.round(Date.now() / 1000),
       GameSettings: [g],
       Motds: [{ Id: id, Message: S.motd || '' }],
-      Bans: [], Weights: [],
+      Bans: (bans || []).map(function (userId, i) { return { Id: i + 1, ProcessId: 0, UserId: Number(userId) }; }), Weights: [],
       Positions: [{ ProcessId: id, Users: [] }],
       PowerRestrictions: [],
       SpectatorWhitelist: [{ ProcessId: id, Users: [] }]
@@ -374,8 +382,18 @@
     var L = layoutIndex[r.layoutId] || { track: 'track', layout: '' };
     return 'round-' + ('0' + (i + 1)).slice(-2) + '-' + r.id + '-' + slug(L.track + ' ' + L.layout) + '.json';
   }
-  function exportFiles() {
-    return races().map(function (r, i) { return { name: roundFileName(r, i), text: JSON.stringify(buildRoundFile(r), null, 2) }; });
+  function exportFiles(bans) {
+    return races().map(function (r, i) { return { name: roundFileName(r, i), text: JSON.stringify(buildRoundFile(r, bans), null, 2) }; });
+  }
+  /* The blacklist: the IDs of every member ticked Blacklist in Member Management, lowest first. Read fresh from the Sheet each
+     time. Resolves to null when the Sheet cannot be read, and the export is then stopped, because a file with an empty Bans
+     list could let a blacklisted driver back in. */
+  function readBans() {
+    return RR.api('listMembers').then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.members)) return null;
+      return res.members.filter(function (m) { return m.blacklist; }).map(function (m) { return Number(m.id); })
+        .sort(function (a, b) { return a - b; });
+    });
   }
 
   /* ---------------- Small screen helpers ---------------- */
@@ -435,6 +453,8 @@
       panel('Server',
         RR.row(text('Server ID', S, 'serverId', { type: 'number', bad: function () { return !Number(S.serverId); } }),
           RR.input({ label: 'Time zone', value: zoneLabel(S.zone), readOnly: true })),
+        RR.row(RR.checkbox('Show server banner', function (v) { S.showBanner = v; save(); }, S.showBanner !== false)),
+        note('The server banner is the Race Club picture shown for the server in the RaceRoom game. It is the same picture in every file. Untick the box to leave it out.'),
         note('The server ID is the number of your server in the RaceRoom server tool. Every round is imported onto that one server.'),
         note('The server tool uses the time zone of this browser and it cannot be changed, so it is fixed here. Every server online time in the calendar is in this zone.')),
       panel('Message of the day',
@@ -812,8 +832,15 @@
               return;
             }
             flagged = false;
-            download(makeZip(exportFiles()), slug(S.name || 'season') + '-server-files.zip');
-            status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip.';
+            status.textContent = 'Reading the blacklist from the Sheet...';
+            readBans().then(function (bans) {
+              if (!bans) {
+                status.textContent = 'Nothing was exported. The blacklist could not be read from the Sheet. Check that you are logged in and try again.';
+                return;
+              }
+              download(makeZip(exportFiles(bans)), slug(S.name || 'season') + '-server-files.zip');
+              status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.');
+            });
           }),
           RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
             S = newSeason();
@@ -823,6 +850,7 @@
             drawAll();
           })),
         status,
+        note('Each file carries the server blacklist (the members ticked Blacklist in Member Management). It is read from the Sheet when you press Export.'),
         note('The zip contains your server passwords. Keep them on your computer. Never add them to the website folder.'))
     ));
     RR.refresh();

@@ -728,6 +728,7 @@ button, select { font-family: inherit; }
 .rr-promo-soon { cursor: default; }
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .rr-promo-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.rr-promo-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .rr-tile-corner { position: absolute; top: 16px; left: 16px; }
 
 /* ---------- Hero panel ---------- */
@@ -888,14 +889,15 @@ button, select { font-family: inherit; }
 /* ---------- Flags ---------- */
 .rr-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .rr-flag { display: block; flex: none; width: 20px; height: 14px; object-fit: cover; box-shadow: 0 0 0 1px var(--rr-line); }
-.rr-rank-name .rr-name, .rr-banner-title .rr-name { max-width: 100%; }
+.rr-rank-name .rr-name { max-width: 100%; }
 
 /* ---------- Picture behind text (RR.photo): ranking tiles, banners and hero panels ---------- */
 .rr-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
 .rr-rank-tile.rr-has-photo::before, .rr-banner.rr-has-photo::before {
-  content: ""; position: absolute; inset: 0; z-index: 0;
+  content: ""; position: absolute; inset: 0; z-index: 1;   /* above the picture (z-index 0), under the text (z-index 1, later in the box) */
   background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.15) 80%);
 }
+.rr-banner.rr-has-photo::before { background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.6)); }   /* even fade: the driver's information sits across the whole banner */
 .rr-rank-tile.rr-has-photo > :not(.rr-photo-img), .rr-banner > :not(.rr-photo-img) { position: relative; z-index: 1; }
 .rr-rank-tile.rr-has-photo, .rr-banner {
   --rr-text: var(--rr-photo-text);
@@ -912,15 +914,13 @@ button, select { font-family: inherit; }
 .rr-hero .rr-photo-img { position: absolute; top: 0; bottom: 0; right: 0; left: auto; width: 50%; height: 100%; object-fit: contain; object-position: center; padding: 8px 8px 8px 0; box-sizing: border-box; }
 
 /* Wide banner at the top of a page */
-.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-bar); box-shadow: var(--rr-shadow); }
-.rr-banner-who { display: flex; align-items: flex-end; gap: 16px; }
+.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-bar); box-shadow: var(--rr-shadow); }
+.rr-banner-who { display: flex; align-items: center; gap: 16px; }
 .rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; overflow: hidden; background: var(--rr-bar); box-shadow: 0 0 0 2px var(--rr-photo-text); }
 .rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .rr-banner-avatar .rr-banner-avatar-mark { width: 56%; height: auto; object-fit: contain; }
-.rr-banner-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.rr-banner-title { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.1; text-transform: uppercase; }
-.rr-banner-title .rr-flag { width: 30px; height: 21px; }
+.rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
 .rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 28px; height: auto; opacity: 0.6; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
-@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } .rr-banner-title { font-size: 22px; } }
+@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } }

@@ -21,7 +21,7 @@
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
   /* The site version, shown in the footer of every page. Change it here and nowhere else each time the site is updated. */
-  var VERSION = '0.1.1';
+  var VERSION = '0.1.2';
   var LEGAL_SHORT = 'Race Club is an independent community-run sim racing league and is not affiliated with, endorsed by, or sponsored by RaceRoom, KW Studios, RaceRoom Entertainment AG, any racing team, vehicle manufacturer, race circuit, racing series, or trademark owner. All trademarks, logos, team names, liveries, vehicle names, and circuit names are the property of their respective owners and are used for identification and informational purposes only.';
   var TABSETS = {
     leaderboards: [
@@ -36,6 +36,11 @@
       ['statistics', 'Statistics'],
       ['achievements', 'Achievements'],
       ['boards', 'Leaderboards']
+    ],
+    /* Admin Results Management: what the server posted by itself, and adding a race by hand. */
+    results: [
+      ['server', 'Posted by the server'],
+      ['upload', 'Upload by hand']
     ],
     /* Admin Website Options: reminders for changing parts of the site. */
     options: [
@@ -558,11 +563,11 @@
     if (o.photo) { a.classList.add('rr-has-photo'); a.style.backgroundImage = 'url("' + o.photo + '")'; }
     if (soon) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag('Not yet', true)));
     else if (o.tag) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag(o.tag)));
-    if (o.eyebrow) a.appendChild(el('div', 'rr-label rr-red', o.eyebrow));
-    a.appendChild(el('h3', 'rr-tile-title', o.title));
-    var foot = el('div', 'rr-promo-foot');
-    add(foot, el('p', 'rr-body', o.desc || ''), soon ? null : el('span', 'rr-btn', o.button || 'Read'));
-    a.appendChild(foot);
+    /* The eyebrow, title and description are one block, so the title always sits right above the description;
+       the button is beside the block at the bottom. A tile with a button and a tile without one are then spaced the same. */
+    var text = add(el('div', 'rr-promo-text'), o.eyebrow ? el('div', 'rr-label rr-red', o.eyebrow) : null,
+      el('h3', 'rr-tile-title', o.title), el('p', 'rr-body', o.desc || ''));
+    a.appendChild(add(el('div', 'rr-promo-foot'), text, soon ? null : el('span', 'rr-btn', o.button || 'Read')));
     return a;
   };
 
@@ -611,17 +616,18 @@
     return node;
   };
 
-  /* Wide banner at the top of a driver's page. o: { eyebrow, title, country, sub, banner (picture address or ''), avatar (picture address or '') }.
-     With a banner picture it fills the box; with none the box is black and carries a small Race Club R in the lower right corner.
-     The profile picture (RaceRoom's helmet unless the driver uploaded one) sits on top at the left; with no picture, a dark square with the R. */
+  /* The Driver box on a driver's page: the driver's RaceRoom banner fills the box, with the profile picture at the left and the
+     driver's information (o.info, a list of nodes) beside it. o: { banner (picture address or ''), avatar (picture address or ''), alt, info }.
+     With a banner picture it fills the box under a dark fade; with none the box is black and carries a small Race Club R in the lower
+     right corner. The profile picture is RaceRoom's helmet unless the driver uploaded one; with no picture, a dark square with the R. */
   RR.banner = function (o) {
-    var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar');
+    var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar'), text = el('div', 'rr-banner-text');
     function fallback() { pic.textContent = ''; var r = el('img', 'rr-banner-avatar-mark'); r.src = 'assets/images/Race Club R White.webp'; r.alt = ''; pic.appendChild(r); }
     if (/^https:\/\//.test(String(o.avatar || ''))) {
-      var a = el('img'); a.alt = o.title + ' profile picture'; a.onerror = fallback; a.src = o.avatar; pic.appendChild(a);
+      var a = el('img'); a.alt = (o.alt || 'Driver') + ' profile picture'; a.onerror = fallback; a.src = o.avatar; pic.appendChild(a);
     } else fallback();
-    add(who, pic, add(el('div', 'rr-banner-text'), o.eyebrow ? el('div', 'rr-label', o.eyebrow) : null,
-      add(el('h2', 'rr-banner-title'), RR.nameWithFlag(o.title, o.country)), o.sub ? el('div', 'rr-note', o.sub) : null));
+    (o.info || []).forEach(function (n) { if (n) text.appendChild(n); });
+    add(who, pic, text);
     var mark = el('img', 'rr-banner-mark');
     mark.src = 'assets/images/Race Club R White.webp';
     mark.alt = '';

@@ -42,14 +42,14 @@
       { id: 'st', name: 'Super Touring' }
     ],
     drivers: [
-      { id: 'sample-driver-1', userId: 8261679, name: 'Sample Driver 1', team: 'Sample Team A', country: 'United States', cls: 'dtm92', car: CLASS_CARS.dtm92[0].name, livery: CLASS_CARS.dtm92[0].livery },
-      { id: 'sample-driver-2', userId: 3493304, name: 'Sample Driver 2', team: 'Sample Team A', country: 'Canada', cls: 'dtm92', car: CLASS_CARS.dtm92[1].name, livery: CLASS_CARS.dtm92[1].livery },
-      { id: 'sample-driver-3', userId: 8081195, name: 'Sample Driver 3', team: 'Sample Team B', country: 'Germany', cls: 'dtm92', car: CLASS_CARS.dtm92[2].name, livery: CLASS_CARS.dtm92[2].livery },
-      { id: 'sample-driver-4', userId: 2369079, name: 'Sample Driver 4', team: 'Sample Team B', country: 'United Kingdom', cls: 'dtm92', car: CLASS_CARS.dtm92[3].name, livery: CLASS_CARS.dtm92[3].livery },
-      { id: 'sample-driver-5', userId: 7361519, name: 'Sample Driver 5', team: 'Sample Team C', country: 'United States', cls: 'st', car: CLASS_CARS.st[0].name, livery: CLASS_CARS.st[0].livery },
-      { id: 'sample-driver-6', userId: 5327094, name: 'Sample Driver 6', team: 'Sample Team C', country: 'Italy', cls: 'st', car: CLASS_CARS.st[1].name, livery: CLASS_CARS.st[1].livery },
-      { id: 'sample-driver-7', userId: 6112142, name: 'Sample Driver 7', team: 'Sample Team D', country: 'France', cls: 'st', car: CLASS_CARS.st[2].name, livery: CLASS_CARS.st[2].livery },
-      { id: 'sample-driver-8', userId: 4951332, name: 'Sample Driver 8', team: 'Sample Team D', country: 'Spain', cls: 'st', car: CLASS_CARS.st[3].name, livery: CLASS_CARS.st[3].livery }
+      { id: 'sample-driver-1', userId: 8261679, name: 'Sample Driver 1', country: 'United States', cls: 'dtm92', car: CLASS_CARS.dtm92[0].name, livery: CLASS_CARS.dtm92[0].livery },
+      { id: 'sample-driver-2', userId: 3493304, name: 'Sample Driver 2', country: 'Canada', cls: 'dtm92', car: CLASS_CARS.dtm92[1].name, livery: CLASS_CARS.dtm92[1].livery },
+      { id: 'sample-driver-3', userId: 8081195, name: 'Sample Driver 3', country: 'Germany', cls: 'dtm92', car: CLASS_CARS.dtm92[2].name, livery: CLASS_CARS.dtm92[2].livery },
+      { id: 'sample-driver-4', userId: 2369079, name: 'Sample Driver 4', country: 'United Kingdom', cls: 'dtm92', car: CLASS_CARS.dtm92[3].name, livery: CLASS_CARS.dtm92[3].livery },
+      { id: 'sample-driver-5', userId: 7361519, name: 'Sample Driver 5', country: 'United States', cls: 'st', car: CLASS_CARS.st[0].name, livery: CLASS_CARS.st[0].livery },
+      { id: 'sample-driver-6', userId: 5327094, name: 'Sample Driver 6', country: 'Italy', cls: 'st', car: CLASS_CARS.st[1].name, livery: CLASS_CARS.st[1].livery },
+      { id: 'sample-driver-7', userId: 6112142, name: 'Sample Driver 7', country: 'France', cls: 'st', car: CLASS_CARS.st[2].name, livery: CLASS_CARS.st[2].livery },
+      { id: 'sample-driver-8', userId: 4951332, name: 'Sample Driver 8', country: 'Spain', cls: 'st', car: CLASS_CARS.st[3].name, livery: CLASS_CARS.st[3].livery }
     ],
     news: [
       { id: 'sample-story-2', kind: 'story', eyebrow: 'Race story', title: 'Sample race story for round 2', date: '08.11.2026',

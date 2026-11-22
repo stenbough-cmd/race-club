@@ -1,4 +1,4 @@
-/* Race Club admin: Upload Results.
+/* Race Club admin: Results Management, the "Upload by hand" tab (the "Posted by the server" tab is raceroom-posted.js).
    Add a race by hand from its results file (the .json the server keeps after a race).
    Each file is checked first and nothing is saved until the admin presses Save:
      - it belongs to a round (the number at the end of the server name matches a round in the Sheet): ready
@@ -13,7 +13,7 @@
   var MAX = 1500000;   /* the most characters in one file; the service refuses more */
 
   var items = [], nextId = 1, queue = Promise.resolve(), saving = false, summary = null;
-  var main = document.querySelector('main');
+  var main = RR.view('upload');
 
   function longDate(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
