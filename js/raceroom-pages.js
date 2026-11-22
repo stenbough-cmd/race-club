@@ -337,7 +337,6 @@
         if (!f.other) m.push(f.self ? 'the driver you collided with' : 'the driver you are reporting');
         if (!f.reason) m.push('a reason');
         if (!f.lap) m.push('the lap');
-        if (!f.note.trim()) m.push('what happened');
         return m;
       }
       function refresh() {
@@ -359,7 +358,7 @@
       var lapOptions = [['', 'Choose a lap']];
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
       var lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
-      var narrative = RR.textarea({ label: 'What happened (required, keep it short)', value: '', onChange: function (v) { f.note = v; refresh(); } });
+      var narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
       RR.arm(submit, 'Submit your protest', 'Confirm protest', function () {
         if (missing().length) return;
@@ -395,12 +394,12 @@
       var rows = D.drivers.filter(function (d) { return cls === 'all' || d.cls === cls; })
         .sort(function (a, b) { return a.name.localeCompare(b.name); });
       fill(holder, RR.table([
-        { key: 'driver', label: 'Driver', sorted: true }, { key: 'country', label: 'Country' }, { key: 'cls', label: 'Class' },
-        { key: 'car', label: 'Car' }, { key: 'races', label: 'Races', num: true }, { key: 'wins', label: 'Wins', num: true },
+        { key: 'driver', label: 'Driver', sorted: true }, { key: 'country', label: 'Country' },
+        { key: 'car', label: 'Favorite car/class' }, { key: 'races', label: 'Races', num: true }, { key: 'wins', label: 'Wins', num: true },
         { key: 'podiums', label: 'Podiums', num: true }, { key: 'points', label: 'Points', num: true }
       ], rows.map(function (d) {
-        return { href: profileLink(d), cells: { driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), country: d.country, cls: className(d.cls),
-          car: d.car, races: d.races, wins: d.wins, podiums: d.podiums, points: d.points } };
+        return { href: profileLink(d), cells: { driver: RR.cell(RR.nameWithFlag(d.name, d.country), d.team), country: d.country,
+          car: RR.cell(d.car, className(d.cls)), races: d.races, wins: d.wins, podiums: d.podiums, points: d.points } };
       }), 'No drivers yet.'));
     }
     RR.headTool(RR.select('Class', [['all', 'All classes']].concat(D.classes.map(function (c) { return [c.id, c.name]; })), draw));
