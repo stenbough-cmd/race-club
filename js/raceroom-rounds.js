@@ -5,7 +5,7 @@
    A round with no results can be cancelled (and restored). Both Confirm and Deny use the two-click button.
    Stories: Confirm also writes the round's story (about a minute) once the results are live. The Story button of a round opens its notes
    (rivalries between drivers who raced, a short note for the writer) and up to 3 photos with captions, with a Hero tick and a Use a track photo tick; a failed story shows Retry story,
-   a written one can be rewritten. The Season preview is written when a season is saved for the first time and is retried here too.
+   a written one can be rewritten. The Season preview is written when a season is created (not when a draft is saved) and is retried here; the Season recap is written when the season ends.
    The list is read when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
@@ -374,9 +374,7 @@
       box.appendChild(RR.row(pick, refresh, publish));
       if (message) box.appendChild(RR.notice(message.text, message.kind));
       var rounds = data.rounds.filter(function (r) { return r.season === seasonId; });
-      var thisSeason = data.seasons.filter(function (x) { return x.seasonId === seasonId; })[0] || {}, pv = storyState(thisSeason.preview);
-      box.appendChild(RR.row(RR.kv('Season preview', pv[0] + (pv[2] ? ' · ' + pv[2] : '')),
-        RR.row.apply(null, storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview))));
+      var thisSeason = data.seasons.filter(function (x) { return x.seasonId === seasonId; })[0] || {};
       box.appendChild(RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Scheduled', sorted: true },
         { key: 'status', label: 'Status' }, { key: 'story', label: 'Story' }, { key: 'act', label: '' }
@@ -391,6 +389,17 @@
         return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: RR.cell(dmy(r.date), (r.time ? r.time + ' ' : '') + r.zone),
           status: RR.cell(el('span', st[1], st[0]), st[2]), story: RR.cell(el('span', sy[1], sy[0]), sy[2]), act: act } };
       }), 'This season has no rounds.'));
+      /* Season preview and recap: stories about the whole season, not a round. The recap is written when the season ends. */
+      var pv = storyState(thisSeason.preview), rc = storyState(thisSeason.finale), ended = thisSeason.status === 'Finished';
+      box.appendChild(RR.heading('Season preview and recap'));
+      box.appendChild(RR.table([
+        { key: 'what', label: 'Story' }, { key: 'when', label: 'Written when' }, { key: 'status', label: 'Status' }, { key: 'act', label: '' }
+      ], [
+        { cells: { what: RR.cell('Season preview', 'Before the first race'), when: 'When the season is created',
+          status: RR.cell(el('span', pv[1], pv[0]), pv[2]), act: RR.row.apply(null, storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview)) } },
+        { cells: { what: RR.cell('Season recap', 'Champions of every class'), when: 'When the season ends',
+          status: RR.cell(el('span', rc[1], rc[0]), rc[2]), act: ended || thisSeason.finale ? RR.row.apply(null, storyButtons({ kind: 'finale', seasonId: seasonId }, 'season recap', thisSeason.finale)) : el('span', 'rr-body', 'Ends with the season') } }
+      ], ''));
     }
     view.appendChild(box);
     if (review) view.appendChild(reviewPanel());

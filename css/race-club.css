@@ -1013,3 +1013,17 @@ button, select { font-family: inherit; }
 @media (orientation: portrait) {
   .rr-figure { float: none; width: 100%; max-width: none; margin: 0 0 16px; }
 }
+
+/* ---------- One story: banner with the title over the first photo, list of the latest stories at the left ---------- */
+.rr-story-hero { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; min-height: 280px; padding: 24px; background-color: var(--rr-panel); background-position: center; background-size: cover; box-shadow: var(--rr-shadow); }
+.rr-story-hero.rr-has-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--rr-photo-fade), transparent 80%); }
+.rr-story-hero > * { position: relative; }
+.rr-story-hero.rr-has-photo { --rr-text: var(--rr-photo-text); --rr-muted: var(--rr-photo-muted); color: var(--rr-photo-text); }
+.rr-story-hero .rr-article-meta { margin-bottom: 0; }
+.rr-story-title { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.15; text-transform: uppercase; }
+.rr-story-side .rr-sidelist-row { text-align: left; }
+@media (orientation: portrait) {
+  .rr-story-side { order: 2; }
+  .rr-story-hero { min-height: 220px; padding: 16px; }
+  .rr-story-title { font-size: 22px; }
+}

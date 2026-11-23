@@ -1,0 +1,11 @@
+const {ctx}=require('./harness'); const vm=require('vm');
+let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else console.log('ok  ',m); };
+const S="Ann Alpha took the lead on lap two and never looked back, holding a steady gap through the middle of the race. ";
+const big=S.repeat(14);
+let r=vm.runInContext('rcStoryBody_(__t)',Object.assign(ctx,{__t:big}));
+ok(r.paragraphs>=3&&r.text.split('\n\n').every(x=>x.length<700),'one huge block is cut into paragraphs ('+r.paragraphs+')');
+r=vm.runInContext('rcStoryBody_(__t)',Object.assign(ctx,{__t:'## One\nFirst para here.\nSecond para here.\n**Second Section**\nThird para here.'}));
+ok(r.text==='## One\n\nFirst para here.\n\nSecond para here.\n\n## Second Section\n\nThird para here.','single line breaks and a bold-only line become paragraphs and a subheading');
+r=vm.runInContext('rcStoryBody_(__t)',Object.assign(ctx,{__t:'Alpha.\\n\\nBeta.'}));
+ok(r.text==='Alpha.\n\nBeta.','escaped line breaks are real ones');
+console.log(fails?'FAILED':'ALL PASS (t31)');

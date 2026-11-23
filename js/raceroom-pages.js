@@ -55,6 +55,7 @@
       items.forEach(function (n, i) {
         grid.appendChild(RR.promo({
           feature: p === 1 && i === 0 && !portraitQuery.matches, eyebrow: n.eyebrow + ' \u00B7 ' + n.date, title: n.title, desc: n.desc,
+          photo: n.photos && n.photos[0] && n.photos[0].src ? n.photos[0].src : '',
           href: 'story.html?id=' + encodeURIComponent(n.id)
         }));
       });
@@ -74,13 +75,18 @@
     posts.forEach(function (n, i) { if (n.id === RR.param('id')) at = i; });
     if (at < 0) { main.appendChild(RR.empty('This post could not be found.')); return; }
     var n = posts[at];
-    RR.setTitle(n.title);
+    document.title = n.title + ' | Race Club';
     var art = el('article', 'rr-article');
-    art.appendChild(add(el('div', 'rr-article-meta'), el('span', 'rr-label rr-red', n.eyebrow), el('span', 'rr-label', n.date),
-      n.byline ? el('span', 'rr-label', 'By ' + n.byline) : null));
+    /* The first photo is the banner: the same picture as the story's tile on the News page, with the title over it. The other photos sit inside the story. */
+    var allPhotos = (n.photos || []).filter(function (ph) { return ph && ph.src; });
+    var hero = allPhotos[0] || null, photos = allPhotos.slice(1);
+    var banner = el('div', 'rr-story-hero' + (hero ? ' rr-has-photo' : ''));
+    if (hero) banner.style.backgroundImage = 'url("' + hero.src + '")';
+    add(banner, add(el('div', 'rr-article-meta'), el('span', 'rr-label rr-red', n.eyebrow), el('span', 'rr-label', n.date),
+      n.byline ? el('span', 'rr-label', 'By ' + n.byline) : null), el('h2', 'rr-story-title', n.title));
     /* A written story: "## Heading" lines are subheadings, **name** is bold, and each photo is placed inside the paragraph number
-       photo.at (0 is the first paragraph) with the text wrapping around it. A hero photo is at 0. Older posts are plain paragraphs. */
-    var photos = (n.photos || []).slice(), paraNo = 0;
+       photo.at (0 is the first paragraph) with the text wrapping around it. Older posts are plain paragraphs. */
+    var paraNo = 0;
     function figure(ph) {
       var fig = el('figure', 'rr-figure rr-figure-' + (ph.side === 'left' ? 'left' : 'right')), img = el('img');
       img.src = ph.src; img.alt = ph.caption || ''; img.loading = 'lazy';
@@ -88,7 +94,21 @@
       if (ph.caption) fig.appendChild(el('figcaption', '', ph.caption));
       return fig;
     }
+    /* A story saved as one long block is cut into paragraphs of about four sentences, so the page reads well even for an older story. */
+    var blocks = [];
     n.body.forEach(function (text) {
+      if (!/^## /.test(text) && text.length > 900) {
+        var sentences = text.match(/[^.!?]+[.!?]+["')\]]*(\s+|$)/g) || [text], cur = '';
+        sentences.forEach(function (s) { if (cur && cur.length + s.length > 520) { blocks.push(cur.trim()); cur = ''; } cur += s; });
+        if (cur.trim()) blocks.push(cur.trim());
+      } else blocks.push(text);
+    });
+    var paraCount = blocks.filter(function (x) { return !/^## /.test(x); }).length;
+    if (photos.length > 1 && paraCount > 3 && photos.every(function (ph) { return !Number(ph.at); })) {   // every picture at the start: spread them down the story
+      var third = Math.max(1, Math.ceil(paraCount / (photos.length + 1)));
+      photos.forEach(function (ph, i) { ph.at = Math.min(paraCount - 1, (i + 1) * third); ph.side = i % 2 === 0 ? 'right' : 'left'; });
+    }
+    blocks.forEach(function (text) {
       var block = RR.richBlock(text);
       if (block.nodeName !== 'P') { art.appendChild(block); return; }
       photos = photos.filter(function (ph) { if (Number(ph.at) !== paraNo) return true; art.appendChild(figure(ph)); return false; });
@@ -109,7 +129,13 @@
     }
     /* After an edit: the date and the reason, in italics, at the very bottom. */
     if (n.editNote) art.appendChild(el('p', 'rr-edit-note', 'Edited ' + n.editNote.date + '. Reason: ' + n.editNote.reason + '.'));
-    main.appendChild(art);
+    /* Left: the latest stories (the open one is highlighted). Right: the banner and the story. Same layout as the Lap times page. */
+    var latest = posts.slice(0, 10);
+    if (at >= 10) latest.push(n);
+    var items = latest.map(function (m) { return [m.id, m.title]; });
+    var list = RR.sidelist(items, function (id) { location.href = 'story.html?id=' + encodeURIComponent(id); });
+    Array.prototype.forEach.call(list.children, function (row, i) { row.setAttribute('aria-pressed', items[i][0] === n.id ? 'true' : 'false'); });
+    main.appendChild(add(el('div', 'rr-split rr-story-split'), add(el('div', 'rr-story-side'), list), add(el('div', 'rr-stack'), banner, art)));
     /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
     function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }
     RR.setSteps(storyLink(posts[at - 1], 'Newer story'), storyLink(posts[at + 1], 'Older story'));
