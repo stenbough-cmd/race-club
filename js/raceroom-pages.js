@@ -437,7 +437,21 @@
     function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
     function seasonCar(k) {
       var info = el('div', 'rr-season-info'), strip = el('div', 'rr-season-liveries');
-      k.liveries.forEach(function (id) { strip.appendChild(RR.images.img('livery', id, { className: 'rr-season-livery' })); });
+      var pic = el('div', 'rr-season-car-pic'), thumbs = [];
+      function showLivery(id, thumb) {
+        pic.textContent = '';
+        pic.appendChild(RR.images.img('livery', id, { size: 'full', className: 'rr-season-car-img', alt: k.name }));
+        thumbs.forEach(function (x) { x.classList.toggle('rr-selected', x === thumb); x.setAttribute('aria-pressed', x === thumb ? 'true' : 'false'); });
+      }
+      k.liveries.forEach(function (id) {
+        var th = RR.images.img('livery', id, { className: 'rr-season-livery' });
+        th.setAttribute('role', 'button'); th.setAttribute('tabindex', '0'); th.setAttribute('aria-label', 'Show this livery');
+        th.addEventListener('click', function () { showLivery(id, th); });
+        th.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showLivery(id, th); } });
+        thumbs.push(th);
+        strip.appendChild(th);
+      });
+      showLivery(k.liveries[0], thumbs[0]);
       RR.images.details(k.carId).then(function (d) {
         if (!d) return;
         [['Power', d.powerHp ? d.powerHp + ' hp' : ''], ['Weight', d.weightKg ? RR.num(d.weightKg) + ' kg' : ''],
@@ -452,7 +466,7 @@
         if (i && i.manufacturer && i.manufacturer.id !== undefined && i.manufacturer.id !== null) title.insertBefore(RR.images.logo(i.manufacturer.id, { className: 'rr-season-mfr', alt: i.manufacturer.name }), title.firstChild);
       });
       return add(el('div', 'rr-season-car'),
-        add(el('div', 'rr-season-car-pic'), RR.images.img('livery', k.liveries[0], { size: 'full', className: 'rr-season-car-img', alt: k.name })),
+        pic,
         title, info, strip);
     }
     function seasonClass(c) {
