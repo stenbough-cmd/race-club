@@ -313,7 +313,8 @@
           /* Night total: the races added together, plus the night's pole bonus. Best in each class first. */
           var by = {};
           inClass.forEach(function (x) {
-            var g = by[x.driver] = by[x.driver] || { driver: x.driver, cls: x.cls, finishes: [], best: 0, inc: 0, points: 0, bonus: 0 };
+            var g = by[x.driver] = by[x.driver] || { driver: x.driver, cls: x.cls, car: x.car || '', finishes: [], best: 0, inc: 0, points: 0, bonus: 0 };
+            if (!g.car && x.car) g.car = x.car;
             g.finishes[(x.race || 1) - 1] = x.status === 'Finished' ? 'P' + x.pos : x.status;
             if (x.best > 0 && (!g.best || x.best < g.best)) g.best = x.best;
             g.inc += x.incidents; g.points += x.points; g.bonus += x.bonus;
@@ -324,7 +325,7 @@
           });
           var count = {};
           table = RR.table([
-            { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'cls', label: 'Class', sort: true },
+            { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car', sort: true },
             { key: 'fin', label: 'Race finishes', sort: true }, { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'inc', label: 'Inc', num: true, sort: true },
             { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], list2.map(function (g) {
@@ -332,11 +333,11 @@
             for (var q = 0; q < r.races; q++) fin.push(g.finishes[q] || '-');
             count[g.cls] = (count[g.cls] || 0) + 1;
             return { href: profileLink(d), linkCol: 1, cells: {
-              pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), cls: className(g.cls),
+              pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: g.car || '-',
               fin: fin.join(' · '), best: RR.lap(g.best), inc: g.inc, pts: pointsNode({ points: g.points, bonus: g.bonus })
             }, sort: {
               /* Night: best first inside each class. Race finishes: the places added up (a race without a finish counts as 99). */
-              pos: g.cls + '|' + ('000' + count[g.cls]).slice(-3), driver: d.name.toLowerCase(), cls: className(g.cls).toLowerCase(),
+              pos: g.cls + '|' + ('000' + count[g.cls]).slice(-3), driver: d.name.toLowerCase(), car: String(g.car || '').toLowerCase(),
               fin: fin.reduce(function (a, f) { return a + (/^P\d+$/.test(f) ? Number(f.slice(1)) : 99); }, 0),
               best: g.best > 0 ? g.best : null, inc: g.inc, pts: g.points + g.bonus
             } };
@@ -344,17 +345,17 @@
         } else {
           var rows = inClass.filter(function (x) { return (x.race || 1) === pickedRace; }).sort(function (a, b) { return a.cls.localeCompare(b.cls) || a.pos - b.pos; });
           table = RR.table([
-            { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'cls', label: 'Class', sort: true },
+            { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car', sort: true },
             { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'gap', label: 'Gap', num: true, sort: true }, { key: 'diff', label: 'Diff pos', num: true, sort: true, desc: true },
             { key: 'inc', label: 'Inc', num: true, sort: true }, { key: 'pen', label: 'Pen', num: true, sort: true }, { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
-              pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), cls: className(x.cls),
+              pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: x.car || '-',
               best: RR.lap(x.best), gap: RR.gap(x.gap), diff: diffPos(x), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
             }, sort: {
               /* Result: finishing order inside each class, as the rows come. */
-              pos: x.cls + '|' + ('000' + x.pos).slice(-3), driver: d.name.toLowerCase(), cls: className(x.cls).toLowerCase(),
+              pos: x.cls + '|' + ('000' + x.pos).slice(-3), driver: d.name.toLowerCase(), car: String(x.car || '').toLowerCase(),
               best: x.best > 0 ? x.best : null, gap: x.status === 'Finished' && x.pos > 1 ? x.gap : null,
               diff: x.status === 'Finished' && x.start ? x.start - x.pos : null,
               inc: x.incidents, pen: x.penaltyPoints || 0, pts: x.points + x.bonus
