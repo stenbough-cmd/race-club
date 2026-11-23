@@ -305,7 +305,7 @@
       if (sp) {
         view.appendChild(sp);
         /* The panel sits below the tables, so bring it into view the first time it opens. */
-        if (panel && panel.fresh) { panel.fresh = false; try { sp.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { sp.scrollIntoView(); } }
+        if (panel && panel.fresh) { panel.fresh = false; if (sp.scrollIntoView) { try { sp.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { sp.scrollIntoView(); } } }
       }
     }
   }
