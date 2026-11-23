@@ -258,15 +258,16 @@
   /* When qualifying and Race 1 start, if practice and qualifying are timed in minutes. */
   function startTimes(r) {
     var w = weekendOf(r), out = { quali: '-', race: '-' };
-    if (!r.time || w.Practice.unit !== 'M') return out;
+    if (!r.time) return out;
     out.quali = addMinutes(r.time, Number(w.Practice.len));
-    if (w.Qualify.unit === 'M') out.race = addMinutes(r.time, Number(w.Practice.len) + Number(w.Qualify.len) + Number(w.warmup));
+    out.race = addMinutes(r.time, Number(w.Practice.len) + Number(w.Qualify.len) + Number(w.warmup));
     return out;
   }
 
   /* ---------------- Build one round's server file ---------------- */
-  function sessionOut(s, isPractice) {
-    var o = { Duration: s.unit === 'M' ? Number(s.len) : 0, Laps: s.unit === 'L' ? Number(s.len) : 0 };
+  function sessionOut(s, isPractice, minutesOnly) {
+    var timed = s.unit === 'M' || isPractice === true || minutesOnly === true;
+    var o = { Duration: timed ? Number(s.len) : 0, Laps: timed ? 0 : (s.unit === 'L' ? Number(s.len) : 0) };
     if (Number(s.tod)) o.TimeOfDay = Number(s.tod);
     var type = isPractice ? 1 : Number(s.start);
     if (type) o.SessionType = type;
@@ -287,7 +288,7 @@
     ASSISTS.forEach(function (a) { if (Number(S.assists[a[0]])) g[a[0]] = Number(S.assists[a[0]]); });
     var sessions = {};
     if (Number(w.warmup)) sessions.WarmupDuration = Number(w.warmup);
-    sessions.Qualify = sessionOut(w.Qualify);
+    sessions.Qualify = sessionOut(w.Qualify, false, true);
     sessions.Practice = sessionOut(w.Practice, true);
     sessions.Race1 = sessionOut(w.Race1);
     sessions.Race2 = sessionOut(raceCount() >= 2 ? w.Race2 : notRun(w.Race2));
@@ -601,6 +602,8 @@
       text('Warmup minutes', w, 'warmup', { type: 'number', min: 0, after: changed })));
     SESSIONS.forEach(function (def) {
       var s = w[def[0]], isRace = def[0].indexOf('Race') === 0, weather = el('div', 'rr-form-row');
+      /* Practice and Qualifying are timed in minutes only (a server cannot run them by laps). Only a race can be set in laps. */
+      if (!isRace && s.unit !== 'M') s.unit = 'M';
       if (isRace && Number(def[0].slice(4)) > raceCount()) return;
       function drawWeather() {
         fill(weather, RR.select('Set all', [['', 'Mixed']].concat(CLOUDS), function (v) {
@@ -617,7 +620,7 @@
       box.appendChild(panel(def[1],
         RR.row(
           text('Length', s, 'len', { type: 'number', min: 0, after: changed, bad: isRace ? function () { return noRaceLength(w); } : null }),
-          pick('In', [['M', 'Minutes'], ['L', 'Laps']], s, 'unit', changed),
+          isRace ? pick('In', [['M', 'Minutes'], ['L', 'Laps']], s, 'unit', changed) : null,
           def[0] === 'Practice' ? null : pick('Start', isRace ? RACE_START : QUALI_START, s, 'start', changed),
           pick('Starts at', TIMES, s, 'tod', changed)),
         weather,

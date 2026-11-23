@@ -33,7 +33,6 @@
 
   var panel = el('div', 'rr-panel rr-stack');
   add(panel,
-    RR.heading('Admin log in'),
     RR.row(
       RR.input({ label: 'Admin name', onChange: function (v) { form.name = v; } }),
       RR.input({ label: 'Password', type: 'password', onChange: function (v) { form.password = v; } }),
