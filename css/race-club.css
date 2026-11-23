@@ -812,6 +812,32 @@ button, select { font-family: inherit; }
 .rr-article p:last-child { margin-bottom: 0; }
 .rr-article-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
 
+/* ---------- Admin tool buttons: an icon in the middle, the name and one line under it ---------- */
+.rr-tool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rr-gap-tiles); }
+.rr-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 200px;
+  padding: 24px 16px;
+  border: 1px solid var(--rr-line);
+  background: var(--rr-panel);
+  color: var(--rr-text);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--rr-speed) ease, color var(--rr-speed) ease, border-color var(--rr-speed) ease;
+}
+.rr-tool .rr-icon { display: block; width: 56px; height: 56px; }
+.rr-tool .rr-icon svg { display: block; width: 100%; height: 100%; stroke-width: 1.4; }
+.rr-tool .rr-tile-title { font-size: 16px; }
+.rr-tool .rr-body { max-width: 28ch; font-size: 13px; }
+.rr-tool:hover, .rr-tool:focus-visible { background: var(--rr-invert-bg); border-color: var(--rr-invert-bg); color: var(--rr-invert-text); }
+.rr-tool:hover .rr-body, .rr-tool:focus-visible .rr-body { color: var(--rr-invert-text); }
+@media (orientation: portrait) { .rr-tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rr-tool { min-height: 160px; } }
+
 /* ---------- Empty state ---------- */
 .rr-empty { padding: 16px; background: var(--rr-panel); color: var(--rr-muted); }
 
@@ -823,7 +849,6 @@ button, select { font-family: inherit; }
   .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
   .rr-topbar-end { order: 2; flex-shrink: 0; }
   .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
-  .rr-hide-portrait { display: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }

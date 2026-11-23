@@ -83,9 +83,9 @@
   add(RR.view('pages'), stack(
     panel('Public pages', [
       grid(['Page', 'Files', 'What it does'], [
-        ['Home', 'index.html, raceroom-home.js', "Tiles for News, Leaderboards, Drivers and About Race Club."],
+        ['Home', 'index.html, raceroom-home.js', "Tiles for News, League (leaderboards), Drivers and About Race Club."],
         ['News', 'news.html, story.html', "The race stories and your own posts, newest first. A story opens on its own page."],
-        ['Leaderboards', 'leaderboards.html', "Tabs: Standings, Race Results, Lap Times, Schedule, Season. A season dropdown covers old seasons too."],
+        ['League', 'leaderboards.html', "The League menu item. Tabs: Standings, Race Results, Lap Times, Schedule, Season. A season dropdown covers old seasons too."],
         ['Drivers', 'drivers.html, driver.html', "Every driver. A profile has Overview, Race History, Statistics, Achievements and Leaderboards."],
         ['File a Protest', 'protest.html', "The protest form (flag icon, top right). It needs the round password."],
         ['Help', 'help.html, raceroom-help.js', "The league rules in short: The league, Points, Penalties."],
@@ -97,7 +97,7 @@
       "Log in with the key icon at the top right. A login lasts 6 hours or until the tab closes. The cog icon then opens the admin hub.",
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
-        ['Admin hub', 'admin.html, raceroom-hub.js', "One tile for each tool. A new tool gets its tile in raceroom-hub.js."],
+        ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],
         ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft, Create a season, Export season (.zip)."],
         ['News Editor', 'news-editor.html, raceroom-news-editor.js', "Write your own posts. Edit, rewrite, withdraw or delete the race stories."],
         ['Stewarding', 'stewarding.html, raceroom-stewarding.js', "Tabs: Protests, and Car and class (drivers who changed car or class)."],
@@ -240,7 +240,8 @@
         ['The version number in the footer', 'js/raceroom-shell.js, VERSION', "Change it each time the site is updated."],
         ['Colors, fonts, sizes', 'css/race-club.css', "The colors are the --rr-... lines at the top. Change them there and nowhere else."],
         ['Legal notice', 'js/raceroom-shell.js, LEGAL_SHORT, and legal.html', "The short notice is in the shell, the full text in legal.html."],
-        ['Home and admin tile pictures', 'assets/images', "See the Tile pictures tab."],
+        ['Home tile pictures', 'assets/images/home', "See the Tile pictures tab."],
+        ['Admin button icons', 'js/raceroom-shell.js, ICONS; js/raceroom-hub.js', "Each admin button names an icon in raceroom-hub.js. Icons are drawn in ICONS in the shell. The button look is .rr-tool in css/race-club.css."],
         ['The server banner picture', 'js/raceroom-admin.js, SERVER_IMAGE', "If the picture is uploaded again in the server tool it gets a new address. Copy it from an exported file's Thumbnail."],
         ['Add an admin, change a password, log everyone out', 'The Sheet, Race Club menu', "Add an admin or change a password, Log every admin out."],
         ['Turn result emails or Discord alerts on or off', 'The Sheet, Race Club menu', "Result emails: turn on or off, Discord alerts: set the webhook."],

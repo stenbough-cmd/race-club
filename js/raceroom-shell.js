@@ -16,7 +16,7 @@
   /* ---- The one menu list. Change the site menu here and nowhere else. ---- */
   var MENU = [
     { id: 'news', label: 'News', href: 'news.html' },
-    { id: 'leaderboards', label: 'Leaderboards', href: 'leaderboards.html' },
+    { id: 'leaderboards', label: 'League', href: 'leaderboards.html' },
     { id: 'profiles', label: 'Drivers', href: 'drivers.html' }
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
@@ -109,6 +109,11 @@
     startover: '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/>',
     trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5"/><path d="M14 11v5"/>',
     alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/>',
+    wizard: '<path d="M4 6h9"/><path d="M19 6h1"/><circle cx="16" cy="6" r="2"/><path d="M4 12h1"/><path d="M11 12h9"/><circle cx="8" cy="12" r="2"/><path d="M4 18h9"/><path d="M19 18h1"/><circle cx="16" cy="18" r="2"/>',
+    news: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7"/><path d="M9 17h7"/>',
+    steward: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    members: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',
+    book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
     trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
   };
   function iconSvg(name) {
@@ -196,9 +201,6 @@
   homeBtn.href = 'index.html';
   homeBtn.classList.add('rr-icon-solid');
   if (mainId === 'home') homeBtn.setAttribute('aria-current', 'page');
-  /* Back and Forward are hidden in portrait (phones have their own); see css. */
-  backBtn.classList.add('rr-hide-portrait');
-  forwardBtn.classList.add('rr-hide-portrait');
   add(nav, backBtn, forwardBtn, homeBtn);
   MENU.forEach(function (item) {
     var a = el('a', 'rr-nav-item', item.label);
@@ -443,6 +445,8 @@
 
   /* Let a page's content fill the whole content area (used so a paged block keeps one height). */
   RR.version = VERSION;
+  /* RR.icon('trophy') is the small picture used on buttons and the admin tool buttons. */
+  RR.icon = function (name) { var s = el('span', 'rr-icon'); setIcon(s, name); return s; };
   RR.scrollTop = function () { scroller.scrollTop = 0; };
   RR.setSteps = setSteps;
   RR.fillContent = function () { main.classList.add('rr-content-fill'); };
