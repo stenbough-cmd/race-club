@@ -120,7 +120,7 @@
     var riv = [['', ''], ['', ''], ['', '']];
     (r.rivalries || []).slice(0, 3).forEach(function (p, i) { riv[i] = [String(p[0]), String(p[1])]; });
     panel = { roundId: r.id, rivals: riv, note: r.note || '', choice: { hero: (r.photoChoice && r.photoChoice.hero) || '', track: r.photoChoice ? r.photoChoice.track : undefined }, caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
-    message = null; review = null;
+    message = null;
     draw();
   }
   function panelFail(res) {
@@ -235,7 +235,7 @@
   /* Add context for the season preview: a note for the writer and up to 3 pictures. The first picture is the hero that opens the story. */
   function openSeasonPanel(s) {
     panel = { seasonId: s.seasonId, note: s.previewNote || '', caps: [0, 1, 2].map(function (i) { return (s.previewPhotos && s.previewPhotos[i] && s.previewPhotos[i].caption) || ''; }) };
-    message = null; review = null;
+    message = null;
     draw();
   }
   function seasonPanel() {
