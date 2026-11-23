@@ -193,7 +193,7 @@
     return season;
   });
 
-  /* Protests (sample). ruling: 'Pending', 'Upheld' or 'Dismissed'; penalty is what was given when upheld.
+  /* Protests (sample). ruling: 'Pending', 'Penalised' or 'Dismissed'; penalty is what was given ('1 point', '3 points', '5 points' or 'DSQ'); comment is the steward's.
      self: true means the driver reported their own collision with the driver named in "against". */
   var PROTEST_REASONS = ['Bad Rejoin', 'Blocking or Weaving', 'Reckless Driving', 'Intentional Wrecking'];
   data.protestReasons = PROTEST_REASONS;
@@ -209,8 +209,9 @@
       var self = round.n % 2 === 0;
       data.protests.push({ season: season.id, round: round.n, by: a.id, against: b.id, self: self, lap: 3 + round.n,
         reason: PROTEST_REASONS[round.n % 4], narrative: self ? 'I went in too deep into the braking zone and hit the car ahead.' : 'Moved across on the straight while I was alongside and we touched.',
-        ruling: open ? 'Pending' : (round.n % 3 === 0 ? 'Dismissed' : 'Upheld'),
-        penalty: open || round.n % 3 === 0 ? '' : (round.n % 2 === 0 ? '+5s' : 'Drive-through') });
+        ruling: open ? 'Pending' : (round.n % 3 === 0 ? 'Dismissed' : 'Penalised'),
+        penalty: open || round.n % 3 === 0 ? '' : (round.n % 2 === 0 ? '1 point' : '3 points'),
+        comment: open ? '' : (round.n % 3 === 0 ? 'Racing incident.' : 'Moved across under braking.') });
     });
   });
 
@@ -230,9 +231,10 @@
       var settled = !(s.windowEnd > now) && !(s.openProtests > 0);
       s.totals = settled ? s.totalsWith : s.totals;
       s.rounds.forEach(function (r) {
-        var inWindow = r.done && r.windowEnd > now;
-        r.counts = r.done && !inWindow;
-        if (r.done) r.status = inWindow ? 'Waiting' : 'Settled';
+        /* Waiting while the window is open or a protest is still open. Protests can only be filed while the window is open. */
+        var inWindow = r.done && r.windowEnd > now, waiting = r.done && (inWindow || r.protestsOpen > 0);
+        r.counts = r.done && !waiting;
+        if (r.done) r.status = waiting ? 'Waiting' : 'Settled';
         if (r.done && !inWindow) r.protestCloses = '';
       });
       return s;

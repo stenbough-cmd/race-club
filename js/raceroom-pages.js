@@ -100,6 +100,17 @@
       paraNo++;
     });
     photos.forEach(function (ph) { art.appendChild(figure(ph)); });     // a photo whose paragraph number is past the end goes last
+    /* What the stewards decided after the race (added once every protest is ruled): driver, what for, the penalty and the steward's comment. */
+    if (n.addendum && n.addendum.length) {
+      art.appendChild(el('h2', 'rr-article-sub', 'Steward decisions'));
+      art.appendChild(RR.table([
+        { key: 'driver', label: 'Driver' }, { key: 'why', label: 'For' }, { key: 'where', label: 'Where' }, { key: 'pen', label: 'Penalty' }
+      ], n.addendum.map(function (a) {
+        var d = byId(D.drivers, a.driver);
+        return { cells: { driver: d ? RR.nameWithFlag(d.name, d.country) : a.name, why: RR.cell(a.infraction, a.comment || ''),
+          where: a.lap ? 'Race ' + a.race + ' · lap ' + a.lap : 'Whole night', pen: a.penalty } };
+      }), ''));
+    }
     main.appendChild(art);
     /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
     function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }
@@ -159,7 +170,8 @@
     if (!n) return '0';
     return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '+' : '-') + Math.abs(n));
   }
-  function penaltyText(x) { return x.penalty ? '+' + x.penalty + 's' : '-'; }
+  /* Penalty points come off the season total (taken once per night, shown on the first race of the night). */
+  function penaltyText(x) { return x.penaltyPoints ? '-' + x.penaltyPoints : '-'; }
   /* Protests filed for one round of one season (newest first as stored). */
   function protestsFor(season, n) { return (D.protests || []).filter(function (p) { return p.season === season.id && p.round === n; }); }
   /* The rulings table for a round: who, against whom, the lap, why, the ruling and the penalty. null when nobody protested. */
@@ -172,7 +184,7 @@
     ], list.map(function (p) {
       var by = driver(p.by), against = driver(p.against);
       return { cells: { by: RR.cell(RR.nameWithFlag(by.name, by.country), p.self ? 'Self report' : ''), against: RR.nameWithFlag(against.name, against.country),
-        lap: (p.race > 1 || (roundOf(season, n) || {}).races > 1) && p.race ? 'Race ' + p.race + ' · ' + p.lap : p.lap, reason: p.reason, ruling: p.ruling === 'Pending' ? RR.tag('Pending', true) : RR.tag(p.ruling, p.ruling === 'Dismissed'), pen: p.penalty || '-' } };
+        lap: (p.race > 1 || (roundOf(season, n) || {}).races > 1) && p.race ? 'Race ' + p.race + ' · ' + p.lap : p.lap, reason: p.reason, ruling: RR.cell(p.ruling === 'Pending' ? RR.tag(p.status === 'Reviewing' ? 'Reviewing' : 'Pending', true) : RR.tag(p.ruling, p.ruling === 'Dismissed'), p.comment || ''), pen: p.penalty || '-' } };
     }), 'No protests.');
   }
   /* Mark the row of a sidebar list that matches `index` as the chosen one (the list starts with its first row chosen). */
@@ -518,8 +530,26 @@
       passwordBox = RR.input({ label: 'Round ' + r.n + ' password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
       narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
+      var reasons = { 'wrong-password': 'That is not the round password. Only league members have it.', locked: 'Too many wrong passwords for this round. Try again in 10 minutes.',
+        closed: 'The protest window for this round is over.', 'not-open': 'This round is not open for protests.', duplicate: 'You already filed this protest.',
+        'too-many': 'You have filed the most protests allowed for this round.', busy: 'Many protests are being filed right now. Try again in a few minutes.',
+        unreachable: 'Could not reach the league service. Try again.', 'no-address': 'Protests cannot be filed from this page yet.' };
       RR.arm(submit, '', 'Confirm protest', function () {
-        /* SAMPLE check. The real one is done by the service, so the password is never in the page. */
+        if (!D.sample) {
+          submit.disabled = true;
+          fill(warn, RR.notice('Filing your protest...', 'ok'));
+          RR.post('fileProtest', { roundId: r.id, password: f.password, me: f.me, other: f.other, self: f.self, race: Number(f.race), lap: Number(f.lap), reason: f.reason, narrative: f.note.trim() }).then(function (res) {
+            submit.disabled = false;
+            if (!(res && res.ok)) { fill(warn, RR.notice(reasons[res && res.error] || 'Your protest could not be filed. Check the boxes and try again.', 'warn')); return; }
+            fill(warn);
+            D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, race: Number(f.race), lap: Number(f.lap), reason: f.reason, status: 'Filed', ruling: 'Pending', penalty: '', comment: '' });
+            message = RR.notice('Your protest was filed. The stewards will rule on it.', 'ok');
+            pickedRound = r.n;
+            drawBody();
+          });
+          return;
+        }
+        /* SAMPLE check (sample data only). The real check is done by the service, so the password is never in the page. */
         if (f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the race password. Only league members have it.', 'warn')); return; }
         fill(warn);
         D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, race: Number(f.race), lap: Number(f.lap), reason: f.reason, narrative: f.note.trim(), ruling: 'Pending', penalty: '' });

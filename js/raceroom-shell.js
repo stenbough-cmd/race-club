@@ -44,6 +44,11 @@
       ['server', 'Posted by the server'],
       ['upload', 'Upload by hand']
     ],
+    /* Admin Stewarding: protests to rule on, and drivers who changed car or class. */
+    stewarding: [
+      ['protests', 'Protests'],
+      ['policy', 'Car and class']
+    ],
     /* Admin Website Options: reminders for changing parts of the site. */
     options: [
       ['pictures', 'Tile pictures'],
@@ -409,6 +414,14 @@
       if (res && res.error === 'signed-out') { adminClear(); location.href = 'login.html'; }
       return res;
     });
+  };
+
+  /* A request to the service that needs no admin session (the service decides with its own key, for example the round password).
+     Answers a promise of { ok: true, ... } or { ok: false, error: 'word' }. */
+  RR.post = function (action, data) {
+    var payload = { action: action };
+    Object.keys(data || {}).forEach(function (k) { payload[k] = data[k]; });
+    return apiCall(apiAddress(), payload);
   };
 
   /* Give any button or link the standard tooltip. */
