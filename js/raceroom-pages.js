@@ -325,7 +325,7 @@
           });
           var count = {};
           table = RR.table([
-            { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car', sort: true },
+            { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
             { key: 'fin', label: 'Race finishes', sort: true }, { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'inc', label: 'Inc', num: true, sort: true },
             { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], list2.map(function (g) {
@@ -333,7 +333,7 @@
             for (var q = 0; q < r.races; q++) fin.push(g.finishes[q] || '-');
             count[g.cls] = (count[g.cls] || 0) + 1;
             return { href: profileLink(d), linkCol: 1, cells: {
-              pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: g.car || '-',
+              pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: RR.cell(g.car || '-', className(g.cls)),
               fin: fin.join(' · '), best: RR.lap(g.best), inc: g.inc, pts: pointsNode({ points: g.points, bonus: g.bonus })
             }, sort: {
               /* Night: best first inside each class. Race finishes: the places added up (a race without a finish counts as 99). */
@@ -345,13 +345,13 @@
         } else {
           var rows = inClass.filter(function (x) { return (x.race || 1) === pickedRace; }).sort(function (a, b) { return a.cls.localeCompare(b.cls) || a.pos - b.pos; });
           table = RR.table([
-            { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car', sort: true },
+            { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
             { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'gap', label: 'Gap', num: true, sort: true }, { key: 'diff', label: 'Diff pos', num: true, sort: true, desc: true },
             { key: 'inc', label: 'Inc', num: true, sort: true }, { key: 'pen', label: 'Pen', num: true, sort: true }, { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
-              pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: x.car || '-',
+              pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: RR.cell(x.car || '-', className(x.cls)),
               best: RR.lap(x.best), gap: RR.gap(x.gap), diff: diffPos(x), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
             }, sort: {
               /* Result: finishing order inside each class, as the rows come. */
