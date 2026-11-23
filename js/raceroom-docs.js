@@ -92,7 +92,7 @@
         ['About, Legal, 404', 'about.html, legal.html, 404.html', "Plain text pages."]
       ]),
       "Every public page loads raceroom-data.js (it fetches league.js) and raceroom-pages.js (it draws the page).",
-      "League tables sort: click a column heading to sort by it and click again to reverse it. The red heading with an arrow is the current sort. Each table opens in its natural order: standings by position, race results by finishing place inside each class, lap times by average lap, the schedule by round. To make another column sortable, add sort: true to it in js/raceroom-pages.js, with desc: true if the first click should go high to low.
+      "League tables sort: click a column heading to sort by it and click again to reverse it. The red heading with an arrow is the current sort. Each table opens in its natural order: standings by position, race results by finishing place inside each class, lap times by average lap, the schedule by round. To make another column sortable, add sort: true to it in js/raceroom-pages.js, with desc: true if the first click should go high to low."
     ]),
     panel('Admin pages', [
       "Log in with the key icon at the top right. A login lasts 6 hours or until the tab closes. The cog icon then opens the admin hub.",
