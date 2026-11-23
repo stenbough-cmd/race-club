@@ -379,20 +379,6 @@
       var list = RR.sidelist(items, function (n) { pickedTrack = n; pickedLapRace = 1; drawTable(); });
       pressRow(list, items.map(function (i) { return i[0]; }).indexOf(pickedTrack));
       var right = el('div', 'rr-stack');
-      /* Season tiles: fastest lap, the driver with the most fastest laps, and who closed the gap the most from the first race to the latest. */
-      var all = season.results.filter(function (x) { return (cls === 'all' || x.cls === cls) && roundCounts(season, x.round); });
-      var quick = all.slice().sort(function (a, b) { return a.best - b.best; })[0];
-      var counts = {};
-      all.forEach(function (x) { if (x.fastest) counts[x.driver] = (counts[x.driver] || 0) + 1; });
-      var topId = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0];
-      var improved = null;
-      if (done.length > 1) {
-        D.drivers.forEach(function (d) {
-          var a = all.filter(function (x) { return x.driver === d.id && x.round === done[0].n; })[0];
-          var b = all.filter(function (x) { return x.driver === d.id && x.round === done[done.length - 1].n; })[0];
-          if (a && b && (!improved || a.gapPct - b.gapPct > improved.by)) improved = { d: d, by: a.gapPct - b.gapPct };
-        });
-      }
       function drawTable() {
         var r = roundOf(season, pickedTrack), opts = raceOptions(r, false), picker = null;
         if (!opts || !(pickedLapRace >= 1 && pickedLapRace <= r.races)) pickedLapRace = 1;
@@ -413,13 +399,7 @@
         }), 'No lap times for this class.'));
       }
       drawTable();
-      fill(RR.view('laptimes'), add(el('div', 'rr-stack'),
-        RR.statRow([
-          RR.stat('Fastest lap', quick ? RR.lap(quick.best) : '-', quick ? roundOf(season, quick.round).track : ''),
-          RR.wide(RR.stat('Fastest driver', topId ? driver(topId).name : '-', topId ? counts[topId] + ' fastest laps' : '')),
-          RR.wide(RR.stat('Most improved', improved ? improved.d.name : '-', improved ? improved.by.toFixed(2) + '% closer to the fastest' : 'Needs two races'))
-        ]),
-        add(el('div', 'rr-split'), add(el('div'), list), right)));
+      fill(RR.view('laptimes'), add(el('div', 'rr-split'), add(el('div'), list), right));
     }
 
     /* Start time of a round in the visitor's own time zone (the browser's), as { date: 'DD.MM.YYYY', time: '20:00', zone: 'EST' }. */
