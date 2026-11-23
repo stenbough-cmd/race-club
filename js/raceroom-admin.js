@@ -619,17 +619,14 @@
   }
   function formatPanel() {
     var f = S.format, multi = raceCount() > 1;
-    function flag(label, key) { return RR.checkbox(label, function (on) { f[key] = on; save(); }, f[key] !== false); }
     return panel('Season format',
       RR.row(RR.select('Races each night', [[1, 'Single race'], [2, 'Multi-race: 2 races'], [3, 'Multi-race: 3 races']], function (v) {
         setRaceCount(Number(v));
         save();
         drawAll();
       }, raceCount())),
-      multi ? RR.row(flag('Race 2 scores points', 'race2'), raceCount() > 2 ? flag('Race 3 scores points', 'race3') : null) : null,
-      multi ? RR.row(flag('Pole bonus, once per night', 'pole'), flag('Fastest lap bonus, in each race', 'fastest'), flag('Clean race bonus, in each race', 'clean')) : null,
       note(multi
-        ? 'A season is either single-race or multi-race, never both. Race 1 always scores points. A night\'s points are its races added together. The bonus values are set in the Points step; a bonus left unticked here is not given.'
+        ? 'A season is either single-race or multi-race, never both. Every race scores points and a night\'s points are its races added together. Pole is given once per night; fastest lap and clean race in each race. The bonus values are set in the Points step.'
         : 'One race each night. Choose a multi-race format to run two or three races a night.'));
   }
   function drawWeekend() {
