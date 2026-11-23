@@ -120,6 +120,10 @@
     steward: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
     members: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',
     book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
+    sky0: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5"/><path d="M12 19.5V22"/><path d="M2 12h2.5"/><path d="M19.5 12H22"/><path d="M4.9 4.9l1.8 1.8"/><path d="M17.3 17.3l1.8 1.8"/><path d="M4.9 19.1l1.8-1.8"/><path d="M17.3 6.7l1.8-1.8"/>',
+    sky1: '<circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2v1.6"/><path d="M2 8.5h1.6"/><path d="M3.9 3.9l1.1 1.1"/><path d="M13.1 3.9L12 5"/><path d="M3.9 13.1L5 12"/><path d="M9.5 20h8a3.5 3.5 0 0 0 .3-7A4.8 4.8 0 0 0 9 12.6 3.7 3.7 0 0 0 9.5 20z"/>',
+    sky2: '<path d="M5.5 12.5h5a2.8 2.8 0 0 0 .2-5.6A3.8 3.8 0 0 0 4.3 8.8a2.2 2.2 0 0 0 1.2 3.7z"/><path d="M10 20h8.2a3.6 3.6 0 0 0 .3-7.2 5 5 0 0 0-9.6 1.4A3 3 0 0 0 10 20z"/>',
+    sky3: '<path d="M7 19h10.5a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 6 11.7 3.7 3.7 0 0 0 7 19z"/>',
     close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
     trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
   };
@@ -555,6 +559,21 @@
 
   RR.heading = function (text) { return el('h2', 'rr-heading', text); };
   RR.label = function (text) { return el('div', 'rr-label', text); };
+  /* RR.sky([2, 0]): the weather icons for the amount of cloud, in the order the sky passes through them (0 clear, 1 few clouds, 2 scattered clouds, 3 overcast). */
+  var SKY_NAMES = ['Clear', 'Few clouds', 'Scattered clouds', 'Overcast'];
+  RR.skyName = function (code) { return SKY_NAMES[Number(code)] || ''; };
+  RR.sky = function (codes) {
+    var box = el('span', 'rr-sky'), list = (codes || []).filter(function (c) { return SKY_NAMES[Number(c)]; });
+    if (!list.length) { box.textContent = '-'; return box; }
+    box.setAttribute('role', 'img');
+    box.setAttribute('aria-label', list.map(RR.skyName).join(', then '));
+    list.forEach(function (c, i) {
+      var one = el('span', 'rr-sky-icon'); setIcon(one, 'sky' + Number(c)); one.title = RR.skyName(c);
+      if (i) { var go = el('span', 'rr-sky-next'); setIcon(go, 'forward'); box.appendChild(go); }
+      box.appendChild(one);
+    });
+    return box;
+  };
   RR.tag = function (text, outline) { return el('span', outline ? 'rr-tag-outline' : 'rr-tag', text); };
   /* Written text, drawn without HTML: **bold**, *italic*, __underline__ and [text](mailto:name@example.com) inside a line.
      Used by the news stories and by the News Editor preview. */
