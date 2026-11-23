@@ -428,7 +428,7 @@
         var at = localStart(r);
         return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
           time: at ? RR.cell(at.time, at.zone) : '-',
-          race: r.day ? TIMES_OF_DAY[r.day.tod] || '-' : '-', sky: r.day ? RR.sky(r.day.sky) : '-',
+          race: r.day ? TIMES_OF_DAY[r.day.tod] || '-' : '-', sky: r.day ? RR.sky(r.day.sky.slice(0, 1)) : '-',
           status: r.cancelled ? RR.tag('Cancelled', true) : (r.done ? RR.tag('Finished') : RR.tag('Upcoming', true)) },
           /* Round and Date are the same order (the calendar). Time is the time of day. Status: Finished, then Upcoming, then Cancelled. */
           sort: { n: r.n, track: r.track.toLowerCase(), date: r.start && !isNaN(Date.parse(r.start)) ? Date.parse(r.start) : r.n,
