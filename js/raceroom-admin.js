@@ -789,6 +789,7 @@
       sheetDone((activate
         ? 'Created. ' + S.name + ' is live in the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.'
         : 'Draft saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.') + storyNote, res.story && !res.story.ok && !res.story.already ? 'warn' : undefined);
+      if (activate) listFromSheet(true);   /* the list reloads with the new season so it can be exported from there */
     });
   }
   function deleteFromSheet(seasonId, name) {
@@ -801,13 +802,35 @@
       sheetDone('Deleted "' + name + '" from the Sheet. What is in the wizard was kept.');
     });
   }
-  function listFromSheet() {
-    if (sheetBusy) return;
-    sheetBusy = true; sheetNote = { text: 'Reading the Sheet...', kind: 'ok' }; drawExport();
+  /* Reads the season list from the Sheet. keepNote: leave the message on screen (used right after Create a season). */
+  function listFromSheet(keepNote) {
+    if (sheetBusy && keepNote !== true) return;
+    sheetBusy = true;
+    if (keepNote !== true) sheetNote = { text: 'Reading the Sheet...', kind: 'ok' };
+    drawExport();
     RR.api('listSeasons').then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       sheetSeasons = res.seasons;
-      sheetBusy = false; sheetNote = null; drawExport();
+      sheetBusy = false; if (keepNote !== true) sheetNote = null; drawExport();
+    });
+  }
+  /* Downloads one saved season's server files (one zip). The season is read from the Sheet, checked, then built with the same code as the wizard's own season. */
+  function exportFromSheet(seasonId, name) {
+    if (sheetBusy) return;
+    sheetBusy = true; sheetNote = { text: 'Reading "' + name + '" from the Sheet...', kind: 'ok' }; drawExport();
+    Promise.all([RR.api('loadSeason', { seasonId: seasonId }), readBans()]).then(function (got) {
+      var res = got[0], bans = got[1];
+      if (!res || !res.ok || !res.season || res.season.version !== 1) { sheetDone(sheetError(res || {}), 'warn'); return; }
+      if (!bans) { sheetDone('Nothing was exported. The blacklist could not be read from the Sheet. Check that you are logged in and try again.', 'warn'); return; }
+      var mine = S, files = null, left = [];
+      try {
+        S = res.season; tidy();
+        left = problems();
+        if (!left.length) files = { zip: makeZip(exportFiles(bans)), file: slug(S.name || 'season') + '-server-files.zip', n: races().length };
+      } finally { S = mine; }
+      if (!files) { sheetDone('Nothing was exported. "' + name + '" has ' + left.length + ' item(s) that are not filled in. Load it into the wizard and see Checks.', 'warn'); return; }
+      download(files.zip, files.file);
+      sheetDone('Downloaded ' + files.n + ' round file(s) for "' + name + '" in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.') + ' The zip contains your server passwords. Keep it on your computer.');
     });
   }
   function loadFromSheet(seasonId, name) {
@@ -831,7 +854,10 @@
       RR.arm(RR.button('Create a season', null, false, 'create'), 'Create this season in the Sheet', 'Confirm create season', function () { saveToSheet(true); }),
       del,
       RR.arm(RR.button('Save a draft', null, false, 'save'), 'Save the draft to the Sheet', 'Confirm save draft', function () { saveToSheet(false); }),
-      RR.button('Show saved drafts', listFromSheet)));
+      RR.button('Show saved seasons', function () { listFromSheet(); }),
+      RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
+        S = newSeason(); flagged = false; sheetNote = null; save(); drawAll();
+      })));
     if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
     if (sheetSeasons) {
       p.appendChild(RR.table([
@@ -841,21 +867,18 @@
       ], sheetSeasons.map(function (s) {
         var load = RR.arm(RR.button('Load', null), 'Replace the wizard with this season', 'Confirm load season', function () { loadFromSheet(s.seasonId, s.name); });
         var remove = RR.arm(RR.button('Delete', null, false, 'trash'), 'Delete this season from the Sheet', 'Confirm delete season', function () { deleteFromSheet(s.seasonId, s.name); });
+        var exp = RR.button('Export season (.zip)', function () { exportFromSheet(s.seasonId, s.name); });
+        if (s.status === 'Draft') { exp.disabled = true; exp.setAttribute('data-rr-tip', 'Create the season first'); }
         return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
-          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.row(load, remove) } };
+          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.row(load, exp, remove) } };
       }), 'No seasons are saved in the Sheet yet.'));
     }
     p.appendChild(note((S.seasonId ? 'This season is in the Sheet as ' + S.seasonId + '. Saving a draft again updates it.' : 'This season has not been saved to the Sheet yet.') +
-      ' A draft can be saved at any time. Create a season makes it live once everything under Checks is filled in. Results are matched to a round by its round ID, so create the season before its first race. The Sheet keeps the server passwords; keep the Sheet private.'));
+      ' A draft can be saved at any time. Create a season makes it live once everything under Checks is filled in. Results are matched to a round by its round ID, so create the season before its first race. Export season (.zip) is on each created season in the list; it carries the server blacklist read from the Sheet, and the zip holds your server passwords, so keep it on your computer and out of the website folder. The Sheet keeps the server passwords; keep the Sheet private.'));
     return p;
   }
 
   /* ---------------- Step 7: Review and export ---------------- */
-  /* The server files are only for a season that is live in the Sheet (created, not a draft). Until then the button is greyed out. */
-  function liveOnly(btn) {
-    if (!S.live) { btn.disabled = true; btn.setAttribute('data-rr-tip', 'Create the season first'); }
-    return btn;
-  }
   function drawExport() {
     var issues = problems(), checks = panel('Checks');
     if (!issues.length) checks.appendChild(RR.notice('Everything needed for the export is filled in.', 'ok'));
@@ -878,41 +901,7 @@
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date' }, { key: 'online', label: 'Server online' },
         { key: 'race', label: 'Race 1 starts' }, { key: 'id', label: 'Round ID' }, { key: 'pw', label: 'Password' }, { key: 'own', label: 'Weekend format' }
       ], rows, 'No rounds yet.')),
-      sheetPanel(),
-      panel('Files',
-        RR.row(
-          liveOnly(RR.button('Export season (.zip)', function () {
-            var left = problems();
-            if (left.length) {
-              /* Refused: from now on every box that fails a check shows a red border until it is fixed. */
-              flagged = true;
-              drawAll();
-              window.RR_ADMIN.lastStatus = 'Fix the ' + left.length + ' item(s) under Checks first. The boxes that need attention have a red border.';
-              drawExport();
-              return;
-            }
-            flagged = false;
-            status.textContent = 'Reading the blacklist from the Sheet...';
-            readBans().then(function (bans) {
-              if (!bans) {
-                status.textContent = 'Nothing was exported. The blacklist could not be read from the Sheet. Check that you are logged in and try again.';
-                return;
-              }
-              download(makeZip(exportFiles(bans)), slug(S.name || 'season') + '-server-files.zip');
-              status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.');
-            });
-          })),
-          RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
-            S = newSeason();
-            flagged = false;
-            sheetNote = null;
-            save();
-            drawAll();
-          })),
-        S.live ? null : note('Export season is available once the season has been created in the Sheet (Create a season). A saved draft is not enough.'),
-        status,
-        note('Each file carries the server blacklist (the members ticked Blacklist in Member Management). It is read from the Sheet when you press Export.'),
-        note('The zip contains your server passwords. Keep them on your computer. Never add them to the website folder.'))
+      sheetPanel()
     ));
     RR.refresh();
     flagSteps();
