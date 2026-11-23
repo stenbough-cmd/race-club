@@ -681,7 +681,7 @@ button, select { font-family: inherit; }
 
 /* ---------- Tags ---------- */
 .rr-select.rr-needs .rr-select-btn { border-color: var(--rr-red); box-shadow: 0 0 0 1px var(--rr-red); }
-.rr-heading-note { font: inherit; letter-spacing: inherit; color: var(--rr-text); }
+.rr-heading-note { font: inherit; font-weight: 400; letter-spacing: inherit; color: var(--rr-muted); }
 .rr-btn-lock { width: 34px; padding: 0; }
 .rr-btn-lock svg { margin-right: 0; }
 .rr-btn-locked { border-color: var(--rr-text); }
