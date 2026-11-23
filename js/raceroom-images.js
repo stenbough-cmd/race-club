@@ -140,6 +140,8 @@
     node.loading = 'lazy';
     node.decoding = 'async';
     node.alt = o.alt || '';
+    /* o.quiet: show nothing (no broken-picture icon) until a picture has actually loaded, then show it. */
+    if (o.quiet) { node.style.visibility = 'hidden'; node.addEventListener('load', function () { node.style.visibility = ''; }); }
     id = goodId(id);
     if (!id || !SOURCES[source] || !address(source, kind === 'car' ? 'livery' : kind, id, size)) { node.src = PLACEHOLDER; node.setAttribute('data-r3e', 'missing'); return node; }
 

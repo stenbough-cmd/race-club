@@ -468,7 +468,7 @@
       var pic = el('div', 'rr-season-car-pic'), thumbs = [];
       function showLivery(id, thumb) {
         pic.textContent = '';
-        pic.appendChild(RR.images.img('livery', id, { size: 'full', className: 'rr-season-car-img', alt: k.name }));
+        pic.appendChild(RR.images.img('livery', id, { size: 'full', className: 'rr-season-car-img', alt: k.name, quiet: true }));
         thumbs.forEach(function (x) { x.classList.toggle('rr-selected', x === thumb); x.setAttribute('aria-pressed', x === thumb ? 'true' : 'false'); });
       }
       k.liveries.forEach(function (id) {
