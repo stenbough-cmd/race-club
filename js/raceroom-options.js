@@ -36,7 +36,7 @@
       ['News Generator', 'assets/images/admin/news-generator.jpg', 'js/raceroom-hub.js'],
       ['Stewarding', 'assets/images/admin/stewarding.jpg', 'js/raceroom-hub.js'],
       ['Member Management', 'assets/images/admin/member-management.jpg', 'js/raceroom-hub.js'],
-      ['League Management', 'assets/images/admin/upload-results.jpg', 'js/raceroom-hub.js'],
+      ['Results', 'assets/images/admin/upload-results.jpg', 'js/raceroom-hub.js'],
       ['Website Options', 'assets/images/admin/website-options.jpg', 'js/raceroom-hub.js']
     ].map(function (r) { return { cells: { tile: r[0], file: r[1], code: r[2] } }; })
   );
