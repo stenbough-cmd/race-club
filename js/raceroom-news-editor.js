@@ -12,8 +12,8 @@
   'use strict';
   var RR = window.RR;
   var el = RR.el, add = RR.add;
-  var main = document.querySelector('main');
   RR.fillContent();
+  var main = RR.view('posts');
 
   var data = null, busy = false, failed = false, message = null, filter = 'published', openKey = '', form = null, ta = null, linkBox = null, working = false;
 

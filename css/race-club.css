@@ -194,7 +194,7 @@ button, select { font-family: inherit; }
 }
 .rr-title-box { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .rr-crumb { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rr-muted); }
-.rr-crumb-link { color: var(--rr-text); text-decoration: none; padding: 4px 8px; border: 1px solid var(--rr-line); }
+.rr-crumb-link { color: var(--rr-text); text-decoration: none; }
 .rr-crumb-link:hover, .rr-crumb-link:focus-visible { text-decoration: underline; }
 .rr-crumb-sep { color: var(--rr-muted); }
 .rr-page-title {

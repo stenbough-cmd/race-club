@@ -51,6 +51,11 @@
       ['upload', 'Upload by hand'],
       ['season', 'Season']
     ],
+    /* Admin News Editor: the posts and stories, and the notes and photos that shape the AI stories. */
+    newsed: [
+      ['posts', 'Posts and stories'],
+      ['context', 'Story context']
+    ],
     /* Admin Stewarding: protests to rule on, and drivers who changed car or class. */
     stewarding: [
       ['protests', 'Protests'],
