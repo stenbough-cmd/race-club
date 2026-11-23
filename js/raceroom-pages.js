@@ -211,6 +211,11 @@
           cls === 'all' && classesIn(season).length > 1 ? RR.stat(finished ? 'Champions' : 'Leaders', 'One per class', 'Choose a class') : RR.stat(finished ? 'Champion' : 'Leader', lead ? lead.d.name : '-'),
           cls === 'all' && classesIn(season).length > 1 ? RR.stat('Lead', '-', 'Choose a class') : RR.stat('Lead', lead && second ? '+' + (lead.t.total - second.t.total) : '-', 'Points over second place')
         ]),
+        finished && season.champions && Object.keys(season.champions).length ? RR.table([{ key: 'cls', label: 'Champions' }, { key: 'who', label: 'Driver' }],
+          Object.keys(season.champions).filter(function (c) { return cls === 'all' || String(c) === String(cls); }).map(function (c) {
+            var dr = byId(D.drivers, season.champions[c]);
+            return { cells: { cls: className(c), who: dr ? RR.nameWithFlag(dr.name, dr.country) : '-' } };
+          }), '') : null,
         RR.table(cols, rows.map(function (r, i) {
           var cells = { pos: RR.pos(i + 1), driver: RR.cell(RR.nameWithFlag(r.d.name, r.d.country)),
             wins: season.results.filter(function (x) { return x.driver === r.d.id && x.pos === 1 && x.status === 'Finished' && roundCounts(season, x.round); }).length,
@@ -715,7 +720,7 @@
       return s.status === 'Finished' && seasonRows(s, d.cls).map(function (r) { return r.d.id; }).indexOf(d.id) < 3;
     }));
     seasonAch('Perfect attendance', 'Race in every round of two seasons.', 2, mine.filter(attendedAll), true);
-    seasonAch('Champion', 'Win a season championship.', 1, mine.filter(function (s) { return s.champion === d.id; }), true);
+    seasonAch('Champion', 'Win a season championship.', 1, mine.filter(function (s) { return s.champion === d.id || (s.champions && Object.keys(s.champions).some(function (c) { return String(s.champions[c]) === String(d.id); })); }), true);
     return out;
   }
 

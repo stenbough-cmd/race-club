@@ -42,7 +42,8 @@
     league: [
       ['rounds', 'Rounds'],
       ['server', 'Posted by the server'],
-      ['upload', 'Upload by hand']
+      ['upload', 'Upload by hand'],
+      ['season', 'Season']
     ],
     /* Admin Stewarding: protests to rule on, and drivers who changed car or class. */
     stewarding: [
