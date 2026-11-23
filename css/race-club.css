@@ -785,7 +785,9 @@ button, select { font-family: inherit; }
 .rr-working, .rr-working * { cursor: progress; }
 .rr-working button[disabled] { opacity: 0.4; pointer-events: none; }
 /* A red tab hanging from the top edge of the browser: both sides slant outward toward the edge, so it is widest where it meets the top. */
-.rr-working-pill { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 40px 9px; background: var(--rr-red); color: var(--rr-photo-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
+.rr-working-pill { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 40px 9px; isolation: isolate; color: var(--rr-photo-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); }
+/* The red shape is drawn on its own layer: a shadow on the pill itself would be cut off by the angled edges. */
+.rr-working-pill::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--rr-red); clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
 .rr-working-pill[hidden] { display: none; }
 .rr-icon-solid svg { fill: currentColor; }
 .rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
