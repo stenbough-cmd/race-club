@@ -735,6 +735,7 @@
     st.hours = rows.reduce(function (n, r) { return n + r.x.laps * r.x.best; }, 0) / 3600000;
     st.points = D.seasons.reduce(function (n, s) { return n + ((sel === 'all' || s.id === sel) && s.totals[d.id] ? s.totals[d.id].total : 0); }, 0);
     st.incPerRace = st.races ? st.incidents / st.races : 0;
+    st.avgGapPct = st.races ? avg(rows, function (r) { return r.x.gapPct; }) : 0;
     st.cleanLaps = st.laps ? Math.max(0, 100 - st.invalid / st.laps * 100) : 0;
     /* The four radar axes, each 0 to 100, all from league data:
        Results = average share of the field beaten. Finishing = share of races finished.
@@ -744,7 +745,7 @@
       { label: 'Results', value: avg(rows, function (r) { return r.x.of > 1 ? (r.x.of - r.x.pos) / (r.x.of - 1) * 100 : 100; }) },
       { label: 'Finishing', value: st.races ? st.finished / st.races * 100 : 0 },
       { label: 'Clean racing', value: st.races ? Math.max(0, 100 - st.incPerRace / INCIDENT_LIMIT * 100) : 0 },
-      { label: 'Pace', value: st.races ? Math.max(0, 100 - avg(rows, function (r) { return r.x.gapPct; }) * 20) : 0 }
+      { label: 'Pace', value: st.races ? Math.min(100, Math.max(0, 100 - avg(rows, function (r) { return r.x.gapPct; }) * 20)) : 0 }
     ];
     var cars = grouped(rows, function (r) { return r.x.car; }).sort(function (a, b) { return b.rows.length - a.rows.length; });
     st.favouriteCar = cars[0] ? { name: cars[0].key, share: Math.round(cars[0].rows.length / st.races * 100) } : null;
@@ -865,21 +866,62 @@
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
+      /* The radar: each axis gets a plain sentence for what its number means, and a dashed shape for the league average over every driver in the same seasons. */
+      var notes = st.races ? [
+        'finished ahead of ' + Math.round(st.radar[0].value) + '% of the field on average',
+        st.finished + ' of ' + st.races + ' races finished',
+        st.incPerRace.toFixed(1) + ' incident points per race (the limit is ' + INCIDENT_LIMIT + ')',
+        'best laps average ' + Math.max(0, st.avgGapPct).toFixed(2) + '% slower than the fastest in class'
+      ] : [];
+      var sums = [0, 0, 0, 0], people = 0;
+      D.drivers.forEach(function (x) {
+        var xr = profileRows(x, sel);
+        if (!xr.length) return;
+        profileStats(x, xr, sel).radar.forEach(function (a, i) { sums[i] += a.value; });
+        people++;
+      });
+      var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, note: notes[i], ref: people > 1 ? sums[i] / people : undefined }; });
       var fav = st.favouriteCar;
       var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
         el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');
-      var standing = add(el('div', 'rr-panel rr-stack'), RR.label('Season standing'),
-        add(el('div', 'rr-kv-list'), RR.kv('Season', season.name), RR.kv('Class', className(myCls)), RR.kv('Position', place ? RR.pos(place) + ' of ' + table.length : '-')),
-        add(el('div', 'rr-kv-list'), RR.kv('Points', mineRow ? mineRow.t.total : '-'),
-          RR.kv('Gap to leader', mineRow && lead && place > 1 ? String(mineRow.t.total - lead.t.total) : '-'),
-          RR.kv('Rounds', doneRounds(season).length + ' / ' + season.rounds.length)));
+      /* Season standing: only what the rest of the profile does not already show (points, wins, podiums and best finish are elsewhere). */
+      var standing = add(el('div', 'rr-panel rr-stack'), RR.label('Season standing'));
+      function pts(v) { return Math.round(v * 100) / 100; }
+      if (mineRow) {
+        var mine = rows.filter(function (r) { return r.season === season; }), ahead = table[place - 2], behind = table[place];
+        var fin = mine.filter(function (r) { return r.x.status === 'Finished'; }), attended = {};
+        mine.forEach(function (r) { attended[r.x.round] = 1; });
+        var played = Object.keys(attended).length, ran = doneRounds(season).length;
+        add(standing, add(el('div', 'rr-kv-list'), RR.kv('Season', season.name), RR.kv('Class', className(myCls)), RR.kv('Position', RR.pos(place) + ' of ' + table.length)),
+          add(el('div', 'rr-kv-list'),
+            RR.kv('Class leader', place > 1 ? lead.d.name : 'Leading'),
+            RR.kv('Behind the leader', place > 1 ? String(pts(lead.t.total - mineRow.t.total)) : '-'),
+            RR.kv(place > 1 ? 'Behind the car ahead' : 'Lead over second', place > 1 ? String(pts(ahead.t.total - mineRow.t.total)) : (behind ? String(pts(mineRow.t.total - behind.t.total)) : '-'))),
+          add(el('div', 'rr-kv-list'),
+            RR.kv('Average finish', fin.length ? 'P' + (fin.reduce(function (n, r) { return n + r.x.pos; }, 0) / fin.length).toFixed(1) : '-'),
+            RR.kv('Points per round', played ? String(pts(mineRow.t.total / played)) : '-'),
+            RR.kv('Rounds raced', played + ' of ' + ran)),
+          add(el('div', 'rr-kv-list'),
+            RR.kv('Poles', mine.filter(function (r) { return r.x.pole; }).length),
+            RR.kv('Fastest laps', mine.filter(function (r) { return r.x.fastest; }).length),
+            RR.kv('Laps led', mine.reduce(function (n, r) { return n + r.x.led; }, 0))));
+        var five = el('div', 'rr-form-row');
+        mine.slice(0, 5).reverse().forEach(function (r) { five.appendChild(RR.tag(r.x.status === 'Finished' ? 'P' + r.x.pos : r.x.status, true)); });
+        add(standing, RR.label('Last five results, oldest first'), five);
+      } else {
+        var lastSeason = D.seasons.filter(function (s) { return s.totals[d.id]; })[0];
+        add(standing, add(el('div', 'rr-kv-list'), RR.kv('Season', season.name)),
+          el('p', 'rr-body', d.name + ' did not race in ' + season.name + '.'),
+          lastSeason ? add(el('div', 'rr-kv-list'), RR.kv('Last raced', lastSeason.name), RR.kv('Class then', className(classIn(lastSeason, d)))) : el('p', 'rr-body', 'No season raced yet.'),
+          lastSeason ? RR.row(RR.button('See ' + lastSeason.name, function () { goToSeason(lastSeason.id); })) : null);
+      }
       var next = achievementList(d, rows, sel).filter(function (a) { return a.status.progress && !a.hidden; })
         .sort(function (a, b) { return b.status.progress[0] / b.status.progress[1] - a.status.progress[0] / a.status.progress[1]; }).slice(0, 3);
       var nextGrid = el('div', 'rr-grid-3');
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
         add(el('div', 'rr-grid-2'), card, hero),
-        add(el('div', 'rr-grid-2'), RR.radar(st.radar), standing),
+        add(el('div', 'rr-grid-2'), RR.radar(radarAxes), standing),
         RR.statRow([
           RR.stat('Last race', last ? (last.x.status === 'Finished' ? RR.pos(last.x.pos) : last.x.status) : '-', last ? last.round.track : 'No races yet'),
           RR.stat('Best finish', best ? RR.pos(best.x.pos) : '-', best ? best.round.track : 'No races yet'),
@@ -1015,8 +1057,19 @@
     }
 
     /* Header options. The Season dropdown follows every tab; the others belong to one tab each. */
-    RR.headTool(RR.select('Season', [['all', 'All seasons']].concat(D.seasons.map(function (s) { return [s.id, seasonLabel(s)]; })),
-      function (v) { sel = v; drawAll(); }, sel));
+    function seasonPicker() {
+      return RR.select('Season', [['all', 'All seasons']].concat(D.seasons.map(function (s) { return [s.id, seasonLabel(s)]; })),
+        function (v) { sel = v; drawAll(); }, sel);
+    }
+    var seasonBox = RR.headTool(seasonPicker());
+    /* A button inside the page that jumps to one season: the Season dropdown is drawn again so it shows the same season. */
+    function goToSeason(id) {
+      sel = id;
+      var fresh = seasonPicker();
+      if (seasonBox.parentNode) seasonBox.parentNode.replaceChild(fresh, seasonBox);
+      seasonBox = fresh;
+      drawAll();
+    }
     RR.headTool(RR.segment([['all', 'All']].concat(careerClasses.map(function (c) { return [c.id, c.name]; })),
       function (v) { clsFilter = v; drawHistory(profileRows(d, sel)); }), 'history');
     RR.headTool(RR.segment([['all', 'All'], ['earned', 'Earned'], ['progress', 'In progress'], ['notyet', 'Not yet']],
