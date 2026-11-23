@@ -97,10 +97,10 @@
         var mk = MARK.exec(b.trim()), ph = mk && it && it.photos && it.photos[Number(mk[1]) - 1];
         if (mk) {
           if (!ph) return;
-          var fig = el('figure', 'rr-figure rr-figure-wide'), im = el('img');
+          var fig = el('figure', 'rr-figure rr-figure-' + (ph.side === 'left' ? 'left' : 'right')), im = el('img');   /* the same float as the story page, so the text wraps around it */
           im.src = ph.src; im.alt = ph.caption || '';
           fig.appendChild(im);
-          fig.appendChild(el('figcaption', '', 'Picture ' + mk[1] + (ph.caption ? ': ' + ph.caption : '')));
+          if (ph.caption) fig.appendChild(el('figcaption', '', ph.caption));
           preview.appendChild(fig);
           return;
         }
