@@ -782,6 +782,7 @@
     RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }), activate: !!activate }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       S.seasonId = res.seasonId;
+      if (activate) S.live = true;   /* the season is live in the Sheet: the server files can be exported */
       save();
       sheetSeasons = null;
       var storyNote = !res.story || res.story.already ? '' : (res.story.ok ? ' The season preview story was written.' : ' The season preview story could not be written (' + (res.story.error || 'unknown reason') + '). Retry it on the Rounds tab.');
@@ -795,7 +796,7 @@
     sheetBusy = true; sheetNote = { text: 'Deleting from the Sheet...', kind: 'ok' }; drawExport();
     RR.api('deleteSeason', { seasonId: seasonId }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
-      if (S.seasonId === seasonId) { delete S.seasonId; save(); }
+      if (S.seasonId === seasonId) { delete S.seasonId; delete S.live; save(); }
       if (sheetSeasons) sheetSeasons = sheetSeasons.filter(function (x) { return x.seasonId !== seasonId; });
       sheetDone('Deleted "' + name + '" from the Sheet. What is in the wizard was kept.');
     });
@@ -815,6 +816,7 @@
     RR.api('loadSeason', { seasonId: seasonId }).then(function (res) {
       if (!res || !res.ok || !res.season || res.season.version !== 1) { sheetDone(sheetError(res || {}), 'warn'); return; }
       S = res.season;
+      S.live = res.status === 'Active' || res.status === 'Finished';
       flagged = false;
       tidy();
       save();
@@ -849,6 +851,11 @@
   }
 
   /* ---------------- Step 7: Review and export ---------------- */
+  /* The server files are only for a season that is live in the Sheet (created, not a draft). Until then the button is greyed out. */
+  function liveOnly(btn) {
+    if (!S.live) { btn.disabled = true; btn.setAttribute('data-rr-tip', 'Create the season first'); }
+    return btn;
+  }
   function drawExport() {
     var issues = problems(), checks = panel('Checks');
     if (!issues.length) checks.appendChild(RR.notice('Everything needed for the export is filled in.', 'ok'));
@@ -874,7 +881,7 @@
       sheetPanel(),
       panel('Files',
         RR.row(
-          RR.button('Export season (.zip)', function () {
+          liveOnly(RR.button('Export season (.zip)', function () {
             var left = problems();
             if (left.length) {
               /* Refused: from now on every box that fails a check shows a red border until it is fixed. */
@@ -894,7 +901,7 @@
               download(makeZip(exportFiles(bans)), slug(S.name || 'season') + '-server-files.zip');
               status.textContent = 'Downloaded ' + races().length + ' round file(s) in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.');
             });
-          }),
+          })),
           RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
             S = newSeason();
             flagged = false;
@@ -902,6 +909,7 @@
             save();
             drawAll();
           })),
+        S.live ? null : note('Export season is available once the season has been created in the Sheet (Create a season). A saved draft is not enough.'),
         status,
         note('Each file carries the server blacklist (the members ticked Blacklist in Member Management). It is read from the Sheet when you press Export.'),
         note('The zip contains your server passwords. Keep them on your computer. Never add them to the website folder.'))
