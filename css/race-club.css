@@ -680,6 +680,7 @@ button, select { font-family: inherit; }
 .rr-barlist-value { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ---------- Tags ---------- */
+.rr-select.rr-needs .rr-select-btn { border-color: var(--rr-red); box-shadow: 0 0 0 1px var(--rr-red); }
 .rr-btn-lock { width: 34px; padding: 0; }
 .rr-btn-lock svg { margin-right: 0; }
 .rr-btn-locked { border-color: var(--rr-text); }

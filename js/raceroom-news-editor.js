@@ -16,7 +16,7 @@
   RR.fillContent();
   var main = RR.view('posts');
 
-  var data = null, busy = false, failed = false, message = null, filter = 'published', openKey = '', form = null, ta = null, linkBox = null, working = false;
+  var data = null, busy = false, failed = false, message = null, filter = 'published', openKey = '', form = null, ta = null, linkBox = null, working = false, reasonMissing = false, reasonEl = null;
 
   function problem(res) {
     var e = res && res.error;
@@ -281,13 +281,18 @@
     box.appendChild(wrapEl);
     if (linkBox) box.appendChild(linkRow());
     box.appendChild(el('p', 'rr-body', 'Leave a blank line between paragraphs. A heading, a quote and a picture each sit on their own.'));
-    if (!isNew) {
-      box.appendChild(RR.select('Reason for this edit (shown at the bottom of the story)', [['', 'Choose']].concat(data.reasons.map(function (r) { return [r, r]; })),
-        function (v) { form.reason = v; }, form.reason));
-    }
     box.appendChild(el('h3', 'rr-card-title', 'How it will look'));
     preview = el('div', 'rr-article');
     box.appendChild(preview);
+    /* The reason sits right above the buttons. When Save edit is pressed without one, it gets a red border until one is chosen. */
+    reasonEl = null;
+    if (!isNew) {
+      var mine = RR.select('Reason for this edit (shown at the bottom of the story)', [['', 'Choose']].concat(data.reasons.map(function (r) { return [r, r]; })),
+        function (v) { form.reason = v; if (v) { reasonMissing = false; mine.classList.remove('rr-needs'); } }, form.reason);
+      reasonEl = mine;
+      if (reasonMissing && !form.reason) reasonEl.classList.add('rr-needs');
+      box.appendChild(reasonEl);
+    }
 
     var save = RR.button(isNew ? 'Publish post' : 'Save edit', null, true);
     RR.arm(save, '', isNew ? 'Confirm: publish this post on the News page' : 'Confirm: save this edit', function () {
@@ -298,7 +303,12 @@
       if (!form.title.trim()) { fail({ error: 'no-title' }); return false; }
       if (!form.body.trim()) { fail({ error: 'no-body' }); return false; }
       if (bodyLen() > limit()) { message = { text: 'The text is over ' + thousands(limit()) + ' characters. Shorten it.', kind: 'warn' }; drawNotice(); return false; }
-      if (!isNew && !form.reason) { fail({ error: 'no-reason' }); return false; }
+      if (!isNew && !form.reason) {
+        reasonMissing = true; if (reasonEl) reasonEl.classList.add('rr-needs');
+        fail({ error: 'no-reason' });
+        setTimeout(function () { if (reasonEl && reasonEl.scrollIntoView) reasonEl.scrollIntoView({ block: 'center' }); }, 0);
+        return false;
+      }
       return true;
     });
     var buttons = [save];
