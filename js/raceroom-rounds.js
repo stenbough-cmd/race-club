@@ -115,7 +115,7 @@
       first.disabled = writing;
       out.push(first);
     } else if (s.status === 'published') {
-      var again = RR.button('Rewrite story', null, false);
+      var again = RR.button('Rewrite story', null, false, 'redo');
       RR.arm(again, '', 'Confirm rewrite story', function () { writeStory(opts, label, true); });
       again.disabled = writing;
       out.push(again);

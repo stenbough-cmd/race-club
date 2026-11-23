@@ -219,7 +219,7 @@
       if (item.state !== 'deleted') buttons.push(state('Delete', 'Confirm delete: it is hidden; you can undo this', 'deleted', 'It was deleted. You can bring it back with Undo delete.'));
       else buttons.push(state('Undo delete', 'Confirm undo: it comes back as Withdrawn', 'withdrawn', 'It is back, as Withdrawn.'));
       if (item.kind !== 'post') {
-        var again = RR.button('Rewrite story', null, false);
+        var again = RR.button('Rewrite story', null, false, 'redo');
         RR.arm(again, '', 'Confirm rewrite: the writer makes a new text (about a minute)', function () {
           working = true;
           message = { text: 'Rewriting the story. This takes about a minute.', kind: 'ok' };
