@@ -72,7 +72,7 @@
     panel('Four habits', [
       list([
         "Website change: edit the file, push from GitHub Desktop, then hard refresh the page (Cmd+Shift+R) because browsers keep old files.",
-        "Backend change: open the .gs file in Apps Script, paste the whole new file over the old one, save, then Deploy, Manage deployments, edit, New version. If the public data should change too, run Race Club > Publish: send the site data now.",
+        "Backend change: open the .gs file in Apps Script, paste the whole new file over the old one, save, then Deploy, Manage deployments, edit, New version. If the public data should change too, press Publish site data on Results, Rounds.",
         "If a .gs file adds a column to a Sheet tab, run Race Club > Build or repair the tabs once. It never deletes anything.",
         "Never edit the Results or Laps tabs by hand. Corrections go through Stewarding, which adds a record on top and can be reversed."
       ])
@@ -210,7 +210,7 @@
         "Build or repair the tabs: makes missing tabs and columns. Safe to run again.",
         "Set the web app address, Show the results address (private), Make a new results secret.",
         "Add an admin or change a password, Remove an admin, List admins, Log every admin out.",
-        "Publish: set up GitHub, Publish: send the site data now.",
+        "Publish: set up GitHub (the token and the data repository).",
         "Results: read a round again (use it after a parser or scoring change, to rebuild an old round).",
         "Result emails: turn on or off, Discord alerts: set the webhook."
       ])
@@ -220,7 +220,7 @@
         "The relay is a Google Cloud Run function. It takes the server's post, checks a token in the path, and forwards it unchanged to the Apps Script address with the results secret. It is needed because the RaceRoom tool only accepts an address ending in /*.json, and Apps Script needs one ending in /exec.",
         "Admin login: passwords are hashed (PBKDF2) and never stored. 5 wrong tries for one name, or 30 in all, lock the login for 15 minutes.",
         "Protest forms lock after 10 minutes of wrong round passwords, and you get an email once.",
-        "Nothing runs on a timer. The public data is rebuilt after Confirm, Deny, Cancel or Restore, a protest, a ruling, ending a season, a round read again, and the Publish menu item.",
+        "Nothing runs on a timer. The public data is rebuilt after Confirm, Deny, Cancel or Restore, a protest, a ruling, ending a season, a round read again, and the Publish site data button.",
         "The GitHub workflow RaceRoom pictures runs by itself every day and keeps assets/r3e current (see Picture database)."
       ])
     ])
@@ -230,7 +230,7 @@
   add(RR.view('change'), stack(
     panel('I want to change...', [
       grid(['What', 'Where', 'How'], [
-        ['Points, bonuses, drop weeks, rules, classes or calendar for a season', 'Season Wizard', "Open the season in the wizard, change the step, press Create a season, then run Race Club > Publish: send the site data now. Check the Season page and the standings after."],
+        ['Points, bonuses, drop weeks, rules, classes or calendar for a season', 'Season Wizard', "Open the season in the wizard, change the step, press Create a season, then press Publish site data on Results, Rounds. Check the Season page and the standings after."],
         ['The scoring rules themselves (the 50% laps rule, the order, how bonuses work)', 'Scoring.gs', "Edit it, paste into Apps Script, deploy a new version, then Race Club > Results: read a round again for rounds already raced."],
         ['Protest window length (12 hours)', 'Results.gs, RC_PROTEST_HOURS. Also the text on help.html and the protest page', "Change the number, deploy, then update the wording in js/raceroom-help.js."],
         ['Penalty sizes (1, 3, 5) or the DSQ rule', 'Stewarding.gs and js/raceroom-stewarding.js', "Both files list the options. Change both, deploy, push. Then update js/raceroom-help.js."],
@@ -253,7 +253,7 @@
       grid(['What you see', 'Look at', 'What to do'], [
         ['A round did not appear after the race', 'Results, Posted by the server, or the Inbox tab', "The Status and Note say why: no race session, nobody classified, duplicate, held or cancelled round. If the file is there, use Race Club > Results: read a round again."],
         ['The round is waiting and standings are missing it', 'Results, Rounds', "It needs Confirm. After that it counts when the protest window has ended and no protest is open."],
-        ['Standings or a page show old data', 'Race Club menu', "Publish: send the site data now, then hard refresh (Cmd+Shift+R)."],
+        ['Standings or a page show old data', 'Results, Rounds', "Press Publish site data, then hard refresh (Cmd+Shift+R)."],
         ['Publish says GitHub is not set up', 'Race Club menu', "Publish: set up GitHub, and check the token has not expired."],
         ['A story failed or reads badly', 'Results, Rounds', "Retry story, or Rewrite story. Or edit it in the News Editor."],
         ['A driver is in the wrong class or has no points', 'Stewarding, Car and class; Results tab', "A driver counts in the class of their first confirmed round. Check the flag and the Season page."],
