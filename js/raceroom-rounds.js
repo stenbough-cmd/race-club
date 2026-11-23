@@ -3,7 +3,7 @@
    them is public until you Confirm them here. Review shows what the file says; Confirm makes the results live, Deny keeps the
    file but never uses it. A newer file for a round that is already live waits here too and changes nothing until you confirm it.
    A round with no results can be cancelled (and restored). Both Confirm and Deny use the two-click button.
-   Stories: Confirm also writes the round's story (about a minute) once the results are live. Notes, photos, Retry story and the season preview and recap are on the News Editor, Story writer tab.
+   Stories: Confirm only puts the results live. The round's story is written when you press Write story on the News Editor, Story writer tab, after adding context there.
    The list is read when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
@@ -75,13 +75,6 @@
   }
 
   /* ---------------- Stories ---------------- */
-  /* The message after Confirm: the story is written right after the results go live. */
-  function storyDone(res, label) {
-    var st = res && res.story;
-    if (!st) return '';
-    if (st.already) return '';
-    return st.ok ? ' The ' + label + ' was written.' : ' The ' + label + ' could not be written: ' + (st.error || 'unknown reason') + ' Use Retry story on the News Editor, Story writer tab.';
-  }
 
   /* ---------------- Cancel and restore ---------------- */
   function cancelButton(r, cancelled) {
@@ -115,7 +108,7 @@
       if (action === 'denyRound') done('Round ' + r.n + ': the file was denied. It is kept in the Inbox, and nothing was made public.', 'ok');
       else if (res.protestEnds) {
         done('Round ' + r.n + ' is live. Protests close ' + dmy(res.protestEnds) + (res.fromSchedule ? '.' : ' (the round has no usable schedule, so this counts 12 hours from now).') +
-          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : '') + storyDone(res, 'story'), res.story && !res.story.ok ? 'warn' : 'ok', res);
+          (res.newDrivers ? ' ' + plural(res.newDrivers, 'new driver was', 'new drivers were') + ' added.' : '') + ' Add context and press Write story on the News Editor, Story writer tab, when you are ready.', 'ok', res);
       } else done('Round ' + r.n + ': the results were replaced with the newer file.', 'ok', res);
     });
   }

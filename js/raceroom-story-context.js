@@ -214,7 +214,7 @@
     box.appendChild(RR.row(RR.kv('Story', st[0]), st[2] ? RR.kv(r.story && r.story.status === 'failed' ? 'Reason' : 'Title', st[2]) : null));
     var btns = storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story);
     if (btns.length && (r.status === 'Provisional' || r.status === 'Final')) box.appendChild(RR.row.apply(null, btns));
-    else if (btns.length) box.appendChild(el('p', 'rr-body', 'The story is written when you confirm the results.'));
+    else if (btns.length) box.appendChild(el('p', 'rr-body', 'The story can be written once you have confirmed the results.'));
     box.appendChild(el('h3', 'rr-card-title', 'Notes for the writer'));
     box.appendChild(el('p', 'rr-body', 'The writer treats these as true. A rivalry only shows up if the race gives it a way in. The note is never quoted.'));
     if (!r.drivers || !r.drivers.length) box.appendChild(el('p', 'rr-body', 'Rivalries can be picked once the round’s results have arrived.'));
@@ -292,7 +292,7 @@
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Story writer'),
-      el('p', 'rr-body', 'Every AI story is managed here: add notes and photos, write, retry or rewrite, and edit a written story (change its text, withdraw or delete it). Posts you write yourself are on the News tab. A race story is written when you confirm the round (Results, Rounds). The preview is written when you press Write story, after you have added your own context. The recap can be written once the season has ended.'));
+      el('p', 'rr-body', 'Every AI story is managed here: add notes and photos, write, retry or rewrite, and edit a written story (change its text, withdraw or delete it). Posts you write yourself are on the News tab. A race story is written when you press Write story, once the round’s results are live and you have added your own context. The preview is written when you press Write story, after you have added your own context. The recap can be written once the season has ended.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else if (!data.seasons.length) box.appendChild(RR.empty('No seasons are created yet. Create one from the Season Wizard.'));
@@ -320,7 +320,7 @@
         var act = el('span', 'rr-form-row'), sy = storyState(r.story);
         if (r.status !== 'Cancelled') act.appendChild(RR.button('Add context', function () { openPanel(r); }));
         var eb = editButton('race', seasonId, r.id); if (eb) act.appendChild(eb);
-        if (r.story && r.story.status === 'failed' && (r.status === 'Provisional' || r.status === 'Final')) storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story).forEach(function (b) { act.appendChild(b); });
+        if (r.status === 'Provisional' || r.status === 'Final') storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story).forEach(function (b) { act.appendChild(b); });
         return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: RR.cell(dmy(r.date), (r.time ? r.time + ' ' : '') + r.zone),
           story: RR.cell(el('span', sy[1], sy[0]), sy[2]), act: act } };
       }), 'This season has no rounds.'));

@@ -35,7 +35,7 @@
     ]),
     panel('After the race', [
       "RaceRoom decides the result. The finishing order and every penalty given in the game stand.",
-      "The results are checked and posted on the site, and a news story is written.",
+      "The results are checked and posted on the site. The race story is written later, when the organizers press Write story.",
       "Protests stay open for 12 hours after the scheduled start of the round. After that the round counts in the standings, once every protest is ruled.",
       "At the end of the season the champion of each class is crowned."
     ])

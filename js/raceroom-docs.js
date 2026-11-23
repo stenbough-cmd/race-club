@@ -51,7 +51,7 @@
         ['2 Run the server', "Each round's file is loaded in the RaceRoom server tool. After the event the server posts its results file.", 'RaceRoom server'],
         ['3 Relay', "The cloud function passes the file to Apps Script. Duplicates are ignored and the raw file is kept in a private Drive folder.", 'Cloud Run, Apps Script'],
         ['4 Waiting', "The round shows Awaiting confirmation. Nothing is public yet. You get an email, and a Discord message if set.", 'Results, Rounds tab'],
-        ['5 Confirm', "Results go live, the story is written and the public data is sent to race-club-data.", 'Results, Rounds tab'],
+        ['5 Confirm', "Results go live and the public data is sent to race-club-data. The story is written later, when you press Write story.", 'Results, Rounds tab'],
         ['6 Protests', "Drivers file with the round password until 12 hours after the scheduled start. You rule on them.", 'Stewarding'],
         ['7 Standings', "A round counts once its protest window has ended and no protest is open. The page works this out from the clock.", 'Automatic'],
         ['8 End of season', "Champions per class, a recap story, and a Reopen button if you end too soon.", 'Results, Season tab']
@@ -133,8 +133,8 @@
     panel('Each round', [
       list([
         "The server posts the results. You get an alert, and the round shows Awaiting confirmation on Results, Rounds. Nothing is public yet.",
-        "Look at the results as the server sent them, then Confirm or Deny (both need two clicks). Confirm puts the results live, writes the story (about a minute) and sends the public data. Deny keeps the file in the Inbox and puts nothing live.",
-        "If the story fails, the results stay live and Retry story is on the News Editor, Story writer tab, where Rewrite story writes it again and the photos for each story are chosen. A changed photo shows in a written story at once.",
+        "Look at the results as the server sent them, then Confirm or Deny (both need two clicks). Confirm puts the results live and sends the public data. It does not write the story. Deny keeps the file in the Inbox and puts nothing live.",
+        "Once the results are live, go to the News Editor, Story writer tab: Add context, then Write story (about a minute). If a story fails, press Retry story; Rewrite story writes a written story again. The photos for each story are chosen there too. A changed photo shows in a written story at once.",
         "A newer file for a round that is still waiting replaces it. After a round is confirmed, a newer file is HELD and changes nothing until you confirm it.",
         "Cancel round works only for a round with no results. Restore brings it back.",
         "Stewarding, Protests: Review a protest, then rule on it: dismiss, 1, 3 or 5 points, or a DSQ for that race. Your comment is public, and a DSQ needs one. A ruling can be reopened or reversed.",
