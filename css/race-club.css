@@ -776,7 +776,8 @@ button, select { font-family: inherit; }
 /* While the service is busy (RR.api / RR.post pending) every button is disabled and greyed, and a note shows at the top of the screen. */
 .rr-working, .rr-working * { cursor: progress; }
 .rr-working button[disabled] { opacity: 0.4; pointer-events: none; }
-.rr-working-pill { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 16px; background: var(--rr-invert-bg); color: var(--rr-invert-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; box-shadow: 0 2px 12px rgba(23, 23, 23, 0.35); }
+/* A red tab hanging from the top edge of the browser: both sides slant outward toward the edge, so it is widest where it meets the top. */
+.rr-working-pill { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 40px 9px; background: var(--rr-red); color: var(--rr-photo-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
 .rr-working-pill[hidden] { display: none; }
 .rr-icon-solid svg { fill: currentColor; }
 .rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
@@ -890,6 +891,10 @@ button, select { font-family: inherit; }
 .rr-rank-name { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.15; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rr-rank-value { display: flex; align-items: baseline; gap: 8px; margin-top: auto; }
 .rr-rank-value .rr-stat-value { font-size: 22px; }
+/* The black Race Club R in the lower right corner of a tile with no banner picture (hidden when the picture shows) */
+.rr-rank-mark { position: absolute; right: 12px; bottom: 12px; width: 26px; height: auto; }
+.rr-rank-1 .rr-rank-mark { width: 40px; }
+.rr-rank-tile.rr-has-photo > .rr-rank-mark { display: none; }
 .rr-rank-1 { grid-column: 1; grid-row: 1 / span 2; }
 .rr-rank-1 .rr-rank-name { font-size: 24px; white-space: normal; }
 .rr-rank-1 .rr-rank-value .rr-stat-value { font-size: 44px; }
@@ -943,6 +948,8 @@ button, select { font-family: inherit; }
 /* ---------- Flags ---------- */
 .rr-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .rr-flag { display: block; flex: none; width: 20px; height: 14px; object-fit: cover; box-shadow: 0 0 0 1px var(--rr-line); }
+.rr-flag-none { display: flex; align-items: center; justify-content: center; background: var(--rr-photo-text); }
+.rr-flag-none img { display: block; height: 70%; width: auto; }
 .rr-rank-name .rr-name { max-width: 100%; }
 
 /* ---------- Picture behind text (RR.photo): ranking tiles, banners and hero panels ---------- */
@@ -975,7 +982,7 @@ button, select { font-family: inherit; }
 .rr-banner-avatar .rr-banner-avatar-mark { width: 56%; height: auto; object-fit: contain; }
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
-.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 28px; height: auto; opacity: 0.6; }
+.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 44px; height: auto; opacity: 1; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
 @media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } }
 

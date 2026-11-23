@@ -788,17 +788,24 @@
     /* The league's Sheet keeps RaceRoom's own two letter code (US, DE); the sample data uses names. */
     return COUNTRY_CODES[key] || (/^[a-z]{2}$/.test(key) ? key : '');
   };
-  /* RR.flag('Canada') is a small <img> of the flag, or null when the country is not known. */
+  /* RR.flag('Canada') is a small <img> of the flag. When the country is not known (or has no flag picture) it is a white box of the same size with the
+     small black Race Club R in it, so a name never sits without one. */
+  function noFlag() {
+    var b = el('span', 'rr-flag rr-flag-none'), r = el('img');
+    r.src = 'assets/images/Race Club R Black.webp'; r.alt = '';
+    b.appendChild(r);
+    return b;
+  }
   RR.flag = function (country) {
     var code = RR.countryCode(country);
-    if (!code) return null;
+    if (!code) return noFlag();
     var f = el('img', 'rr-flag');
     f.src = 'assets/flags/' + code + '.svg';
     f.alt = country;
     f.title = country;
     f.width = 20;
     f.height = 14;
-    f.onerror = function () { f.remove(); };
+    f.onerror = function () { if (f.parentNode) f.parentNode.replaceChild(noFlag(), f); };
     return f;
   };
   /* A name with the driver's flag in front of it. */
@@ -859,6 +866,9 @@
       name.appendChild(it.country ? RR.nameWithFlag(it.title, it.country) : document.createTextNode(it.title));
       add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), name, it.sub ? el('div', 'rr-note', it.sub) : null,
         add(el('div', 'rr-rank-value'), el('span', 'rr-stat-value', dash(it.value)), it.valueLabel ? RR.label(it.valueLabel) : null));
+      var mark = el('img', 'rr-rank-mark');     // shown only while the tile has no banner picture
+      mark.src = 'assets/images/Race Club R Black.webp'; mark.alt = '';
+      t.appendChild(mark);
       if (it.livery) RR.photo(t, it.livery, i < 1 ? 'full' : 'small');
       box.appendChild(t);
     });

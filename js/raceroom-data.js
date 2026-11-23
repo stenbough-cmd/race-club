@@ -216,9 +216,10 @@
   });
 
   /* REAL DATA. When that league.js exists (the league's Apps Script writes it after every confirmed round) the page uses it
-     instead of the sample above. It is already in this same shape. Two things are decided here, from the clock, because nothing runs
-     on a timer: a round counts toward the standings once its protest window has ended and no protest is open (until then the page
-     uses the standings without it), and "Protests close" disappears once the window has ended. */
+     instead of the sample above. It is already in this same shape. A confirmed round counts toward the standings and the other boards at
+     once, so the standings are always the most current; they change again when a protest is ruled (a ruling publishes the file again).
+     The file also carries standings without rounds still inside their protest window; the page no longer uses them. "Protests close"
+     disappears once the window has ended. */
   function applyLive(live) {
     var now = Date.now();
     data.sample = false;
@@ -228,13 +229,11 @@
     data.protests = live.protests || [];
     data.sampleRacePassword = '';
     data.seasons = live.seasons.map(function (s) {
-      var settled = !(s.windowEnd > now) && !(s.openProtests > 0);
-      s.totals = settled ? s.totalsWith : s.totals;
-      s.order = settled ? s.order : (s.orderWithout || s.order);   /* the class order follows the same snapshot as the totals */
+      s.totals = s.totalsWith || s.totals;      /* the standings with every confirmed round in them, and the class order that goes with them (s.order) */
       s.rounds.forEach(function (r) {
         /* Waiting while the window is open or a protest is still open. Protests can only be filed while the window is open. */
         var inWindow = r.done && r.windowEnd > now, waiting = r.done && (inWindow || r.protestsOpen > 0);
-        r.counts = r.done && !waiting;
+        r.counts = r.done;                      /* a confirmed round counts at once; Waiting only says its protest window is still open */
         if (r.done) r.status = waiting ? 'Waiting' : 'Settled';
         if (r.done && !inWindow) r.protestCloses = '';
       });
