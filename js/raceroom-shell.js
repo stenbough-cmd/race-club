@@ -173,12 +173,57 @@
   function adminClear() { try { sessionStorage.removeItem(ADMIN_KEY); } catch (e) {} }
   function apiAddress() { return (window.RC_CONFIG && window.RC_CONFIG.service) || ''; }
   function apiGood(url) { return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url); }
+  /* While ANY request to the service is waiting (reading or writing the Sheet), every button on the page is disabled and a "Working" note shows at
+     the top of the screen, so nobody taps twice and the page never feels frozen. Buttons a page had already disabled stay disabled afterwards, and
+     buttons the page draws during the wait are locked too. The X of a popup window always stays usable. */
+  var pending = 0, locked = [], lockWatch = null, pill = null, pillTimer = null;
+  var LOCKABLE = 'button:not([disabled]), input[type="button"]:not([disabled]), input[type="submit"]:not([disabled])';
+  function lockIn(root) {
+    Array.prototype.forEach.call(root.querySelectorAll(LOCKABLE), function (b) {
+      if (b.classList.contains('rr-modal-x')) return;
+      b.disabled = true; b._rrLocked = true; locked.push(b);
+    });
+  }
+  function workStart() {
+    pending++;
+    if (pending > 1) return;
+    document.documentElement.classList.add('rr-working');
+    lockIn(document.body);
+    if (window.MutationObserver) {
+      lockWatch = new MutationObserver(function (list) {
+        list.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes, function (n) {
+          if (n.nodeType !== 1) return;
+          if (n.matches && n.matches(LOCKABLE) && !n.classList.contains('rr-modal-x')) { n.disabled = true; n._rrLocked = true; locked.push(n); }
+          else if (n.querySelectorAll) lockIn(n);
+        }); });
+      });
+      lockWatch.observe(document.body, { childList: true, subtree: true });
+    }
+    clearTimeout(pillTimer);
+    pillTimer = setTimeout(function () {
+      if (!pending) return;
+      if (!pill) { pill = el('div', 'rr-working-pill', 'Working... please wait'); pill.setAttribute('role', 'status'); document.body.appendChild(pill); }
+      pill.hidden = false;
+    }, 200);
+  }
+  function workEnd() {
+    pending = Math.max(0, pending - 1);
+    if (pending) return;
+    if (lockWatch) { lockWatch.disconnect(); lockWatch = null; }
+    clearTimeout(pillTimer);
+    if (pill) pill.hidden = true;
+    document.documentElement.classList.remove('rr-working');
+    locked.forEach(function (b) { if (b._rrLocked) { b._rrLocked = false; b.disabled = false; } });
+    locked = [];
+  }
   /* One request to the service. Answers a promise of { ok: true, ... } or { ok: false, error: 'word' }. */
   function apiCall(url, payload) {
     if (!apiGood(url)) return Promise.resolve({ ok: false, error: 'no-address' });
+    workStart();
     return fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json(); })
-      .catch(function () { return { ok: false, error: 'unreachable' }; });
+      .catch(function () { return { ok: false, error: 'unreachable' }; })
+      .then(function (res) { workEnd(); return res; });
   }
 
   /* ---- Build the frame ---- */
