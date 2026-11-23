@@ -1,4 +1,4 @@
-/* Race Club admin: News Editor, the "Story context" tab.
+/* Race Club admin: News Editor, the "Story writer" tab. Every AI story lives here (race stories, season preview, season recap): write, retry, rewrite, and Edit story (opens the editor on the News Editor page: edit, withdraw, delete).
    Everything that shapes the AI stories lives here: for each round, Add context (notes for the writer: rivalries between drivers who raced, a short note, and up to 3 photos with captions,
    a Hero tick and a Use a track photo tick); the Season preview and the Season recap with their own Add context (a note and up to 3 photos, the first is the hero).
    A failed story shows Retry story, a written one can be rewritten (Rewrite story). Writing a story takes about a minute.
@@ -10,6 +10,7 @@
   var el = RR.el, add = RR.add;
   var view = RR.view('context');
 
+  var news = [];
   var data = null, busy = false, failed = false, seasonId = '', message = null, panel = null, writing = false;
 
   function dmy(text) {
@@ -22,6 +23,12 @@
     if (res.published) return ' The website data was updated; GitHub Pages shows it in 1 to 2 minutes.';
     return res.publishError ? ' The website data was NOT updated: ' + res.publishError : ' The website data was not updated because GitHub is not set up yet.';
   }
+  /* The Edit story button: opens the written story in the editor window (title, text, withdraw, delete, rewrite). */
+  function editButton(kind, sid, roundId) {
+    var item = news.filter(function (i) { return i.kind === kind && i.seasonId === String(sid) && (kind !== 'race' || i.roundId === String(roundId)); })[0];
+    return item ? RR.button('Edit story', function () { RR.newsEditor.open(item.key); }) : null;
+  }
+  RR.newsEditor.saved = function () { load(); };
   /* After a picture changed: a story that is already written shows it right away, without being written again. */
   function picNote(res, text) {
     return text + (res && res.storyUpdated ? ' The written story now shows it (no rewrite needed).' : ' It is used when the story is written.') + publishNote(res);
@@ -33,7 +40,9 @@
   function load() {
     if (busy) return;
     busy = true; failed = false; draw();
-    RR.api('listRounds').then(function (res) {
+    Promise.all([RR.api('listRounds'), RR.api('listNews', {})]).then(function (both) {
+      var res = both[0];
+      news = both[1] && both[1].ok ? both[1].items : [];
       busy = false;
       if (res && res.ok) {
         data = res;
@@ -280,8 +289,8 @@
     view.textContent = '';
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
-    var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Story context'),
-      el('p', 'rr-body', 'Add notes and photos for the AI stories, and write, retry or rewrite them. A race story is written when you confirm the round (Results, Rounds). The preview is written when the season is created and the recap when it ends.'));
+    var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Story writer'),
+      el('p', 'rr-body', 'Every AI story is managed here: add notes and photos, write, retry or rewrite, and edit a written story (change its text, withdraw or delete it). Posts you write yourself are on the News tab. A race story is written when you confirm the round (Results, Rounds). The preview is written when the season is created and the recap when it ends.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else if (!data.seasons.length) box.appendChild(RR.empty('No seasons are created yet. Create one from the Season Wizard.'));
@@ -298,9 +307,9 @@
         { key: 'what', label: 'Story' }, { key: 'when', label: 'Written when' }, { key: 'status', label: 'Status' }, { key: 'act', label: '' }
       ], [
         { cells: { what: RR.cell('Season preview', 'Before the first race'), when: 'When the season is created',
-          status: RR.cell(el('span', pv[1], pv[0]), pv[2]), act: RR.row.apply(null, [RR.button('Add context', function () { openSeasonPanel(thisSeason); })].concat(storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview))) } },
+          status: RR.cell(el('span', pv[1], pv[0]), pv[2]), act: RR.row.apply(null, [RR.button('Add context', function () { openSeasonPanel(thisSeason); })].concat(storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview), [editButton('preview', seasonId, '')].filter(Boolean))) } },
         { cells: { what: RR.cell('Season recap', 'Champions of every class'), when: 'When the season ends',
-          status: RR.cell(el('span', rc[1], rc[0]), rc[2]), act: ended || thisSeason.finale ? RR.row.apply(null, storyButtons({ kind: 'finale', seasonId: seasonId }, 'season recap', thisSeason.finale)) : el('span', 'rr-body', 'Ends with the season') } }
+          status: RR.cell(el('span', rc[1], rc[0]), rc[2]), act: ended || thisSeason.finale ? RR.row.apply(null, storyButtons({ kind: 'finale', seasonId: seasonId }, 'season recap', thisSeason.finale).concat([editButton('finale', seasonId, '')].filter(Boolean))) : el('span', 'rr-body', 'Ends with the season') } }
       ], ''));
       box.appendChild(RR.heading('Round stories'));
       box.appendChild(RR.table([
@@ -308,6 +317,7 @@
       ], rounds.map(function (r) {
         var act = el('span', 'rr-form-row'), sy = storyState(r.story);
         if (r.status !== 'Cancelled') act.appendChild(RR.button('Add context', function () { openPanel(r); }));
+        var eb = editButton('race', seasonId, r.id); if (eb) act.appendChild(eb);
         if (r.story && r.story.status === 'failed' && (r.status === 'Provisional' || r.status === 'Final')) storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story).forEach(function (b) { act.appendChild(b); });
         return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: RR.cell(dmy(r.date), (r.time ? r.time + ' ' : '') + r.zone),
           story: RR.cell(el('span', sy[1], sy[0]), sy[2]), act: act } };

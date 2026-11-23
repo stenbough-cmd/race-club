@@ -3,7 +3,7 @@
    them is public until you Confirm them here. Review shows what the file says; Confirm makes the results live, Deny keeps the
    file but never uses it. A newer file for a round that is already live waits here too and changes nothing until you confirm it.
    A round with no results can be cancelled (and restored). Both Confirm and Deny use the two-click button.
-   Stories: Confirm also writes the round's story (about a minute) once the results are live. Notes, photos, Retry story and the season preview and recap are on the News Editor, Story context tab.
+   Stories: Confirm also writes the round's story (about a minute) once the results are live. Notes, photos, Retry story and the season preview and recap are on the News Editor, Story writer tab.
    The list is read when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
@@ -80,7 +80,7 @@
     var st = res && res.story;
     if (!st) return '';
     if (st.already) return '';
-    return st.ok ? ' The ' + label + ' was written.' : ' The ' + label + ' could not be written: ' + (st.error || 'unknown reason') + ' Use Retry story on the News Editor, Story context tab.';
+    return st.ok ? ' The ' + label + ' was written.' : ' The ' + label + ' could not be written: ' + (st.error || 'unknown reason') + ' Use Retry story on the News Editor, Story writer tab.';
   }
 
   /* ---------------- Cancel and restore ---------------- */

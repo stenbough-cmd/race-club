@@ -1,6 +1,6 @@
-/* Race Club admin: News Editor.
-   One list of everything on the News page that you can change: your own posts (byline Matt Stenzel) and the AI race stories and
-   season previews (byline Race Club Press).
+/* Race Club admin: News Editor, the "News" tab.
+   Only the posts you write yourself (byline Matt Stenzel). The AI stories (race stories, season preview and recap, byline Race Club Press) are
+   on the Story writer tab, which opens this same editor for them (RR.newsEditor.open).
    New post: a title and text, up to 10,000 characters. The buttons above the text add bold, italic, underline, a heading, a quote, an
    email link or a picture. Pictures are saved to the data site.
    Edit: change the title and text; you must say why (shown in italics at the bottom of the public story). An edited AI story reads
@@ -35,20 +35,28 @@
   function done(text, res, kind) {
     message = { text: text + publishNote(res), kind: res && res.published === false && res.publishError ? 'warn' : (kind || 'ok') };
     openKey = ''; form = null; working = false;
-    load();
+    load(RR.newsEditor.saved);
   }
   function fail(res) { message = { text: problem(res), kind: 'warn' }; draw(); }
 
-  function load() {
+  var waiting = [];
+  function load(then) {
+    if (then) waiting.push(then);
     if (busy) return;
     busy = true; failed = false; draw();
     RR.api('listNews', {}).then(function (res) {
       busy = false;
       if (res && res.ok) data = res; else failed = true;
       draw();
+      var run = waiting; waiting = [];
+      run.forEach(function (f) { f(); });
     });
   }
+  /* The Story writer tab opens this editor for an AI story: RR.newsEditor.open(key) reads the list again, then opens it.
+     RR.newsEditor.saved is called after a save, withdraw, delete or rewrite so that tab can refresh. */
+  RR.newsEditor = { saved: null, open: function (key) { load(function () { var it = find(key); if (it) openItem(it); }); } };
 
+  function posts() { return data.items.filter(function (i) { return i.kind === 'post'; }); }
   function find(key) { return data && data.items.filter(function (i) { return i.key === key; })[0]; }
   function stateWord(s) { return s === 'published' ? 'Live' : (s === 'withdrawn' ? 'Withdrawn' : 'Deleted'); }
   function dmy(d) { var p = String(d || '').split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0] : '-'; }
@@ -254,7 +262,7 @@
     if (busy) refresh.disabled = true;
     var newPost = RR.button('New post', function () { openItem(null); });
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('News'),
-      el('p', 'rr-body', 'Everything on the News page that you can change. Your own posts are signed Matt Stenzel; the race stories and season previews are signed Race Club Press. Nothing is ever erased: a delete only hides it, and every edit keeps the earlier text out of sight.'));
+      el('p', 'rr-body', 'The posts you write yourself, signed Matt Stenzel. The race stories, season previews and recaps are on the Story writer tab. Nothing is ever erased: a delete only hides a post, and every edit keeps the earlier text out of sight.'));
     noticeHost = el('div');
     box.appendChild(noticeHost);
     if (message) noticeHost.appendChild(RR.notice(message.text, message.kind));
@@ -262,11 +270,11 @@
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else {
       var counts = { published: 0, withdrawn: 0, deleted: 0 };
-      data.items.forEach(function (i) { counts[i.state] = (counts[i.state] || 0) + 1; });
+      posts().forEach(function (i) { counts[i.state] = (counts[i.state] || 0) + 1; });
       var seg = RR.segment([['published', 'Live (' + counts.published + ')'], ['withdrawn', 'Withdrawn (' + counts.withdrawn + ')'], ['deleted', 'Deleted (' + counts.deleted + ')']], function (v) { filter = v; draw(); });
       Array.prototype.forEach.call(seg.children, function (b, i) { b.setAttribute('aria-pressed', ['published', 'withdrawn', 'deleted'][i] === filter ? 'true' : 'false'); });
       box.appendChild(RR.row(seg, newPost, refresh));
-      var rows = data.items.filter(function (i) { return i.state === filter; });
+      var rows = posts().filter(function (i) { return i.state === filter; });
       box.appendChild(RR.table([
         { key: 'title', label: 'Title' }, { key: 'by', label: 'Byline' }, { key: 'date', label: 'Date', sorted: true }, { key: 'chars', label: 'Characters', num: true }, { key: 'act', label: '' }
       ], rows.map(function (i) {
