@@ -477,6 +477,36 @@
   RR.heading = function (text) { return el('h2', 'rr-heading', text); };
   RR.label = function (text) { return el('div', 'rr-label', text); };
   RR.tag = function (text, outline) { return el('span', outline ? 'rr-tag-outline' : 'rr-tag', text); };
+  /* Written text, drawn without HTML: **bold**, *italic*, __underline__ and [text](mailto:name@example.com) inside a line.
+     Used by the news stories and by the News Editor preview. */
+  RR.inline = function (node, text) {
+    var re = /\*\*(.+?)\*\*|__(.+?)__|\*(\S(?:.*?\S)?)\*|\[([^\]]+)\]\(mailto:([^)\s]+)\)/g, at = 0, m, s = String(text);
+    while ((m = re.exec(s))) {
+      if (m.index > at) node.appendChild(document.createTextNode(s.slice(at, m.index)));
+      if (m[1] !== undefined) node.appendChild(RR.inline(el('strong'), m[1]));
+      else if (m[2] !== undefined) node.appendChild(RR.inline(el('u'), m[2]));
+      else if (m[3] !== undefined) node.appendChild(RR.inline(el('em'), m[3]));
+      else if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(m[5])) { var a = el('a', '', m[4]); a.href = 'mailto:' + m[5]; node.appendChild(a); }
+      else node.appendChild(document.createTextNode(m[0]));
+      at = m.index + m[0].length;
+    }
+    if (at < s.length) node.appendChild(document.createTextNode(s.slice(at)));
+    return node;
+  };
+  /* One block of a written story (blocks are separated by a blank line): "## " heading, "> " quote, "![caption](https://...)" picture, else a paragraph. */
+  RR.richBlock = function (text) {
+    var m;
+    if (/^## /.test(text)) return el('h2', 'rr-article-sub', text.slice(3));
+    if (/^> /.test(text)) return RR.inline(el('blockquote', 'rr-quote'), text.replace(/^> ?/gm, ' ').trim());
+    if ((m = /^!\[([^\]]*)\]\((https:\/\/[^)\s]+)\)$/.exec(text))) {
+      var fig = el('figure', 'rr-figure rr-figure-wide'), img = el('img');
+      img.src = m[2]; img.alt = m[1]; img.loading = 'lazy';
+      fig.appendChild(img);
+      if (m[1]) fig.appendChild(el('figcaption', '', m[1]));
+      return fig;
+    }
+    return RR.inline(el('p'), text);
+  };
   RR.empty = function (text) { return el('p', 'rr-empty', text); };
   RR.delta = function (n) {
     if (!n) return el('span', '', '-');

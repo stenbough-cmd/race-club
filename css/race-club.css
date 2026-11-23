@@ -965,6 +965,14 @@ button, select { font-family: inherit; }
 .rr-figure { width: 42%; max-width: 440px; margin: 4px 0 12px; }
 .rr-figure-right { float: right; margin-left: 24px; }
 .rr-figure-left { float: left; margin-right: 24px; }
+.rr-figure-wide { float: none; width: 100%; max-width: none; margin: 0 0 16px; }
+.rr-quote { margin: 0 0 16px; padding: 4px 0 4px 16px; border-left: 2px solid var(--rr-red); font-size: 15px; line-height: 1.6; font-style: italic; }
+.rr-article a { color: var(--rr-text); text-decoration: underline; }
+.rr-edit-note { clear: both; margin-top: 24px; font-style: italic; color: var(--rr-muted); font-size: 13px; }
+.rr-editor textarea { height: 380px; }
+.rr-editor-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rr-editor-count { margin-left: auto; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rr-muted); }
+.rr-editor-count.rr-over { color: var(--rr-red); }
 .rr-figure img { display: block; width: 100%; height: auto; }
 .rr-figure figcaption { margin-top: 6px; font-size: 12px; font-style: italic; line-height: 1.4; color: var(--rr-muted); }
 .rr-article::after { content: ''; display: block; clear: both; }

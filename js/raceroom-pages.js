@@ -81,10 +81,6 @@
     /* A written story: "## Heading" lines are subheadings, **name** is bold, and each photo is placed inside the paragraph number
        photo.at (0 is the first paragraph) with the text wrapping around it. A hero photo is at 0. Older posts are plain paragraphs. */
     var photos = (n.photos || []).slice(), paraNo = 0;
-    function boldInto(node, text) {
-      String(text).split(/\*\*(.+?)\*\*/).forEach(function (part, i) { node.appendChild(i % 2 ? el('strong', '', part) : document.createTextNode(part)); });
-      return node;
-    }
     function figure(ph) {
       var fig = el('figure', 'rr-figure rr-figure-' + (ph.side === 'left' ? 'left' : 'right')), img = el('img');
       img.src = ph.src; img.alt = ph.caption || ''; img.loading = 'lazy';
@@ -93,10 +89,10 @@
       return fig;
     }
     n.body.forEach(function (text) {
-      if (/^## /.test(text)) { art.appendChild(el('h2', 'rr-article-sub', text.slice(3))); return; }
-      var p = boldInto(el('p'), text);
+      var block = RR.richBlock(text);
+      if (block.nodeName !== 'P') { art.appendChild(block); return; }
       photos = photos.filter(function (ph) { if (Number(ph.at) !== paraNo) return true; art.appendChild(figure(ph)); return false; });
-      art.appendChild(p);
+      art.appendChild(block);
       paraNo++;
     });
     photos.forEach(function (ph) { art.appendChild(figure(ph)); });     // a photo whose paragraph number is past the end goes last
@@ -111,6 +107,8 @@
           where: a.lap ? 'Race ' + a.race + ' · lap ' + a.lap : 'Whole night', pen: a.penalty } };
       }), ''));
     }
+    /* After an edit: the date and the reason, in italics, at the very bottom. */
+    if (n.editNote) art.appendChild(el('p', 'rr-edit-note', 'Edited ' + n.editNote.date + '. Reason: ' + n.editNote.reason + '.'));
     main.appendChild(art);
     /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
     function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }

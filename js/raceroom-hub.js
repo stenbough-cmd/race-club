@@ -9,7 +9,7 @@
 
   var TILES = [
     { title: 'Season Wizard', desc: 'Build a season and make the server files.', href: 'season-wizard.html', photo: IMG + 'season-wizard.jpg' },
-    { title: 'News Generator', desc: 'Write the news and the race stories.', photo: IMG + 'news-generator.jpg' },
+    { title: 'News Editor', desc: 'Write news, and edit, rewrite or hide the race stories.', href: 'news-editor.html', photo: IMG + 'news-generator.jpg' },
     { title: 'Stewarding', desc: 'Look at protests and give penalties.', href: 'stewarding.html', photo: IMG + 'stewarding.jpg' },
     { title: 'Member Management', desc: 'Blacklist drivers and hide names from stories.', href: 'members.html', photo: IMG + 'member-management.jpg' },
     { title: 'Results', desc: 'Confirm results, cancel a round, see what the server posted and add a race by hand.', href: 'league-management.html', photo: IMG + 'upload-results.jpg' },
