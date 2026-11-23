@@ -119,7 +119,7 @@
   function openPanel(r) {
     var riv = [['', ''], ['', ''], ['', '']];
     (r.rivalries || []).slice(0, 3).forEach(function (p, i) { riv[i] = [String(p[0]), String(p[1])]; });
-    panel = { roundId: r.id, rivals: riv, note: r.note || '', choice: { hero: (r.photoChoice && r.photoChoice.hero) || '', track: r.photoChoice ? r.photoChoice.track : undefined }, caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
+    panel = { fresh: true, roundId: r.id, rivals: riv, note: r.note || '', choice: { hero: (r.photoChoice && r.photoChoice.hero) || '', track: r.photoChoice ? r.photoChoice.track : undefined }, caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
     message = null;
     draw();
   }
@@ -234,7 +234,7 @@
 
   /* Add context for the season preview: a note for the writer and up to 3 pictures. The first picture is the hero that opens the story. */
   function openSeasonPanel(s) {
-    panel = { seasonId: s.seasonId, note: s.previewNote || '', caps: [0, 1, 2].map(function (i) { return (s.previewPhotos && s.previewPhotos[i] && s.previewPhotos[i].caption) || ''; }) };
+    panel = { fresh: true, seasonId: s.seasonId, note: s.previewNote || '', caps: [0, 1, 2].map(function (i) { return (s.previewPhotos && s.previewPhotos[i] && s.previewPhotos[i].caption) || ''; }) };
     message = null;
     draw();
   }
@@ -300,7 +300,14 @@
       }), 'This season has no rounds.'));
     }
     view.appendChild(box);
-    if (panel && data) { var sp = panel.seasonId ? seasonPanel() : storyPanel(); if (sp) view.appendChild(sp); }
+    if (panel && data) {
+      var sp = panel.seasonId ? seasonPanel() : storyPanel();
+      if (sp) {
+        view.appendChild(sp);
+        /* The panel sits below the tables, so bring it into view the first time it opens. */
+        if (panel && panel.fresh) { panel.fresh = false; try { sp.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { sp.scrollIntoView(); } }
+      }
+    }
   }
 
   draw();
