@@ -983,6 +983,8 @@ button, select { font-family: inherit; }
 .rr-season-info:empty { display: none; }
 .rr-season-liveries { display: flex; flex-wrap: wrap; gap: 4px; }
 .rr-season-livery { width: 56px; height: 32px; object-fit: cover; }
+/* the line under each rules category, the same line that sits under the header row of the Race weekend table */
+.rr-season-rule-head { padding: 8px 0; border-bottom: 1px solid var(--rr-line); }
 .rr-season-rules { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (orientation: portrait) {
   .rr-season-cars, .rr-season-rules { grid-template-columns: minmax(0, 1fr); }

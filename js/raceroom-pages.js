@@ -471,7 +471,7 @@
       var rules = el('div', 'rr-season-rules');
       setup.rules.forEach(function (g) {
         var col = el('div', 'rr-stack-tight');
-        col.appendChild(RR.label(g.group));
+        col.appendChild(add(el('div', 'rr-season-rule-head'), RR.label(g.group)));
         g.items.forEach(function (x) { col.appendChild(RR.kv(x[0], x[1], true)); });
         rules.appendChild(col);
       });
