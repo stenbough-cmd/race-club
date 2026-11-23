@@ -202,7 +202,7 @@
       season.rounds.forEach(function (r) { cols.push({ key: 'r' + r.n, label: 'R' + r.n, num: true }); });
       cols.push({ key: 'wins', label: 'Wins', num: true }, { key: 'total', label: 'Total', num: true, sorted: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
-        RR.strip(rows.slice(0, 7).map(function (r) {
+        RR.strip(rows.slice(0, 5).map(function (r) {
           return { title: r.d.name, country: r.d.country, livery: r.d.banner, sub: className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
         RR.statRow([

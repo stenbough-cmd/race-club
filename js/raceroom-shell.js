@@ -703,18 +703,18 @@
     return RR.photo(b, o.banner, 'full');
   };
 
-  /* Ranking strip: the top of a table as tiles. Rank 1 is large, 2 and 3 medium, 4 to 7 small.
-     items: [{ title, sub, value, valueLabel, href }] in rank order (up to 7). Every tile is a link and lifts on hover. */
+  /* Ranking strip: the top of a table as tiles. Rank 1 is large; 2 to 5 are equal small tiles that share the rest of the space.
+     items: [{ title, sub, value, valueLabel, href }] in rank order (up to 5). Every tile is a link and lifts on hover. */
   RR.strip = function (items) {
     var box = el('div', 'rr-strip');
-    items.slice(0, 7).forEach(function (it, i) {
+    items.slice(0, 5).forEach(function (it, i) {
       var t = el(it.href ? 'a' : 'div', 'rr-rank-tile rr-rank-' + (i + 1) + (it.href ? ' rr-block-link' : ''));
       if (it.href) t.href = it.href;
       var name = el('h3', 'rr-rank-name');
       name.appendChild(it.country ? RR.nameWithFlag(it.title, it.country) : document.createTextNode(it.title));
       add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), name, it.sub ? el('div', 'rr-note', it.sub) : null,
         add(el('div', 'rr-rank-value'), el('span', 'rr-stat-value', dash(it.value)), it.valueLabel ? RR.label(it.valueLabel) : null));
-      if (it.livery) RR.photo(t, it.livery, i < 3 ? 'full' : 'small');
+      if (it.livery) RR.photo(t, it.livery, i < 1 ? 'full' : 'small');
       box.appendChild(t);
     });
     return box;

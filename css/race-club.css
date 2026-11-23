@@ -866,8 +866,8 @@ button, select { font-family: inherit; }
 }
 
 
-/* ---------- Ranking strip: rank 1 large, 2 and 3 medium, 4 to 7 small ---------- */
-.rr-strip { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: 2fr 1.3fr 1fr 1fr; grid-template-rows: repeat(2, 136px); }
+/* ---------- Ranking strip: rank 1 large, ranks 2 to 5 equal tiles sharing the rest ---------- */
+.rr-strip { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, 136px); }
 .rr-rank-tile { display: flex; flex-direction: column; gap: 2px; padding: 16px; background: var(--rr-panel); color: var(--rr-text); text-decoration: none; position: relative; min-width: 0; overflow: hidden; }
 .rr-rank-no { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--rr-red); }
 .rr-rank-name { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.15; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -877,12 +877,9 @@ button, select { font-family: inherit; }
 .rr-rank-1 .rr-rank-name { font-size: 24px; white-space: normal; }
 .rr-rank-1 .rr-rank-value .rr-stat-value { font-size: 44px; }
 .rr-rank-2 { grid-column: 2; grid-row: 1; }
-.rr-rank-3 { grid-column: 2; grid-row: 2; }
-.rr-rank-2 .rr-rank-value .rr-stat-value, .rr-rank-3 .rr-rank-value .rr-stat-value { font-size: 28px; }
-.rr-rank-4 { grid-column: 3; grid-row: 1; }
-.rr-rank-5 { grid-column: 4; grid-row: 1; }
-.rr-rank-6 { grid-column: 3; grid-row: 2; }
-.rr-rank-7 { grid-column: 4; grid-row: 2; }
+.rr-rank-3 { grid-column: 3; grid-row: 1; }
+.rr-rank-4 { grid-column: 2; grid-row: 2; }
+.rr-rank-5 { grid-column: 3; grid-row: 2; }
 
 /* ---------- Totals block: four columns of label and value rows ---------- */
 .rr-totals { display: grid; gap: var(--rr-gap); grid-template-columns: repeat(4, minmax(0, 1fr)); }
