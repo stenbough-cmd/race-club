@@ -242,29 +242,31 @@
   }
 
   /* Add context for the season preview: a note for the writer and up to 3 pictures. The first picture is the hero that opens the story. */
-  function openSeasonPanel(s) {
-    panel = { fresh: true, seasonId: s.seasonId, note: s.previewNote || '', caps: [0, 1, 2].map(function (i) { return (s.previewPhotos && s.previewPhotos[i] && s.previewPhotos[i].caption) || ''; }) };
+  function openSeasonPanel(s, kind) {
+    var fin = kind === 'finale', photos = fin ? s.recapPhotos : s.previewPhotos;
+    panel = { fresh: true, seasonId: s.seasonId, kind: fin ? 'finale' : 'preview', note: (fin ? s.recapNote : s.previewNote) || '', caps: [0, 1, 2].map(function (i) { return (photos && photos[i] && photos[i].caption) || ''; }) };
     message = null;
     draw();
   }
   function seasonPanel() {
     var s = data.seasons.filter(function (x) { return x.seasonId === panel.seasonId; })[0];
     if (!s) { panel = null; return null; }
-    var box = el('div', 'rr-panel rr-stack'), st = storyState(s.preview);
-    box.appendChild(RR.heading('Season preview · ' + s.name));
-    box.appendChild(RR.row(RR.kv('Story', st[0]), st[2] ? RR.kv(s.preview && s.preview.status === 'failed' ? 'Reason' : 'Title', st[2]) : null));
+    var fin = panel.kind === 'finale', story = fin ? s.finale : s.preview, word = fin ? 'recap' : 'preview';
+    var box = el('div', 'rr-panel rr-stack'), st = storyState(story);
+    box.appendChild(RR.heading('Season ' + word + ' · ' + s.name));
+    box.appendChild(RR.row(RR.kv('Story', st[0]), st[2] ? RR.kv(story && story.status === 'failed' ? 'Reason' : 'Title', st[2]) : null));
     box.appendChild(el('h3', 'rr-card-title', 'Notes for the writer'));
-    box.appendChild(el('p', 'rr-body', 'Anything you want in the preview: what these cars mean to you, a story about the series, a detail about a venue or the season. The writer treats it as true and uses it in its own words, never quoted.'));
+    box.appendChild(el('p', 'rr-body', (fin ? 'Anything you want in the recap: how the season felt, a moment that mattered, a story from the paddock. You can add to it all season. The writer treats it as true and uses it in its own words, never quoted.' : 'Anything you want in the preview: what these cars mean to you, a story about the series, a detail about a venue or the season. The writer treats it as true and uses it in its own words, never quoted.')));
     box.appendChild(RR.textarea({ label: 'Note (up to 1500 characters)', value: panel.note, onChange: function (v) { panel.note = v.slice(0, 1500); } }));
     box.appendChild(RR.row(RR.button('Save note', function () {
-      RR.api('saveSeasonContext', { seasonId: s.seasonId, note: panel.note }).then(function (res) {
-        if (res && res.ok) { message = { text: 'Note saved. It is used the next time the preview is written or rewritten.', kind: 'ok' }; load(); } else panelFail(res);
+      RR.api('saveSeasonContext', { seasonId: s.seasonId, kind: panel.kind, note: panel.note }).then(function (res) {
+        if (res && res.ok) { message = { text: 'Note saved. It is used the next time the ' + word + ' is written or rewritten.', kind: 'ok' }; load(); } else panelFail(res);
       });
     }, true)));
     box.appendChild(el('h3', 'rr-card-title', 'Photos'));
-    box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each, for example the cars racing. Photo 1 is the hero that opens the preview and is the picture on its News tile. Track pictures fill any empty places.'));
-    var holder = { photos: s.previewPhotos || [] };
-    for (var i = 0; i < 3; i++) box.appendChild(photoSlot(holder, i, { action: 'saveSeasonContext', ids: { seasonId: s.seasonId } }));
+    box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each, for example ' + (fin ? 'the champions or the best moments of the season' : 'the cars racing') + '. Photo 1 is the hero that opens the ' + word + ' and is the picture on its News tile. Track pictures fill any empty places.'));
+    var holder = { photos: (fin ? s.recapPhotos : s.previewPhotos) || [] };
+    for (var i = 0; i < 3; i++) box.appendChild(photoSlot(holder, i, { action: 'saveSeasonContext', ids: { seasonId: s.seasonId, kind: panel.kind } }));
     box.appendChild(RR.row(RR.button('Close', function () { if (modal) modal.close(); })));
     return box;
   }
@@ -290,7 +292,7 @@
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Story writer'),
-      el('p', 'rr-body', 'Every AI story is managed here: add notes and photos, write, retry or rewrite, and edit a written story (change its text, withdraw or delete it). Posts you write yourself are on the News tab. A race story is written when you confirm the round (Results, Rounds). The preview is written when the season is created and the recap when it ends.'));
+      el('p', 'rr-body', 'Every AI story is managed here: add notes and photos, write, retry or rewrite, and edit a written story (change its text, withdraw or delete it). Posts you write yourself are on the News tab. A race story is written when you confirm the round (Results, Rounds). The preview is written when you press Write story, after you have added your own context. The recap can be written once the season has ended.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else if (!data.seasons.length) box.appendChild(RR.empty('No seasons are created yet. Create one from the Season Wizard.'));
@@ -306,10 +308,10 @@
       box.appendChild(RR.table([
         { key: 'what', label: 'Story' }, { key: 'when', label: 'Written when' }, { key: 'status', label: 'Status' }, { key: 'act', label: '' }
       ], [
-        { cells: { what: RR.cell('Season preview', 'Before the first race'), when: 'When the season is created',
-          status: RR.cell(el('span', pv[1], pv[0]), pv[2]), act: RR.row.apply(null, [RR.button('Add context', function () { openSeasonPanel(thisSeason); })].concat(storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview), [editButton('preview', seasonId, '')].filter(Boolean))) } },
+        { cells: { what: RR.cell('Season preview', 'Before the first race'), when: 'When you press Write story',
+          status: RR.cell(el('span', pv[1], pv[0]), pv[2]), act: RR.row.apply(null, [RR.button('Add context', function () { openSeasonPanel(thisSeason, 'preview'); })].concat(storyButtons({ kind: 'preview', seasonId: seasonId }, 'season preview', thisSeason.preview), [editButton('preview', seasonId, '')].filter(Boolean))) } },
         { cells: { what: RR.cell('Season recap', 'Champions of every class'), when: 'When the season ends',
-          status: RR.cell(el('span', rc[1], rc[0]), rc[2]), act: ended || thisSeason.finale ? RR.row.apply(null, storyButtons({ kind: 'finale', seasonId: seasonId }, 'season recap', thisSeason.finale).concat([editButton('finale', seasonId, '')].filter(Boolean))) : el('span', 'rr-body', 'Ends with the season') } }
+          status: RR.cell(el('span', rc[1], rc[0]), rc[2]), act: RR.row.apply(null, [RR.button('Add context', function () { openSeasonPanel(thisSeason, 'finale'); })].concat(ended || thisSeason.finale ? storyButtons({ kind: 'finale', seasonId: seasonId }, 'season recap', thisSeason.finale) : [], [editButton('finale', seasonId, '')].filter(Boolean))) } }
       ], ''));
       box.appendChild(RR.heading('Round stories'));
       box.appendChild(RR.table([

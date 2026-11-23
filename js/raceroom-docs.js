@@ -99,7 +99,7 @@
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
         ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],
-        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft (kept in the Sheet, shown nowhere else), Create a season (goes live and writes the preview story), Export season (.zip)."],
+        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft (kept in the Sheet, shown nowhere else), Create a season (goes live; the preview story is written later from the News Editor, Story writer tab, after you add context), Export season (.zip)."],
         ['News Editor', 'news-editor.html, raceroom-news-editor.js', "Two tabs. News: the posts you write yourself (write, edit, withdraw, delete). Story writer: every AI story (race stories, season preview and recap): Add context (notes and photos), Write, Retry, Rewrite, and Edit story (change the text, withdraw or delete). Changing a photo updates a written story, no rewrite needed."],
         ['Stewarding', 'stewarding.html, raceroom-stewarding.js', "Tabs: Protests, and Car and class (drivers who changed car or class)."],
         ['Member Management', 'members.html, raceroom-members.js', "Blacklist (banned from the servers) and Hide Details (kept out of stories by name) for each driver."],
@@ -126,7 +126,7 @@
       list([
         "Results, Season tab: press Clear test data once, before Season 1. You type the word CLEAR. It empties results, protests, penalties, stories, posts, seasons and rounds. It keeps the admins, the drivers' own settings and the site options.",
         "Member Management: tick Blacklist for any driver who is banned. The ticks are written into the Bans list of every server file at export.",
-        "Season Wizard: fill in the seven steps. A red exclamation on a step means something is missing. Create a season saves it as Active, with its server passwords (private), and writes the Season Preview story.",
+        "Season Wizard: fill in the seven steps. A red exclamation on a step means something is missing. Create a season saves it as Active, with its server passwords (private). The Season Preview story is NOT written automatically: open News Editor, Story writer, add context, then press Write story.",
         "Export season (.zip) makes one server file per round, named round-NN-ID-track.json. Load each file in the RaceRoom server tool. The server name ends with the 7-digit Round ID, and the results address in the tool is the relay address."
       ])
     ]),
