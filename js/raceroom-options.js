@@ -1,5 +1,6 @@
-/* Race Club admin: Website Options.
+/* Race Club admin: Website Documentation (the last two tabs of website-options.html).
    Reminders for the admin about how to change parts of the site. Nothing here changes anything by itself.
+   The first five tabs (Overview, Pages, Running a season, Behind the scenes, How to change things) are in raceroom-docs.js.
    Tab "Tile pictures": how to make and replace the pictures on the home and admin tiles.
    Tab "Picture database": what the RaceRoom picture and car details store holds and how it is kept up to date.
    Built only from the shared builders in raceroom-shell.js (RR.*). */
@@ -37,7 +38,7 @@
       ['Stewarding', 'assets/images/admin/stewarding.jpg', 'js/raceroom-hub.js'],
       ['Member Management', 'assets/images/admin/member-management.jpg', 'js/raceroom-hub.js'],
       ['Results', 'assets/images/admin/upload-results.jpg', 'js/raceroom-hub.js'],
-      ['Website Options', 'assets/images/admin/website-options.jpg', 'js/raceroom-hub.js']
+      ['Website Documentation', 'assets/images/admin/website-options.jpg', 'js/raceroom-hub.js']
     ].map(function (r) { return { cells: { tile: r[0], file: r[1], code: r[2] } }; })
   );
   add(RR.view('pictures'), stack(

@@ -38,6 +38,12 @@
       ['achievements', 'Achievements'],
       ['boards', 'Leaderboards']
     ],
+    /* Public Help: the league rules in short. */
+    help: [
+      ['league', 'The league'],
+      ['points', 'Points'],
+      ['penalties', 'Penalties']
+    ],
     /* Admin League Management: the rounds (confirm or deny results, cancel a round), what the server posted by itself, and adding a race by hand. */
     league: [
       ['rounds', 'Rounds'],
@@ -50,8 +56,13 @@
       ['protests', 'Protests'],
       ['policy', 'Car and class']
     ],
-    /* Admin Website Options: reminders for changing parts of the site. */
+    /* Admin Website Documentation: what every part of the site is and how to change it. */
     options: [
+      ['overview', 'Overview'],
+      ['pages', 'Pages'],
+      ['season', 'Running a season'],
+      ['backend', 'Behind the scenes'],
+      ['change', 'How to change things'],
       ['pictures', 'Tile pictures'],
       ['database', 'Picture database']
     ],
@@ -196,9 +207,11 @@
     nav.appendChild(a);
   });
   /* Icon area at the far right (not part of the navbar): Help, Protest, then admin Log in / Log out.
-     Protest opens the protest page. Help does nothing yet. */
+     Protest opens the protest page. Help opens the league rules (help.html). */
   var topEnd = el('div', 'rr-topbar-end');
-  var helpBtn = iconBtn('button', 'help', 'Help');
+  var helpBtn = iconBtn('a', 'help', 'Help');
+  helpBtn.href = 'help.html';
+  if (mainId === 'help') helpBtn.setAttribute('aria-current', 'page');
   var protestBtn = iconBtn('a', 'protest', 'Protest');
   protestBtn.href = 'protest.html';
   if (mainId === 'protest') protestBtn.setAttribute('aria-current', 'page');

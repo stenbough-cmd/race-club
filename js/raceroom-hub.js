@@ -13,7 +13,7 @@
     { title: 'Stewarding', desc: 'Look at protests and give penalties.', href: 'stewarding.html', photo: IMG + 'stewarding.jpg' },
     { title: 'Member Management', desc: 'Blacklist drivers and hide names from stories.', href: 'members.html', photo: IMG + 'member-management.jpg' },
     { title: 'Results', desc: 'Confirm results, cancel a round, see what the server posted and add a race by hand.', href: 'league-management.html', photo: IMG + 'upload-results.jpg' },
-    { title: 'Website Options', desc: 'Reminders for changing the site.', href: 'website-options.html', photo: IMG + 'website-options.jpg' }
+    { title: 'Website Documentation', desc: 'How every part of the site works and how to change it.', href: 'website-options.html', photo: IMG + 'website-options.jpg' }
   ];
 
   var main = document.querySelector('main');
