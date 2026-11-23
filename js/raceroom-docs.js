@@ -255,7 +255,7 @@
         ['The round is waiting and standings are missing it', 'Results, Rounds', "It needs Confirm. After that it counts when the protest window has ended and no protest is open."],
         ['Standings or a page show old data', 'Results, Rounds', "Press Publish site data, then hard refresh (Cmd+Shift+R)."],
         ['Publish says GitHub is not set up', 'Race Club menu', "Publish: set up GitHub, and check the token has not expired."],
-        ['A story failed or reads badly', 'News Editor, Story writer', "Retry story, or Rewrite story. Or press Edit story to change the text."],
+        ['A story failed or reads badly', 'News Editor, Story writer', "Retry story, or Rewrite story. Or press Edit story to change the text. The Edit story window also lists the story's pictures: swap one for another from your computer, change its caption, or move it by moving its [image #n] line in the text."],
         ['A driver is in the wrong class or has no points', 'Stewarding, Car and class; Results tab', "A driver counts only in the class of the first round they raced in the season; later rows in another class are left out and flagged in Stewarding, Car and class. Check the flag and the Season page."],
         ['Cannot log in', 'The Sheet, Race Club menu', "Too many wrong tries lock the login for 15 minutes. Add an admin or change a password resets a forgotten password."],
         ['The Race Club menu is missing in the Sheet', 'The browser', "Reload the Sheet tab."],

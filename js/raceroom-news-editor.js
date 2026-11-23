@@ -5,6 +5,7 @@
    email link or a picture. Pictures are saved to the data site.
    Edit: change the title and text; you must say why (shown in italics at the bottom of the public story). An edited AI story reads
    "Race Club Press, edited by Matt Stenzel". The text before every edit or rewrite is kept out of sight.
+   Pictures (AI stories): the editor lists the story's pictures; each can be swapped for a picture from the computer or get a new caption.
    Rewrite (AI stories only): the writer tries again. Withdraw hides a story and Republish shows it again. Delete hides it and keeps it in the
    Deleted list; Undo delete moves it back to Withdrawn. Nothing is ever erased.
    Built only from the shared builders in raceroom-shell.js (RR.*). */
@@ -65,16 +66,46 @@
   /* ---------------- The text box and its buttons ---------------- */
   var counter = null, preview = null;
   function limit() { return data ? data.limit : 10000; }
+  /* The [image #n] lines are not part of the story, so they do not count toward the limit. */
+  var MARK = /^\[image #(\d+)\]$/i;
+  function bodyLen() { return form.body.replace(/^\[image #\d+\][ \t]*\n*/gim, '').length; }
+  function liveItem() { return form && form.key ? find(form.key) : null; }
+  /* The text with a [image #n] line before the paragraph each picture (after the banner) sits beside. */
+  function withMarkers(item) {
+    var list = item.photos || [], blocks = String(item.body).split(/\n\n/), out = [], para = 0, placed = {};
+    function put(at) { list.forEach(function (p, i) { if (i >= 1 && !placed[i] && (Number(p.at) || 0) === at) { placed[i] = true; out.push('[image #' + (i + 1) + ']'); } }); }
+    blocks.forEach(function (b) {
+      var isPara = !/^(## |> |!\[)/.test(b);
+      if (isPara) put(para);
+      out.push(b);
+      if (isPara) para++;
+    });
+    list.forEach(function (p, i) { if (i >= 1 && !placed[i]) out.push('[image #' + (i + 1) + ']'); });
+    return out.join('\n\n');
+  }
   function refreshAux() {
     if (counter) {
-      counter.textContent = thousands(form.body.length) + ' / ' + thousands(limit());
-      counter.className = 'rr-editor-count' + (form.body.length > limit() ? ' rr-over' : '');
+      counter.textContent = thousands(bodyLen()) + ' / ' + thousands(limit());
+      counter.className = 'rr-editor-count' + (bodyLen() > limit() ? ' rr-over' : '');
     }
     if (preview) {
       preview.textContent = '';
       var blocks = form.body.replace(/\r\n?/g, '\n').split(/\n\n+/).filter(function (b) { return b.trim(); });
       if (!blocks.length) preview.appendChild(el('p', 'rr-body', 'The text will show here as readers see it.'));
-      blocks.forEach(function (b) { preview.appendChild(RR.richBlock(b.trim())); });
+      var it = liveItem();
+      blocks.forEach(function (b) {
+        var mk = MARK.exec(b.trim()), ph = mk && it && it.photos && it.photos[Number(mk[1]) - 1];
+        if (mk) {
+          if (!ph) return;
+          var fig = el('figure', 'rr-figure rr-figure-wide'), im = el('img');
+          im.src = ph.src; im.alt = ph.caption || '';
+          fig.appendChild(im);
+          fig.appendChild(el('figcaption', '', 'Picture ' + mk[1] + (ph.caption ? ': ' + ph.caption : '')));
+          preview.appendChild(fig);
+          return;
+        }
+        preview.appendChild(RR.richBlock(b.trim()));
+      });
     }
   }
   function setBody(text, from, to) {
@@ -154,6 +185,59 @@
   document.body.appendChild(fileInput);   /* in the page, so the picker opens in every browser */
   fileInput.addEventListener('change', function () { var f = fileInput.files && fileInput.files[0]; fileInput.value = ''; addPicture(f); });
 
+  /* The pictures of a written story (race story, season preview or recap): see each one, swap it for a picture from the computer, change its caption. */
+  var swapInput = el('input'), swapIndex = -1;
+  swapInput.type = 'file'; swapInput.accept = 'image/*'; swapInput.hidden = true;
+  document.body.appendChild(swapInput);
+  swapInput.addEventListener('change', function () {
+    var f = swapInput.files && swapInput.files[0], at = swapIndex, key = form && form.key;
+    swapInput.value = '';
+    if (!f || at < 0 || !key) return;
+    message = { text: 'Saving picture ' + (at + 1) + '...', kind: 'ok' };
+    drawNotice();
+    shrink(f).then(function (b64) {
+      return RR.api('saveStoryPhoto', { key: key, index: at, data: b64, caption: (form.caps || [])[at] });
+    }).then(function (res) {
+      if (res && res.ok) { message = { text: 'Picture ' + (at + 1) + ' was swapped. The story shows it now.' + publishNote(res), kind: 'ok' }; load(RR.newsEditor.saved); }
+      else { message = { text: problem(res), kind: 'warn' }; draw(); }
+    }, function () { message = { text: problem({ error: 'bad-photo' }), kind: 'warn' }; draw(); });
+  });
+  /* Move the [image #n] line to the cursor: it is taken out of its old place and put on its own between the paragraphs at the cursor. */
+  function moveMarker(n) {
+    if (!ta) return;
+    var tag = '[image #' + n + ']', v = ta.value, pos = ta.selectionStart;
+    var re = new RegExp('(^|\\n\\n)\\[image #' + n + '\\](?=\\n\\n|$)'), m = re.exec(v);
+    if (m) {
+      var cut = m[0].length;
+      v = v.slice(0, m.index) + v.slice(m.index + cut);
+      if (m.index < pos) pos = Math.max(m.index, pos - cut);
+      if (!m[1] && v.slice(m.index, m.index + 2) === '\n\n') v = v.slice(0, m.index) + v.slice(m.index + 2);
+    }
+    form.body = v; ta.value = v; ta.setSelectionRange(Math.min(pos, v.length), Math.min(pos, v.length));
+    insertBlock(tag);
+  }
+  function pictureRows(box, item) {
+    var list = item.photos || [];
+    if (!form.caps) form.caps = list.map(function (p) { return p.caption || ''; });
+    box.appendChild(el('h3', 'rr-card-title', 'Pictures in this story'));
+    if (!list.length) { box.appendChild(el('p', 'rr-body', 'This story has no pictures.')); return; }
+    box.appendChild(el('p', 'rr-body', 'The first picture is the banner at the top. Every other picture is a line like [image #2] in the text below, at the paragraph it sits beside. To move a picture, cut that line and paste it between two paragraphs (with a blank line around it), or click in the text where you want it and press Move to cursor. Keep the number as it is. A move is saved with Save edit; swapping a picture or its caption is saved at once and does not need a reason.'));
+    list.forEach(function (p, i) {
+      var row = el('div', 'rr-story-photo'), im = el('img');
+      im.src = p.src; im.alt = '';
+      row.appendChild(add(el('span', 'rr-story-thumb'), im));
+      row.appendChild(RR.input({ label: (i === 0 ? 'Banner picture' : 'Picture ' + (i + 1)) + ' caption', value: form.caps[i], wide: true, onChange: function (v) { form.caps[i] = v; } }));
+      row.appendChild(RR.button('Swap picture', function () { swapIndex = i; swapInput.click(); }));
+      if (i >= 1) row.appendChild(RR.button('Move to cursor', function () { moveMarker(i + 1); }));
+      row.appendChild(RR.button('Save caption', function () {
+        RR.api('saveStoryPhoto', { key: item.key, index: i, caption: form.caps[i] }).then(function (res) {
+          if (res && res.ok) { message = { text: 'The caption was saved.' + publishNote(res), kind: 'ok' }; load(RR.newsEditor.saved); } else fail(res);
+        });
+      }));
+      box.appendChild(row);
+    });
+  }
+
   function linkRow() {
     var box = el('div', 'rr-panel rr-stack');
     var go = RR.button('Add the link', function () {
@@ -188,6 +272,7 @@
       RR.kv('Earlier versions kept', String(item.changes)), RR.kv('Last edit', item.edited ? dmy(item.edited) + ': ' + item.editReason : '-')));
     box.appendChild(RR.input({ label: 'Title', value: form.title, wide: true, onChange: function (v) { form.title = v.slice(0, 120); } }));
     if (!isNew && item.kind !== 'post') box.appendChild(RR.input({ label: 'Short summary under the title (shown on the News page)', value: form.standfirst, wide: true, onChange: function (v) { form.standfirst = v.slice(0, 300); } }));
+    if (!isNew && item.kind !== 'post') pictureRows(box, item);
     var area = RR.textarea({ label: 'Text', value: form.body, onChange: function (v) { form.body = v; refreshAux(); } });
     ta = area.querySelector('textarea');
     var wrapEl = el('div', 'rr-stack rr-editor');
@@ -211,7 +296,7 @@
     }, function () {
       if (!form.title.trim()) { fail({ error: 'no-title' }); return false; }
       if (!form.body.trim()) { fail({ error: 'no-body' }); return false; }
-      if (form.body.length > limit()) { message = { text: 'The text is over ' + thousands(limit()) + ' characters. Shorten it.', kind: 'warn' }; drawNotice(); return false; }
+      if (bodyLen() > limit()) { message = { text: 'The text is over ' + thousands(limit()) + ' characters. Shorten it.', kind: 'warn' }; drawNotice(); return false; }
       if (!isNew && !form.reason) { fail({ error: 'no-reason' }); return false; }
       return true;
     });
@@ -249,7 +334,7 @@
 
   function openItem(item) {
     openKey = item ? item.key : 'new';
-    form = { key: item ? item.key : '', title: item ? item.title : '', standfirst: item ? item.standfirst : '', body: item ? item.body : '', reason: '', caption: '' };
+    form = { key: item ? item.key : '', title: item ? item.title : '', standfirst: item ? item.standfirst : '', body: item ? (item.kind !== 'post' && item.photos && item.photos.length > 1 ? withMarkers(item) : item.body) : '', reason: '', caption: '' };
     linkBox = null; message = null;
     draw();
   }
