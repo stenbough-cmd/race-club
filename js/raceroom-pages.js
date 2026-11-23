@@ -177,8 +177,8 @@
     var list = protestsFor(season, n);
     if (!list.length) return null;
     return RR.table([
-      { key: 'by', label: 'Filed by' }, { key: 'against', label: 'Against' }, { key: 'lap', label: 'Lap', num: true },
-      { key: 'reason', label: 'Reason' }, { key: 'ruling', label: 'Ruling' }, { key: 'pen', label: 'Penalty' }
+      { key: 'by', label: 'Filed by', sort: true }, { key: 'against', label: 'Against', sort: true }, { key: 'lap', label: 'Lap', num: true, sort: true },
+      { key: 'reason', label: 'Reason', sort: true }, { key: 'ruling', label: 'Ruling', sort: true }, { key: 'pen', label: 'Penalty', sort: true }
     ], list.map(function (p) {
       var by = driver(p.by), against = driver(p.against);
       return { cells: { by: RR.cell(RR.nameWithFlag(by.name, by.country), p.self ? 'Self report' : ''), against: RR.nameWithFlag(against.name, against.country),
@@ -198,9 +198,10 @@
     function drawStandings() {
       var rows = seasonRows(season, cls), done = doneRounds(season), lead = rows[0], second = rows[1];
       var finished = season.status === 'Finished';
-      var cols = [{ key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }];
-      season.rounds.forEach(function (r) { cols.push({ key: 'r' + r.n, label: 'R' + r.n, num: true }); });
-      cols.push({ key: 'wins', label: 'Wins', num: true }, { key: 'total', label: 'Total', num: true, sorted: true });
+      /* The rows come best first, so Pos is the sorted column. Points columns sort high to low on the first click. */
+      var cols = [{ key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }];
+      season.rounds.forEach(function (r) { cols.push({ key: 'r' + r.n, label: 'R' + r.n, num: true, sort: true, desc: true }); });
+      cols.push({ key: 'wins', label: 'Wins', num: true, sort: true, desc: true }, { key: 'total', label: 'Total', num: true, sort: true, desc: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
         RR.strip(rows.slice(0, 5).map(function (r) {
           return { title: r.d.name, country: r.d.country, livery: r.d.banner, sub: className(r.d.cls), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
@@ -220,8 +221,13 @@
           var cells = { pos: RR.pos(i + 1), driver: RR.cell(RR.nameWithFlag(r.d.name, r.d.country)),
             wins: season.results.filter(function (x) { return x.driver === r.d.id && x.pos === 1 && x.status === 'Finished' && roundCounts(season, x.round); }).length,
             total: r.t.total };
-          season.rounds.forEach(function (rd, k) { cells['r' + rd.n] = rd.done && rd.counts !== false ? pointsNode(nightOf(season, rd.n, r.d.id), r.t.drop.indexOf(k) >= 0) : '-'; });
-          return { href: profileLink(r.d), linkCol: 1, cells: cells };
+          var sv = { pos: i + 1, driver: r.d.name.toLowerCase(), wins: cells.wins, total: r.t.total };
+          season.rounds.forEach(function (rd, k) {
+            var counted = rd.done && rd.counts !== false, night = counted ? nightOf(season, rd.n, r.d.id) : null;
+            cells['r' + rd.n] = counted ? pointsNode(night, r.t.drop.indexOf(k) >= 0) : '-';
+            sv['r' + rd.n] = night ? night.points + night.bonus : null;
+          });
+          return { href: profileLink(r.d), linkCol: 1, cells: cells, sort: sv };
         }), 'No drivers in this class yet.'),
         season.dropWeeks ? RR.empty('The ' + season.dropWeeks + ' lowest round' + (season.dropWeeks > 1 ? 's are' : ' is') + ' struck through and not counted. A small red number is a bonus point.') : null
       ));
@@ -257,8 +263,9 @@
           });
           var count = {};
           table = RR.table([
-            { key: 'pos', label: 'Night', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'cls', label: 'Class' },
-            { key: 'fin', label: 'Race finishes' }, { key: 'best', label: 'Best lap', num: true }, { key: 'inc', label: 'Inc', num: true }, { key: 'pts', label: 'Points', num: true }
+            { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'cls', label: 'Class', sort: true },
+            { key: 'fin', label: 'Race finishes', sort: true }, { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'inc', label: 'Inc', num: true, sort: true },
+            { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], list2.map(function (g) {
             var d = driver(g.driver), fin = [];
             for (var q = 0; q < r.races; q++) fin.push(g.finishes[q] || '-');
@@ -266,19 +273,30 @@
             return { href: profileLink(d), linkCol: 1, cells: {
               pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), cls: className(g.cls),
               fin: fin.join(' · '), best: RR.lap(g.best), inc: g.inc, pts: pointsNode({ points: g.points, bonus: g.bonus })
+            }, sort: {
+              /* Night: best first inside each class. Race finishes: the places added up (a race without a finish counts as 99). */
+              pos: g.cls + '|' + ('000' + count[g.cls]).slice(-3), driver: d.name.toLowerCase(), cls: className(g.cls).toLowerCase(),
+              fin: fin.reduce(function (a, f) { return a + (/^P\d+$/.test(f) ? Number(f.slice(1)) : 99); }, 0),
+              best: g.best > 0 ? g.best : null, inc: g.inc, pts: g.points + g.bonus
             } };
           }), 'No results for this class.');
         } else {
           var rows = inClass.filter(function (x) { return (x.race || 1) === pickedRace; }).sort(function (a, b) { return a.cls.localeCompare(b.cls) || a.pos - b.pos; });
           table = RR.table([
-            { key: 'pos', label: 'Result', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'cls', label: 'Class' },
-            { key: 'best', label: 'Best lap', num: true }, { key: 'gap', label: 'Gap', num: true }, { key: 'diff', label: 'Diff pos', num: true },
-            { key: 'inc', label: 'Inc', num: true }, { key: 'pen', label: 'Pen', num: true }, { key: 'pts', label: 'Points', num: true }
+            { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'cls', label: 'Class', sort: true },
+            { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'gap', label: 'Gap', num: true, sort: true }, { key: 'diff', label: 'Diff pos', num: true, sort: true, desc: true },
+            { key: 'inc', label: 'Inc', num: true, sort: true }, { key: 'pen', label: 'Pen', num: true, sort: true }, { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
               pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), cls: className(x.cls),
               best: RR.lap(x.best), gap: RR.gap(x.gap), diff: diffPos(x), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
+            }, sort: {
+              /* Result: finishing order inside each class, as the rows come. */
+              pos: x.cls + '|' + ('000' + x.pos).slice(-3), driver: d.name.toLowerCase(), cls: className(x.cls).toLowerCase(),
+              best: x.best > 0 ? x.best : null, gap: x.status === 'Finished' && x.pos > 1 ? x.gap : null,
+              diff: x.status === 'Finished' && x.start ? x.start - x.pos : null,
+              inc: x.incidents, pen: x.penaltyPoints || 0, pts: x.points + x.bonus
             } };
           }), 'No results for this class.');
         }
@@ -321,15 +339,15 @@
           .filter(function (x) { return x.avg; }).sort(function (a, b) { return a.avg - b.avg; });
         var fastest = rows.length ? rows[0].avg : 0;
         fill(right, RR.heading(r.track + ' · ' + r.layout), picker, RR.table([
-          { key: 'pos', label: 'Pos' }, { key: 'driver', label: 'Driver' }, { key: 'time', label: 'Race time', num: true },
-          { key: 'lap', label: 'Avg lap time', num: true, sorted: true },
-          { key: 'delta', label: 'Delta leader', num: true }, { key: 'car', label: 'Car / Class' }
+          { key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'time', label: 'Race time', num: true, sort: true },
+          { key: 'lap', label: 'Avg lap time', num: true, sort: true },
+          { key: 'delta', label: 'Delta leader', num: true, sort: true }, { key: 'car', label: 'Car / Class', sort: true }
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
             pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country)), time: RR.raceTime(x.time), lap: RR.lap(x.avg), delta: RR.gap(x.avg - fastest),
             car: RR.cell(x.car, className(x.cls))
-          } };
+          }, sort: { pos: i + 1, driver: d.name.toLowerCase(), time: x.time > 0 ? x.time : null, lap: x.avg, delta: x.avg - fastest, car: String(x.car || '').toLowerCase() } };
         }), 'No lap times for this class.'));
       }
       drawTable();
@@ -361,13 +379,16 @@
     }
     function drawSchedule() {
       fill(RR.view('schedule'), RR.table([
-        { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date', sorted: true },
-        { key: 'time', label: 'Time' }, { key: 'status', label: 'Status' }
+        { key: 'n', label: 'Round', sort: true, sorted: true }, { key: 'track', label: 'Track', sort: true }, { key: 'date', label: 'Date', sort: true },
+        { key: 'time', label: 'Time', sort: true }, { key: 'status', label: 'Status', sort: true }
       ], season.rounds.filter(function (r) { return !onlyUpcoming || (!r.done && !r.cancelled); }).map(function (r) {
         var at = localStart(r);
         return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
           time: at ? RR.cell(at.time, at.zone) : '-',
-          status: r.cancelled ? RR.tag('Cancelled', true) : (r.done ? RR.tag('Finished') : RR.tag('Upcoming', true)) } };
+          status: r.cancelled ? RR.tag('Cancelled', true) : (r.done ? RR.tag('Finished') : RR.tag('Upcoming', true)) },
+          /* Round and Date are the same order (the calendar). Time is the time of day. Status: Finished, then Upcoming, then Cancelled. */
+          sort: { n: r.n, track: r.track.toLowerCase(), date: r.start && !isNaN(Date.parse(r.start)) ? Date.parse(r.start) : r.n,
+            time: at ? Number(at.time.slice(0, 2)) * 60 + Number(at.time.slice(3)) : null, status: r.cancelled ? 2 : (r.done ? 0 : 1) } };
       }), onlyUpcoming ? 'No upcoming rounds.' : 'The schedule has not been posted yet.'));
     }
 

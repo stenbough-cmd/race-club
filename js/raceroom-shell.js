@@ -540,18 +540,44 @@
     return w;
   };
 
-  /* Table. cols: [{key, label, num, sorted}]  rows: [{cells:{key: text|Node}, href, me}] */
+  /* Table. cols: [{key, label, num, sorted, sort, desc}]  rows: [{cells:{key: text|Node}, href, me, sort:{key: value}}]
+     A column with sort:true can be clicked to sort the rows by it (click again to reverse). The column marked sorted:true is the one
+     the rows already come in (shown red with an arrow). desc:true on a column means its first click sorts high to low.
+     A row's sort value for a column is row.sort[key] (a number, a word, or null for "nothing", which always goes last);
+     when it is missing the text of the cell is used. */
+  function sortValue(row, key, td) {
+    var v = row.sort && row.sort[key];
+    if (v === undefined) {
+      var t = (td.textContent || '').trim().replace(/[,+%]/g, '');
+      v = (t === '' || t === '-') ? null : (/^-?\d+(\.\d+)?$/.test(t) ? Number(t) : t.toLowerCase());
+    }
+    return (v === '' || (typeof v === 'number' && isNaN(v))) ? null : v;
+  }
+  function sortCompare(a, b) {
+    if (a === null || b === null) return a === b ? 0 : (a === null ? 1 : -1);
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    if (typeof a === 'number') return -1;
+    if (typeof b === 'number') return 1;
+    return String(a).localeCompare(String(b));
+  }
   RR.table = function (cols, rows, emptyText) {
     if (!rows.length) return RR.empty(emptyText || 'Nothing here yet.');
     var wrap = el('div', 'rr-table-wrap'), table = el('table', 'rr-table');
-    var thead = el('thead'), trh = el('tr');
+    var thead = el('thead'), trh = el('tr'), ths = {}, state = { key: null, dir: 1 };
     cols.forEach(function (c) {
-      var th = el('th', (c.num ? 'rr-num ' : '') + (c.sorted ? 'rr-sorted' : ''), c.label);
+      var th = el('th', (c.num ? 'rr-num ' : '') + (c.sorted ? 'rr-sorted' : '') + (c.sort ? ' rr-sortable' : '') + (c.sorted && c.desc ? ' rr-desc' : ''), c.label);
+      if (c.sort) {
+        th.tabIndex = 0;
+        th.setAttribute('role', 'button');
+        th.setAttribute('aria-sort', c.sorted ? (c.desc ? 'descending' : 'ascending') : 'none');
+        ths[c.key] = th;
+        if (c.sorted) { state.key = c.key; state.dir = c.desc ? -1 : 1; }
+      }
       trh.appendChild(th);
     });
     thead.appendChild(trh);
-    var tbody = el('tbody');
-    rows.forEach(function (r) {
+    var tbody = el('tbody'), made = [];
+    rows.forEach(function (r, ri) {
       var tr = el('tr', (r.href ? 'rr-row-link ' : '') + (r.me ? 'rr-row-me' : ''));
       cols.forEach(function (c, i) {
         var td = el('td', c.num ? 'rr-num' : ''), v = r.cells[c.key];
@@ -568,6 +594,27 @@
         if (!e.target.closest('a')) location.href = r.href;
       });
       tbody.appendChild(tr);
+      made.push({ tr: tr, row: r, at: ri });
+    });
+    function sortBy(key) {
+      var col = cols.filter(function (c) { return c.key === key; })[0], index = cols.indexOf(col);
+      if (state.key === key) state.dir = -state.dir; else { state.key = key; state.dir = col.desc ? -1 : 1; }
+      made.forEach(function (m) { m.v = sortValue(m.row, key, m.tr.children[index]); });
+      made.sort(function (a, b) {
+        if (a.v === null || b.v === null) return sortCompare(a.v, b.v) || a.at - b.at;
+        return sortCompare(a.v, b.v) * state.dir || a.at - b.at;
+      });
+      made.forEach(function (m) { tbody.appendChild(m.tr); });
+      Object.keys(ths).forEach(function (k) {
+        var on = k === key;
+        ths[k].classList.toggle('rr-sorted', on);
+        ths[k].classList.toggle('rr-desc', on && state.dir < 0);
+        ths[k].setAttribute('aria-sort', on ? (state.dir < 0 ? 'descending' : 'ascending') : 'none');
+      });
+    }
+    Object.keys(ths).forEach(function (k) {
+      ths[k].addEventListener('click', function () { sortBy(k); });
+      ths[k].addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortBy(k); } });
     });
     add(table, thead, tbody);
     wrap.appendChild(table);

@@ -635,6 +635,10 @@ button, select { font-family: inherit; }
 }
 .rr-table th.rr-sorted { color: var(--rr-red); }
 .rr-table th.rr-sorted::after { content: " \25B2"; font-size: 8px; }
+.rr-table th.rr-sorted.rr-desc::after { content: " \25BC"; }
+.rr-table th.rr-sortable { cursor: pointer; user-select: none; }
+.rr-table th.rr-sortable:hover, .rr-table th.rr-sortable:focus-visible { color: var(--rr-red); }
+.rr-table th.rr-sortable:focus-visible { outline: 1px solid var(--rr-red); outline-offset: -1px; }
 .rr-table td {
   height: 40px;
   padding: 6px 12px;
