@@ -809,6 +809,13 @@
     /* The league's Sheet keeps RaceRoom's own two letter code (US, DE); the sample data uses names. */
     return COUNTRY_CODES[key] || (/^[a-z]{2}$/.test(key) ? key : '');
   };
+  /* RR.countryName('US') is 'United States': RaceRoom's two letter code written out as the country's English name. A name stays as it is. */
+  var regionNames = null;
+  RR.countryName = function (country) {
+    var s = String(country || '').trim();
+    if (!/^[A-Za-z]{2}$/.test(s)) return s;
+    try { regionNames = regionNames || new Intl.DisplayNames(['en'], { type: 'region' }); return regionNames.of(s.toUpperCase()) || s; } catch (err) { return s; }
+  };
   /* RR.flag('Canada') is a small <img> of the flag. When the country is not known (or has no flag picture) it is a white box of the same size with the
      small black Race Club R in it, so a name never sits without one. */
   function noFlag() {

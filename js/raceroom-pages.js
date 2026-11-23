@@ -689,9 +689,9 @@
         { key: 'podiums', label: 'Podiums', num: true, sort: true, desc: true }, { key: 'points', label: 'Points', num: true, sort: true, desc: true }
       ], rows.map(function (d) {
         var now = d.current !== false;
-        return { href: profileLink(d), cells: { driver: RR.cell(RR.nameWithFlag(d.name, d.country)), country: d.country || '-', status: now ? 'In a season' : 'Raced before',
+        return { href: profileLink(d), cells: { driver: RR.cell(RR.nameWithFlag(d.name, d.country)), country: RR.countryName(d.country) || '-', status: now ? 'In a season' : 'Raced before',
           car: d.cls || d.car ? RR.cell(d.car || '-', className(d.cls)) : '-', races: d.races, wins: d.wins, podiums: d.podiums, points: d.points },
-          sort: { driver: d.name.toLowerCase(), country: (d.country || '').toLowerCase(), status: now ? 0 : 1, car: (d.car || '').toLowerCase() } };
+          sort: { driver: d.name.toLowerCase(), country: RR.countryName(d.country).toLowerCase(), status: now ? 0 : 1, car: (d.car || '').toLowerCase() } };
       }), 'No drivers yet.'));
     }
     RR.headTool(RR.segment([['all', 'All'], ['current', 'In a season'], ['past', 'Raced before']], function (v) { status = v; draw(); }));
@@ -862,7 +862,7 @@
       /* The Driver box carries the driver's banner and profile picture, with the driver's information beside the picture.
          The name and flag are in the page title. A driver has no team, and the class changes from season to season, so neither is shown here. */
       var card = RR.banner({ banner: d.banner, avatar: d.avatar, alt: d.name, info: [RR.label('Driver'),
-        add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', d.country)),
+        add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
       var fav = st.favouriteCar;
@@ -923,7 +923,7 @@
         if (statPick === 'highlights') {
           var chrono = rows.slice().reverse();
           view = add(el('div', 'rr-stack'), add(el('div', 'rr-grid-2'),
-            RR.barlist('Points by round', 'Pts', chrono.map(function (r) { return { name: r.round.track + (r.round.races > 1 ? ' R' + (r.x.race || 1) : '') + (sel === 'all' ? ' · S' + r.season.id.slice(1) : ''), value: r.x.points + r.x.bonus }; })),
+            RR.barlist('Points by round', 'Pts', chrono.map(function (r) { return { name: r.round.track + (r.round.races > 1 ? ' R' + (r.x.race || 1) : '') + (sel === 'all' ? ' · ' + r.season.name : ''), value: r.x.points + r.x.bonus }; })),
             RR.barlist('Cars by laps', 'Laps', cars.map(function (g) { return { name: g.key, value: agg(g).laps }; }).sort(byValue)),
             RR.barlist('Tracks by laps', 'Laps', tracks.map(function (g) { return { name: g.key, value: agg(g).laps }; }).sort(byValue)),
             RR.barlist('Classes by laps', 'Laps', classes.map(function (g) { return { name: className(g.key), value: agg(g).laps }; }).sort(byValue))),
