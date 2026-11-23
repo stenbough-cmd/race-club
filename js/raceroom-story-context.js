@@ -228,7 +228,7 @@
     box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each. You decide which pictures are used and which one opens the story; the writer only places them among the paragraphs from their captions. If you choose nothing, the story uses a picture of the track.'));
     for (var i = 0; i < 3; i++) box.appendChild(photoSlot(r, i));
     box.appendChild(pictureChoices(r));
-    box.appendChild(RR.row(RR.button('Close', function () { panel = null; draw(); })));
+    box.appendChild(RR.row(RR.button('Close', function () { if (modal) modal.close(); })));
     return box;
   }
 
@@ -256,10 +256,24 @@
     box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each, for example the cars racing. Photo 1 is the hero that opens the preview and is the picture on its News tile. Track pictures fill any empty places.'));
     var holder = { photos: s.previewPhotos || [] };
     for (var i = 0; i < 3; i++) box.appendChild(photoSlot(holder, i, { action: 'saveSeasonContext', ids: { seasonId: s.seasonId } }));
-    box.appendChild(RR.row(RR.button('Close', function () { panel = null; draw(); })));
+    box.appendChild(RR.row(RR.button('Close', function () { if (modal) modal.close(); })));
     return box;
   }
 
+
+  /* ---------------- The popup: Add context opens in a window over the page ---------------- */
+  var modal = null;
+  function syncModal() {
+    var sp = panel && data ? (panel.seasonId ? seasonPanel() : storyPanel()) : null;
+    if (!sp) { if (modal) { var m = modal; modal = null; m.close(true); } return; }
+    var keep = 0;
+    if (modal) keep = modal.body.scrollTop;
+    else modal = RR.modal('Add context', function () { modal = null; panel = null; });
+    modal.body.textContent = '';
+    if (message) modal.body.appendChild(RR.notice(message.text, message.kind));   /* the list under the window is covered, so the result shows here */
+    modal.body.appendChild(sp);
+    modal.body.scrollTop = keep;
+  }
 
   /* ---------------- The tab ---------------- */
   function draw() {
@@ -300,14 +314,7 @@
       }), 'This season has no rounds.'));
     }
     view.appendChild(box);
-    if (panel && data) {
-      var sp = panel.seasonId ? seasonPanel() : storyPanel();
-      if (sp) {
-        view.appendChild(sp);
-        /* The panel sits below the tables, so bring it into view the first time it opens. */
-        if (panel && panel.fresh) { panel.fresh = false; if (sp.scrollIntoView) { try { sp.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { sp.scrollIntoView(); } } }
-      }
-    }
+    syncModal();
   }
 
   draw();

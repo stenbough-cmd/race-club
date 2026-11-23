@@ -162,17 +162,20 @@
   }
 
   /* ---------------- The editor ---------------- */
-  var editorHost = null, noticeHost = null;
+  var editorHost = null, noticeHost = null, editNotice = null;
   function drawNotice() {
-    if (!noticeHost) return;
-    noticeHost.textContent = '';
-    if (message) noticeHost.appendChild(RR.notice(message.text, message.kind));
+    [noticeHost, editNotice].forEach(function (h) {
+      if (!h) return;
+      h.textContent = '';
+      if (message) h.appendChild(RR.notice(message.text, message.kind));
+    });
   }
-  function drawEditorOnly() { if (editorHost) { editorHost.textContent = ''; fillEditor(editorHost); refreshAux(); } drawNotice(); }
+  function drawEditorOnly() { if (editorHost) { var k = modal ? modal.body.scrollTop : 0; editorHost.textContent = ''; fillEditor(editorHost); refreshAux(); if (modal) modal.body.scrollTop = k; } drawNotice(); }
 
   function fillEditor(box) {
     var item = form.key ? find(form.key) : null, isNew = !form.key;
     box.appendChild(RR.heading(isNew ? 'New post' : (item.label + ' · ' + stateWord(item.state))));
+    editNotice = el('div'); box.appendChild(editNotice); drawNotice();
     if (!isNew) box.appendChild(RR.row(RR.kv('Byline', item.edited && item.kind !== 'post' ? item.byline + ', edited by ' + 'Matt Stenzel' : item.byline), RR.kv('Date', dmy(item.date)),
       RR.kv('Earlier versions kept', String(item.changes)), RR.kv('Last edit', item.edited ? dmy(item.edited) + ': ' + item.editReason : '-')));
     box.appendChild(RR.input({ label: 'Title', value: form.title, wide: true, onChange: function (v) { form.title = v.slice(0, 120); } }));
@@ -183,7 +186,6 @@
     add(wrapEl, toolbar(), area);
     box.appendChild(wrapEl);
     if (linkBox) box.appendChild(linkRow());
-    box.appendChild(RR.input({ label: 'Picture caption (used by the next picture you add, optional)', value: form.caption, wide: true, onChange: function (v) { form.caption = v; } }));
     box.appendChild(el('p', 'rr-body', 'Leave a blank line between paragraphs. A heading, a quote and a picture each sit on their own.'));
     if (!isNew) {
       box.appendChild(RR.select('Reason for this edit (shown at the bottom of the story)', [['', 'Choose']].concat(data.reasons.map(function (r) { return [r, r]; })),
@@ -233,7 +235,7 @@
         buttons.push(again);
       }
     }
-    buttons.push(RR.button('Close', function () { openKey = ''; form = null; message = null; draw(); }));
+    buttons.push(RR.button('Close', function () { if (modal) modal.close(); }));
     box.appendChild(RR.row.apply(null, buttons));
   }
 
@@ -242,7 +244,6 @@
     form = { key: item ? item.key : '', title: item ? item.title : '', standfirst: item ? item.standfirst : '', body: item ? item.body : '', reason: '', caption: '' };
     linkBox = null; message = null;
     draw();
-    var host = editorHost; if (host && host.scrollIntoView) host.scrollIntoView();
   }
 
   /* ---------------- The list ---------------- */
@@ -275,12 +276,23 @@
       }), filter === 'published' ? 'Nothing is live yet.' : (filter === 'withdrawn' ? 'Nothing is withdrawn.' : 'Nothing is deleted.')));
     }
     main.appendChild(box);
-    if (form && (openKey === 'new' || find(openKey))) {
-      editorHost = el('div', 'rr-panel rr-stack');
-      main.appendChild(editorHost);
-      fillEditor(editorHost);
-      refreshAux();
-    }
+    syncEditor();
+  }
+  /* The editor opens in a popup window over the page (RR.modal); the list stays as it is underneath. */
+  var modal = null;
+  function syncEditor() {
+    var open = form && (openKey === 'new' || find(openKey));
+    if (!open) { if (modal) { var m = modal; modal = null; m.close(true); } return; }
+    var keep = 0;
+    if (modal) keep = modal.body.scrollTop;
+    else modal = RR.modal(openKey === 'new' ? 'New post' : 'Edit story', function () { modal = null; openKey = ''; form = null; message = null; });
+    modal.setTitle(openKey === 'new' ? 'New post' : 'Edit story');
+    editorHost = el('div', 'rr-stack');
+    modal.body.textContent = '';
+    modal.body.appendChild(editorHost);
+    fillEditor(editorHost);
+    refreshAux();
+    modal.body.scrollTop = keep;
   }
 
   load();

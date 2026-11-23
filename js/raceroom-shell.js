@@ -120,6 +120,7 @@
     steward: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
     members: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',
     book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
+    close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
     trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
   };
   function iconSvg(name) {
@@ -541,6 +542,40 @@
     return RR.inline(el('p'), text);
   };
   RR.empty = function (text) { return el('p', 'rr-empty', text); };
+
+  /* A popup window for editing something on its own (Add context, Edit story). It sits in the centre of the screen over a dim cover, the page behind
+     cannot scroll, and it closes with the X in its corner or the Esc key (not by clicking outside, so a half-written edit is never lost by accident).
+     RR.modal(title, onClose) returns { body, setTitle, close }: put the content in body. Only one popup is open at a time; opening another replaces it.
+     onClose runs once when it closes by any route. */
+  var openModal = null;
+  RR.modal = function (title, onClose) {
+    if (openModal) openModal.close(true);
+    var cover = el('div', 'rr-modal-cover'), win = el('div', 'rr-modal'), head = el('div', 'rr-modal-head'), h = el('h2', 'rr-modal-title', title || '');
+    var x = el('button', 'rr-modal-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(RR.icon('close'));
+    var body = el('div', 'rr-modal-body'), closed = false;
+    win.setAttribute('role', 'dialog'); win.setAttribute('aria-modal', 'true'); win.setAttribute('aria-label', title || 'Window');
+    function key(e) { if (e.key === 'Escape') api.close(); }
+    var api = {
+      body: body,
+      setTitle: function (t) { h.textContent = t; win.setAttribute('aria-label', t); },
+      close: function (silent) {
+        if (closed) return; closed = true;
+        document.removeEventListener('keydown', key);
+        if (cover.parentNode) cover.parentNode.removeChild(cover);
+        document.documentElement.classList.remove('rr-scroll-lock');
+        if (openModal === api) openModal = null;
+        if (!silent && onClose) onClose();
+      }
+    };
+    x.addEventListener('click', function () { api.close(); });
+    document.addEventListener('keydown', key);
+    add(head, h, x); add(win, head, body); cover.appendChild(win);
+    document.body.appendChild(cover);
+    document.documentElement.classList.add('rr-scroll-lock');
+    openModal = api;
+    x.focus();
+    return api;
+  };
   RR.delta = function (n) {
     if (!n) return el('span', '', '-');
     return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '▲ ' : '▼ ') + Math.abs(n));
