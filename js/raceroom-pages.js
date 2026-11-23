@@ -362,8 +362,9 @@
             } };
           }), 'No results for this class.');
         }
-        fill(right, RR.heading(r.track + ' · ' + r.layout),
-          open ? add(el('div', 'rr-form-row'), RR.label('Protests close ' + r.protestCloses)) : null,
+        var head = RR.heading(r.track + ' · ' + r.layout);
+        if (open) head.appendChild(el('span', 'rr-heading-note', ' (Protests close ' + r.protestCloses + ')'));
+        fill(right, head,
           picker, table,
           protestTable(season, pickedRound) ? RR.heading('Protests') : null, protestTable(season, pickedRound));
       }
