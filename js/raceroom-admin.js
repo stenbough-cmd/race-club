@@ -612,7 +612,7 @@
           changed();
           drawWeather();
         }, s.clouds.every(function (c) { return c === s.clouds[0]; }) ? s.clouds[0] : ''));
-        TIMES.forEach(function (t) {
+        [[0, 'At the start'], [1, 'Early'], [2, 'Middle'], [3, 'Late'], [4, 'At the finish']].forEach(function (t) {
           weather.appendChild(RR.select(t[1], CLOUDS, function (v) { s.clouds[t[0]] = Number(v); changed(); drawWeather(); }, s.clouds[t[0]]));
         });
       }
