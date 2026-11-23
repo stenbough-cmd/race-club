@@ -124,16 +124,20 @@
   function clearPanel() {
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Clear test data'),
       el('p', 'rr-body', 'Empties the results, laps, posted files, protests, penalties, stories, news posts, seasons and rounds, so the first real season starts clean. Kept: the admins, the log, the drivers’ own settings (Hide details, blacklist) and the website options. This cannot be undone.'));
-    box.appendChild(RR.input({ label: 'Type CLEAR to unlock the button', value: word, onChange: function (v) { word = v; } }));
     var go = RR.button('Clear test data', null, true);
+    function unlocked() { return String(word).trim() === (data && data.clearWord || 'CLEAR'); }
+    /* The button stays greyed out and cannot be pressed until the word is typed. */
+    function lock() { go.disabled = !unlocked(); }
+    box.appendChild(RR.input({ label: 'Type CLEAR to unlock the button', value: word, onChange: function (v) { word = v; lock(); } }));
     RR.arm(go, '', 'Confirm: empty all test data now', function () {
       RR.api('clearTestData', { word: word }).then(function (res) {
         if (res && res.ok) { word = ''; seasonId = ''; done('Test data cleared.', res); } else fail(res);
       });
     }, function () {
-      if (String(word).trim() !== (data && data.clearWord || 'CLEAR')) { fail({ error: 'word' }); return false; }
+      if (!unlocked()) { fail({ error: 'word' }); return false; }
       return true;
     });
+    lock();
     box.appendChild(RR.row(go));
     return box;
   }
