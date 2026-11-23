@@ -724,8 +724,11 @@
   RR.statRow = function (tiles, compact) {
     var row = el('div', 'rr-row-stats' + (compact ? ' rr-row-stats-compact' : ''));
     tiles.forEach(function (t) { row.appendChild(t); });
+    /* A tile marked wide (RR.wide(tile)) holds a driver's name, which needs the most room: the row gives it a bigger share and the other tiles share the rest. */
+    if (tiles.some(function (t) { return t && t.classList && t.classList.contains('rr-stat-wide'); })) row.classList.add('rr-row-stats-wide');
     return row;
   };
+  RR.wide = function (tile) { tile.classList.add('rr-stat-wide'); return tile; };
 
   /* Label and value */
   RR.kv = function (label, value, inRow) {

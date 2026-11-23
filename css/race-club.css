@@ -874,7 +874,8 @@ button, select { font-family: inherit; }
   .rr-news-first > :first-child { grid-row: auto; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }
   .rr-span-2 { grid-column: auto; }
-  .rr-row-stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rr-row-stats, .rr-row-stats-wide { display: grid; grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rr-row-stats-wide > .rr-stat-wide { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -925,6 +926,10 @@ button, select { font-family: inherit; }
 
 /* Seven stat tiles in a row (profile Leaderboards tab) */
 .rr-row-stats-compact .rr-stat-value { font-size: 20px; }
+.rr-row-stats-wide { display: flex; }
+.rr-row-stats-wide > .rr-stat { flex: 1 1 0; min-width: 0; }
+.rr-row-stats-wide > .rr-stat-wide { flex: 2.4 1 0; }
+.rr-row-stats-wide .rr-stat-value { overflow-wrap: anywhere; }
 
 /* Earned achievement: a trophy in the top right corner of the card */
 .rr-card-earned .rr-card-title { padding-right: 32px; }

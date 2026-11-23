@@ -269,7 +269,7 @@
           RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
           RR.stat('Drivers', rows.length, cls === 'all' ? 'All classes' : className(cls)),
           cls === 'all' && classesIn(season).length > 1 ? RR.stat(finished ? 'Champions' : 'Leaders', 'One per class', 'Choose a class')
-            : RR.stat(finished ? 'Champion' : 'Leader', lead ? lead.d.name : '-', lead && second ? '+' + (lead.t.total - second.t.total) + ' pts over second place' : (lead ? 'No one to chase yet' : '')),
+            : RR.wide(RR.stat(finished ? 'Champion' : 'Leader', lead ? lead.d.name : '-', lead && second ? '+' + (lead.t.total - second.t.total) + ' pts over second place' : (lead ? 'No one to chase yet' : ''))),
           RR.stat('Winners', winners.length || '-', winners.length ? (winners.length === 1 ? 'driver has won' : 'different drivers have won') + ' in ' + plural(done.length, 'round', 'rounds') : 'No races won yet'),
           RR.stat('Fastest lap', quick ? RR.lap(quick.best) : '-', quick ? driver(quick.driver).name + ' \u00B7 ' + ((roundOf(season, quick.round) || {}).track || '') : 'No laps counted yet')
         ]),
@@ -415,8 +415,8 @@
       fill(RR.view('laptimes'), add(el('div', 'rr-stack'),
         RR.statRow([
           RR.stat('Fastest lap', quick ? RR.lap(quick.best) : '-', quick ? roundOf(season, quick.round).track : ''),
-          RR.stat('Fastest driver', topId ? driver(topId).name : '-', topId ? counts[topId] + ' fastest laps' : ''),
-          RR.stat('Most improved', improved ? improved.d.name : '-', improved ? improved.by.toFixed(2) + '% closer to the fastest' : 'Needs two races')
+          RR.wide(RR.stat('Fastest driver', topId ? driver(topId).name : '-', topId ? counts[topId] + ' fastest laps' : '')),
+          RR.wide(RR.stat('Most improved', improved ? improved.d.name : '-', improved ? improved.by.toFixed(2) + '% closer to the fastest' : 'Needs two races'))
         ]),
         add(el('div', 'rr-split'), add(el('div'), list), right)));
     }
