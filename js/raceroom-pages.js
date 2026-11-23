@@ -22,7 +22,7 @@
 
   /* All posts, newest first. Dates are DD.MM.YYYY. */
   function newestFirst() {
-    function stamp(n) { var p = n.date.split('.'); return p[2] + p[1] + p[0]; }
+    function stamp(n) { if (n.sort) return String(n.sort).replace(/-/g, ''); var p = n.date.split('.'); return p[2] + p[1] + p[0]; }
     return D.news.slice().sort(function (x, y) { return stamp(y).localeCompare(stamp(x)); });
   }
 

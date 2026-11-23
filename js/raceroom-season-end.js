@@ -18,6 +18,7 @@
     var e = res && res.error;
     if (e === 'results-waiting') return 'A round has results waiting for your decision. Confirm or deny them on the Rounds tab first.';
     if (e === 'protests-open') return 'A protest is still open. Rule on it on the Stewarding page first.';
+    if (e === 'window-open') return 'A round\'s protest window is still open. End the season after it has closed.';
     if (e === 'no-rounds') return 'No round of this season has live results yet.';
     if (e === 'rounds-left') return 'Some rounds were not raced. Use the button again to end the season anyway.';
     if (e === 'already-ended') return 'This season is already ended.';

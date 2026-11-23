@@ -60,6 +60,7 @@
   function problem(res) {
     var e = res && res.error;
     if (e === 'changed') return 'A newer file arrived or the round changed, so nothing was done. Look at it again.';
+    if (e === 'season-ended') return 'This season has ended, so its results cannot be confirmed. Reopen the season first (Season tab).';
     if (e === 'has-results') return 'This round has results, so it cannot be cancelled.';
     return 'Could not do that. Try again.';
   }
@@ -78,6 +79,8 @@
   /* ---------------- Stories ---------------- */
   function storyState(s) {
     if (!s) return ['-', '', ''];
+    if (s.hidden === 'deleted') return ['Deleted', 'rr-status-bad', s.title];
+    if (s.hidden === 'withdrawn') return ['Withdrawn', 'rr-status-bad', s.title];
     if (s.status === 'published') return ['Written', 'rr-status-ok', s.title];
     if (s.status === 'writing') return ['Writing...', '', ''];
     return ['Failed', 'rr-status-bad', (s.error || '').slice(0, 140)];

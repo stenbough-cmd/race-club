@@ -143,6 +143,7 @@
   }
   var fileInput = el('input');
   fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.hidden = true;
+  document.body.appendChild(fileInput);   /* in the page, so the picker opens in every browser */
   fileInput.addEventListener('change', function () { var f = fileInput.files && fileInput.files[0]; fileInput.value = ''; addPicture(f); });
 
   function linkRow() {
