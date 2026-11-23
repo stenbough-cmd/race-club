@@ -456,8 +456,16 @@
   /* A text box tied to obj[key]. o.bad (optional) returns true when the value fails a check. */
   function text(label, obj, key, o) {
     o = o || {};
+    /* A date or time box sends a value after every typed digit (a month of "1" is already a date). Redrawing the page then would throw the
+       cursor out of the box after one or two digits, so for these the value is kept at once and the redraw waits until the box is left. */
+    var later = o.type === 'date' || o.type === 'time', pending = false;
     var box = RR.input({ label: label, value: obj[key], type: o.type, placeholder: o.placeholder, wide: o.wide, min: o.min, max: o.max,
-      onChange: function (v) { obj[key] = o.type === 'number' ? Number(v) : v; save(); mark(); if (o.after) o.after(); } });
+      onChange: function (v) { obj[key] = o.type === 'number' ? Number(v) : v; save(); mark(); if (o.after) { if (later) pending = true; else o.after(); } } });
+    if (later) box.querySelector('input').addEventListener('blur', function () {
+      if (!pending) return;
+      pending = false;
+      setTimeout(function () { if (o.after) o.after(); }, 250);   /* after a click on a button has finished, so the click is not lost */
+    });
     function mark() { if (flagged && o.bad && o.bad()) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
     mark();
     return box;
@@ -767,8 +775,7 @@
     }
     var layouts = {};
     races().forEach(function (r) { var L = layoutIndex[r.layoutId]; if (L) layouts[r.layoutId] = { track: L.track, layout: L.layout }; });
-    var firstSave = !S.seasonId;
-    sheetBusy = true; sheetNote = { text: (activate ? 'Creating the season in the Sheet...' : 'Saving the draft to the Sheet...') + (firstSave ? ' The first save also writes the season preview story, so this takes about a minute.' : ''), kind: 'ok' }; drawExport();
+    sheetBusy = true; sheetNote = { text: activate ? 'Creating the season in the Sheet... The season preview story is written now, so this takes about a minute.' : 'Saving the draft to the Sheet...', kind: 'ok' }; drawExport();
     RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }), activate: !!activate }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       S.seasonId = res.seasonId;

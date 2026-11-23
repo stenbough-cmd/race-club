@@ -238,7 +238,16 @@
   var head = el('div', 'rr-page-head');
   var title = el('h1', 'rr-page-title', body.getAttribute('data-rr-title') || '');
   var tools = el('div', 'rr-head-tools');
-  add(head, title, tools);
+  /* Every admin page except the Admin hub itself starts with a breadcrumb: Admin / This page. "Admin" goes back to the hub. */
+  var titleBox = title;
+  if (body.getAttribute('data-rr-main') === 'admin' && body.getAttribute('data-rr-page') !== 'admin-hub') {
+    var crumb = el('nav', 'rr-crumb'), crumbBack = el('a', 'rr-crumb-link', 'Admin');
+    crumb.setAttribute('aria-label', 'Breadcrumb');
+    crumbBack.href = 'admin.html';
+    add(crumb, crumbBack, el('span', 'rr-crumb-sep', '/'), el('span', 'rr-crumb-here', body.getAttribute('data-rr-title') || ''));
+    titleBox = add(el('div', 'rr-title-box'), crumb, title);
+  }
+  add(head, titleBox, tools);
 
   var subtabs = el('nav', 'rr-subtabs');
   subtabs.setAttribute('aria-label', 'Sections');

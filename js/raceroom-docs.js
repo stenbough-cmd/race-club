@@ -99,7 +99,7 @@
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
         ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],
-        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft, Create a season, Export season (.zip)."],
+        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft (kept in the Sheet, shown nowhere else), Create a season (goes live and writes the preview story), Export season (.zip)."],
         ['News Editor', 'news-editor.html, raceroom-news-editor.js', "Write your own posts. Edit, rewrite, withdraw or delete the race stories."],
         ['Stewarding', 'stewarding.html, raceroom-stewarding.js', "Tabs: Protests, and Car and class (drivers who changed car or class)."],
         ['Member Management', 'members.html, raceroom-members.js', "Blacklist (banned from the servers) and Hide Details (kept out of stories by name) for each driver."],

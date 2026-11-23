@@ -386,7 +386,7 @@
         else if (r.status === 'Scheduled') act.appendChild(cancelButton(r, true));
         else if (r.status === 'Cancelled') act.appendChild(cancelButton(r, false));
         var sy = storyState(r.story);
-        if (r.status !== 'Cancelled') act.appendChild(RR.button('Story', function () { openPanel(r); }));
+        if (r.status !== 'Cancelled') act.appendChild(RR.button('Add context', function () { openPanel(r); }));
         if (r.story && r.story.status === 'failed' && (r.status === 'Provisional' || r.status === 'Final')) storyButtons({ kind: 'race', roundId: r.id }, 'story', r.story).forEach(function (b) { act.appendChild(b); });
         return { cells: { n: 'Round ' + r.n, track: RR.cell(r.track, r.layout), date: RR.cell(dmy(r.date), (r.time ? r.time + ' ' : '') + r.zone),
           status: RR.cell(el('span', st[1], st[0]), st[2]), story: RR.cell(el('span', sy[1], sy[0]), sy[2]), act: act } };

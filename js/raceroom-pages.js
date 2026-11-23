@@ -419,9 +419,15 @@
           if (x[1]) info.appendChild(RR.kv(x[0], x[1], true));
         });
       });
+      /* The manufacturer's logo goes in front of the car name once the picture database knows the car's manufacturer. */
+      var title = el('h3', 'rr-card-title rr-season-car-title', k.name);
+      RR.images.ready('r3e').then(function () {
+        var i = RR.images.info('car', k.carId);
+        if (i && i.manufacturer && i.manufacturer.id !== undefined && i.manufacturer.id !== null) title.insertBefore(RR.images.logo(i.manufacturer.id, { className: 'rr-season-mfr', alt: i.manufacturer.name }), title.firstChild);
+      });
       return add(el('div', 'rr-season-car'),
         add(el('div', 'rr-season-car-pic'), RR.images.img('livery', k.liveries[0], { size: 'full', className: 'rr-season-car-img', alt: k.name })),
-        el('h3', 'rr-card-title', k.name), info, strip);
+        title, info, strip);
     }
     function seasonClass(c) {
       var liveries = c.cars.reduce(function (n, k) { return n + k.liveries.length; }, 0), cars = el('div', 'rr-season-cars');

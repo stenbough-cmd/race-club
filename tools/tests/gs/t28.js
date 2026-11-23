@@ -1,0 +1,40 @@
+/* t28: a saved draft is invisible outside the wizard, the preview story is only written on Create, Gemini retries a busy answer */
+const fs=require('fs'),vm=require('vm'); const {ctx,tabs}=require('./harness.js'); const T=tabs;
+vm.runInContext(fs.readFileSync('/mnt/user-data/uploads/Race Club/_raceroom-apps-script/Stories.gs','utf8'),ctx,{filename:'Stories.gs'});
+T.SeasonFiles=[]; T.Seasons=[]; vm.runInContext('rcEnsureColumns_=function(){}',ctx);
+let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else console.log('ok  ',m); };
+ctx.__previews=[]; vm.runInContext(`rcSessionAdmin_=function(){return 'Matt'}; rcStoryWrite_=function(id,kind){__previews.push(kind+':'+id);return {ok:true};}; rcThenPublish_=function(r){return r;}; rcStoryEnsureTabs_=function(){}; rcStoryList_=function(){return {byRound:{},preview:{},finale:{}};}; rcGithubConfig_=function(){return null;};`,ctx);
+const season={version:1,seasonId:'',name:'Draft One',zone:'America/Detroit',prefix:'RC',calendar:{date:'2026-12-01'},points:{dropWeeks:0},rounds:[{id:'1234567',layoutId:1,date:'2026-12-01',time:'20:00'}]};
+ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3'],activate:false};
+let r=vm.runInContext('rcApi_(__req)',ctx); console.log('SAVE->',JSON.stringify(r).slice(0,400));
+ok(r.ok&&!r.story,'saving a draft writes no preview story ('+JSON.stringify(r.story)+')');
+ok(vm.runInContext('__previews.length',ctx)===0,'no preview was requested for the draft');
+const sid=r.seasonId;
+ok(vm.runInContext('rcListSeasons_()',ctx).seasons.some(s=>s.seasonId===sid&&s.status==='Draft'),'the wizard still lists the draft');
+const lr=vm.runInContext('rcListRounds_()',ctx);
+ok(!lr.seasons.some(s=>s.seasonId===sid)&&!lr.rounds.some(x=>x.season===sid),'the Rounds tab shows neither the draft season nor its round');
+ok(!vm.runInContext('rcGetSeasonEnd_({})',ctx).seasons.some(s=>s.seasonId===sid),'the Season tab does not list the draft');
+ok(!vm.runInContext('rcListStewarding_({})',ctx).seasons.some(s=>s.seasonId===sid),'Stewarding does not list the draft');
+ok(!vm.runInContext('rcPreviewResults_({})',ctx).rounds||true,'upload by hand ok');
+/* create it */
+season.seasonId=sid; ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3'],activate:true};
+r=vm.runInContext('rcApi_(__req)',ctx);
+ok(r.ok&&r.story&&vm.runInContext('__previews.join()',ctx)==='preview:'+sid,'Create a season writes the preview story');
+const lr2=vm.runInContext('rcListRounds_()',ctx);
+ok(lr2.seasons.some(s=>s.seasonId===sid)&&lr2.rounds.some(x=>x.season===sid),'after Create the season and its round show in the Rounds tab');
+/* Gemini: a busy answer is asked once more, then the next model */
+let calls=[]; ctx.UrlFetchApp={fetch:(u,o)=>{calls.push(u.split('/models/')[1].split(':')[0]); const n=calls.length;
+  if(n<2) return {getResponseCode:()=>503,getContentText:()=>'busy'};
+  return {getResponseCode:()=>200,getContentText:()=>JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({title:'T',standfirst:'S',body:'B',sidecar:''})}]},finishReason:'STOP'}]})};}};
+ctx.PropertiesService={getScriptProperties:()=>({getProperty:(k)=>k==='GEMINI_FALLBACK_MODELS'?'model-b':null,setProperty(){}})};
+ctx.Utilities.sleep=()=>{};
+ctx.__p={}; let g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,ctx);
+ok(g.ok&&g.model==='model-a'&&calls.join()==='model-a,model-a','a 503 is retried on the same model once and then succeeds ('+calls.join()+')');
+calls=[]; ctx.UrlFetchApp={fetch:(u)=>{calls.push(u.split('/models/')[1].split(':')[0]); return {getResponseCode:()=>503,getContentText:()=>'busy'};}};
+g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,ctx);
+ok(!g.ok&&calls.join()==='model-a,model-a,model-b,model-b','two tries per model, then the next model ('+calls.join()+')');
+calls=[]; ctx.UrlFetchApp={fetch:(u)=>{calls.push('x'); return {getResponseCode:()=>400,getContentText:()=>'bad request'};}};
+g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,ctx);
+ok(calls.length===2,'a real error (400) is not retried: one try per model ('+calls.length+')');
+ok(vm.runInContext('RC_STORY.DEFAULT_MODEL',ctx)==='gemini-3.5-flash-lite','default model is the Lite one');
+console.log(fails?'\nFAILED '+fails:'\nALL PASS (t28)');

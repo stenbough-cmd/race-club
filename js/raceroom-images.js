@@ -212,5 +212,34 @@
     return node;
   }
 
-  RR.images = { tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
+  /* A manufacturer logo that always shows on the light page. RaceRoom's logos are made for a dark background, so many are pure white.
+     When almost every visible pixel of a logo is white or very close to it, the logo is turned black (the class rr-logo-dark).
+     Logos with colour stay as they are. A logo that cannot be found is hidden. RR.images.logo(10978, { className, alt }) */
+  var WHITE_SHARE = 0.85, WHITE_MIN = 215;
+  function logo(manufacturerId, o) {
+    o = o || {};
+    var node = img('manufacturer', manufacturerId, { className: o.className || 'rr-r3e-img', alt: o.alt, source: o.source });
+    function check() {
+      if (node.getAttribute('data-r3e') === 'missing') { node.hidden = true; return; }
+      node.hidden = false;
+      try {
+        var c = document.createElement('canvas'), g;
+        c.width = c.height = 32;
+        g = c.getContext('2d');
+        g.drawImage(node, 0, 0, 32, 32);
+        var px = g.getImageData(0, 0, 32, 32).data, seen = 0, white = 0;
+        for (var i = 0; i < px.length; i += 4) {
+          if (px[i + 3] < 40) continue;
+          seen++;
+          if (px[i] > WHITE_MIN && px[i + 1] > WHITE_MIN && px[i + 2] > WHITE_MIN) white++;
+        }
+        node.classList.toggle('rr-logo-dark', seen > 0 && white / seen >= WHITE_SHARE);
+      } catch (e) { /* the picture came from another site and cannot be read: leave it as it is */ }
+    }
+    node.addEventListener('load', check);
+    if (node.complete && node.naturalWidth) check();
+    return node;
+  }
+
+  RR.images = { logo: logo, tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
 })();
