@@ -680,6 +680,9 @@ button, select { font-family: inherit; }
 .rr-barlist-value { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ---------- Tags ---------- */
+.rr-btn-lock { width: 34px; padding: 0; }
+.rr-btn-lock svg { margin-right: 0; }
+.rr-btn-locked { border-color: var(--rr-text); }
 .rr-sky { display: inline-flex; align-items: center; gap: 4px; }
 .rr-sky-icon svg { display: block; width: 22px; height: 22px; }
 .rr-sky-next svg { display: block; width: 12px; height: 12px; opacity: 0.6; }
