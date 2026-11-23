@@ -387,9 +387,9 @@
           .filter(function (x) { return x.avg; }).sort(function (a, b) { return a.avg - b.avg; });
         var fastest = rows.length ? rows[0].avg : 0;
         fill(right, RR.heading(r.track + ' · ' + r.layout), picker, RR.table([
-          { key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'time', label: 'Race time', num: true, sort: true },
-          { key: 'lap', label: 'Avg lap time', num: true, sort: true },
-          { key: 'delta', label: 'Delta leader', num: true, sort: true }, { key: 'car', label: 'Car / Class', sort: true }
+          { key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
+          { key: 'time', label: 'Race time', num: true, sort: true }, { key: 'lap', label: 'Avg lap time', num: true, sort: true },
+          { key: 'delta', label: 'Delta leader', num: true, sort: true }
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
