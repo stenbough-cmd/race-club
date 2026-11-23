@@ -59,6 +59,12 @@
           photo: n.photos && n.photos[0] && n.photos[0].src ? n.photos[0].src : '',
           href: 'story.html?id=' + encodeURIComponent(n.id)
         }));
+        /* A plain click opens the story in a popup; a click with Ctrl, Cmd or Shift (or a middle click) still follows the link. */
+        grid.lastChild.addEventListener('click', function (e) {
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+          e.preventDefault();
+          openStory(posts, posts.indexOf(n));
+        });
       });
       main.appendChild(add(el('div', 'rr-news'), grid,
         RR.pager(pages, p, function (n) { location.hash = n === 1 ? '' : 'page-' + n; })));
@@ -69,14 +75,10 @@
     draw();
   };
 
-  /* ---------------- ONE POST (story.html) ---------------- */
-  PAGES.story = function () {
-    var main = document.querySelector('main');
-    var posts = newestFirst(), at = -1;
-    posts.forEach(function (n, i) { if (n.id === RR.param('id')) at = i; });
-    if (at < 0) { main.appendChild(RR.empty('This post could not be found.')); return; }
-    var n = posts[at];
-    document.title = n.title + ' | Race Club';
+  /* ---------------- ONE POST: a popup window over the News page ----------------
+     Clicking a story on the News page opens it in a popup the size of the Edit story popup (RR.modal), with the banner and the story inside
+     and Newer story / Older story buttons at the bottom. story.html?id=... still works as a link: it shows the News page with that story open. */
+  function storyView(n) {
     var art = el('article', 'rr-article');
     /* The first photo is the banner: the same picture as the story's tile on the News page, with the title over it. The other photos sit inside the story. */
     var allPhotos = (n.photos || []).filter(function (ph) { return ph && ph.src; });
@@ -130,16 +132,34 @@
     }
     /* After an edit: the date and the reason, in italics, at the very bottom. */
     if (n.editNote) art.appendChild(el('p', 'rr-edit-note', 'Edited ' + n.editNote.date + '. Reason: ' + n.editNote.reason + '.'));
-    /* Left: the latest stories (the open one is highlighted). Right: the banner and the story. Same layout as the Lap times page. */
-    var latest = posts.slice(0, 10);
-    if (at >= 10) latest.push(n);
-    var items = latest.map(function (m) { return [m.id, m.title]; });
-    var list = RR.sidelist(items, function (id) { location.href = 'story.html?id=' + encodeURIComponent(id); });
-    Array.prototype.forEach.call(list.children, function (row, i) { row.setAttribute('aria-pressed', items[i][0] === n.id ? 'true' : 'false'); });
-    main.appendChild(add(el('div', 'rr-split rr-story-split'), add(el('div', 'rr-story-side'), list), add(el('div', 'rr-stack'), banner, art)));
-    /* Flip from story to story: the left link goes to the newer story, the right link to the older one. */
-    function storyLink(m, label) { return m && { label: label, href: 'story.html?id=' + encodeURIComponent(m.id) }; }
-    RR.setSteps(storyLink(posts[at - 1], 'Newer story'), storyLink(posts[at + 1], 'Older story'));
+    return [banner, art];
+  }
+
+  function openStory(posts, at, onClose) {
+    var win = RR.modal(posts[at].title, onClose);
+    function show(i) {
+      at = i;
+      var n = posts[at], nodes = storyView(n);
+      win.setTitle(n.title);
+      win.body.textContent = '';
+      nodes.forEach(function (node) { win.body.appendChild(node); });
+      var nav = el('div', 'rr-story-nav');
+      if (posts[at - 1]) nav.appendChild(RR.button('Newer story', function () { show(at - 1); }));
+      if (posts[at + 1]) nav.appendChild(RR.button('Older story', function () { show(at + 1); }));
+      if (nav.children.length) win.body.appendChild(nav);
+      win.body.scrollTop = 0;
+    }
+    show(at);
+    return win;
+  }
+
+  PAGES.story = function () {
+    PAGES.news();
+    var posts = newestFirst(), at = -1;
+    posts.forEach(function (n, i) { if (n.id === RR.param('id')) at = i; });
+    if (at < 0) return;
+    document.title = posts[at].title + ' | Race Club';
+    openStory(posts, at, function () { location.href = 'news.html'; });
   };
 
   /* ---- Season helpers: every Leaderboards and profile page reads the league through these ---- */

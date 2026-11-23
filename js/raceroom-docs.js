@@ -84,7 +84,7 @@
     panel('Public pages', [
       grid(['Page', 'Files', 'What it does'], [
         ['Home', 'index.html, raceroom-home.js', "Tiles for News, League (leaderboards), Drivers and About Race Club."],
-        ['News', 'news.html, story.html', "The race stories and your own posts, newest first. A story opens on its own page."],
+        ['News', 'news.html, story.html', "The race stories and your own posts, newest first. A story opens in a popup."],
         ['League', 'leaderboards.html', "The League menu item. Tabs: Standings, Race Results, Lap Times, Schedule, Season. A season dropdown covers old seasons too."],
         ['Drivers', 'drivers.html, driver.html', "Every driver. A profile has Overview, Race History, Statistics, Achievements and Leaderboards."],
         ['File a Protest', 'protest.html', "The protest form (flag icon, top right). It needs the round password."],
