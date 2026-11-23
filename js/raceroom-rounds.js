@@ -4,7 +4,7 @@
    file but never uses it. A newer file for a round that is already live waits here too and changes nothing until you confirm it.
    A round with no results can be cancelled (and restored). Both Confirm and Deny use the two-click button.
    Stories: Confirm also writes the round's story (about a minute) once the results are live. The Story button of a round opens its notes
-   (rivalries between drivers who raced, a short note for the writer) and up to 3 photos with captions; a failed story shows Retry story,
+   (rivalries between drivers who raced, a short note for the writer) and up to 3 photos with captions, with a Hero tick and a Use a track photo tick; a failed story shows Retry story,
    a written one can be rewritten. The Season preview is written when a season is saved for the first time and is retried here too.
    The list is read when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
@@ -145,7 +145,7 @@
   function openPanel(r) {
     var riv = [['', ''], ['', ''], ['', '']];
     (r.rivalries || []).slice(0, 3).forEach(function (p, i) { riv[i] = [String(p[0]), String(p[1])]; });
-    panel = { roundId: r.id, rivals: riv, note: r.note || '', caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
+    panel = { roundId: r.id, rivals: riv, note: r.note || '', choice: { hero: (r.photoChoice && r.photoChoice.hero) || '', track: r.photoChoice ? r.photoChoice.track : undefined }, caps: [0, 1, 2].map(function (i) { return (r.photos && r.photos[i] && r.photos[i].caption) || ''; }) };
     message = null; review = null;
     draw();
   }
@@ -189,6 +189,37 @@
     row.appendChild(pick);
     return row;
   }
+  /* Which pictures the story uses is the organizer's choice. Uploaded pictures are always used. The track picture is used when ticked
+     (ticked for you when nothing is uploaded). A story has at most 3 pictures, so with 3 uploaded there is no room for the track picture.
+     The hero is the picture that opens the story: the one ticked, else the track picture when used, else the first upload. */
+  function pictureState(r) {
+    var ups = [0, 1, 2].filter(function (i) { return r.photos && r.photos[i] && r.photos[i].src; });
+    var track = ups.length >= 3 ? false : (panel.choice.track === undefined ? ups.length === 0 : !!panel.choice.track);
+    var used = ups.map(function (i) { return String(i + 1); }).concat(track ? ['track'] : []);
+    var hero = used.indexOf(panel.choice.hero) >= 0 ? panel.choice.hero : (track ? 'track' : (used[0] || ''));
+    return { ups: ups, track: track, hero: hero, full: ups.length >= 3 };
+  }
+  function pictureChoices(r) {
+    var ps = pictureState(r), box = el('div', 'rr-stack');
+    var rows = [];
+    ps.ups.forEach(function (i) {
+      rows.push(RR.row(el('span', 'rr-body', 'Photo ' + (i + 1)), RR.checkbox('Hero (opens the story)', function (on) { panel.choice.hero = on ? String(i + 1) : ''; draw(); }, ps.hero === String(i + 1))));
+    });
+    var trackBox = RR.checkbox('Use a track photo', function (on) { panel.choice.track = on; if (!on && panel.choice.hero === 'track') panel.choice.hero = ''; draw(); }, ps.track);
+    if (ps.full) trackBox.querySelector('input').disabled = true;
+    rows.push(RR.row(trackBox, ps.track ? RR.checkbox('Hero (opens the story)', function (on) { panel.choice.hero = on ? 'track' : ''; draw(); }, ps.hero === 'track') : null));
+    rows.forEach(function (x) { box.appendChild(x); });
+    box.appendChild(el('p', 'rr-body', ps.full ? 'Three of your photos are used, which is the most a story has, so there is no room for a track photo.' :
+      (ps.ups.length || panel.choice.track !== undefined ? 'The story uses the pictures ticked here. The writer only decides where each one sits among the paragraphs.' : 'Nothing is chosen yet, so the story opens with a picture of the track.')));
+    box.appendChild(RR.row(RR.button('Save picture choices', function () {
+      var send = { roundId: r.id, hero: panel.choice.hero };
+      if (panel.choice.track !== undefined) send.track = panel.choice.track;
+      RR.api('savePhotoChoice', send).then(function (res) {
+        if (res && res.ok) { message = { text: 'Picture choices saved. They are used the next time the story is written or rewritten.', kind: 'ok' }; load(); } else panelFail(res);
+      });
+    }, true)));
+    return box;
+  }
   function storyPanel() {
     var r = data.rounds.filter(function (x) { return x.id === panel.roundId; })[0];
     if (!r) { panel = null; return null; }
@@ -217,8 +248,9 @@
       });
     }, true)));
     box.appendChild(el('h3', 'rr-card-title', 'Photos'));
-    box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each. A picture of the track is always used as well, unless you add all 3. The writer places them in the story from their captions.'));
+    box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each. You decide which pictures are used and which one opens the story; the writer only places them among the paragraphs from their captions. If you choose nothing, the story uses a picture of the track.'));
     for (var i = 0; i < 3; i++) box.appendChild(photoSlot(r, i));
+    box.appendChild(pictureChoices(r));
     box.appendChild(RR.row(RR.button('Close', function () { panel = null; draw(); })));
     return box;
   }
