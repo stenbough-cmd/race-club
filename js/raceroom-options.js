@@ -1,7 +1,7 @@
 /* Race Club admin: Website Documentation (the last two tabs of website-options.html).
    Reminders for the admin about how to change parts of the site. Nothing here changes anything by itself.
    The first five tabs (Overview, Pages, Running a season, Behind the scenes, How to change things) are in raceroom-docs.js.
-   Tab "Tile pictures": how to make and replace the pictures on the four home tiles. The admin buttons use icons, not pictures.
+   Tab "Tile pictures": how to make and replace the pictures on the four home tiles.
    Tab "Picture database": what the RaceRoom picture and car details store holds and how it is kept up to date.
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {

@@ -3,8 +3,10 @@
    it or give 1, 3 or 5 points, or a DSQ (a DSQ needs a comment). Penalties given in the game are final; this is only for what the game
    cannot see. The filer's own words are shown here and are never public. Everything else, including your comment, is public.
    A ruling can be reopened: the penalty is cancelled by a new record, the old one stays on the Penalties tab.
-   Car and class tab: a driver who raced in another car or class than the one they first raced in the season. You decide: DSQ for the
-   night (needs a comment) or leave it. The list is read when the page opens and after a change made here (never on a timer).
+   Car and class tab: a driver who raced in another car or class than the one they first raced in the season. This is checked as soon as
+   a results file is uploaded (waiting rounds included), and the tab shows a red exclamation until every one is decided. Points only ever count
+   in the first class, so results in another class are left out automatically; you decide whether to DSQ the night (needs a comment) or leave it.
+   Protests and car and class changes are read together in one request when the page opens and after a change made here (never on a timer).
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
   'use strict';
@@ -148,6 +150,7 @@
     var box = el('div', 'rr-panel rr-stack');
     box.appendChild(RR.heading('Round ' + f.n + ' · ' + f.name));
     box.appendChild(RR.row(RR.kv('Locked at their first round', f.lockedCar + ' (' + f.lockedClass + ')'), RR.kv('Used in this round', f.usedCar + ' (' + f.usedClass + ')')));
+    if (f.classChange) box.appendChild(RR.notice('A driver can only score in one class. Their results in ' + f.usedClass + ' are not counted in the results or the points, whatever you decide here.', 'warn'));
     if (f.state === 'open') {
       if (!form || form.id !== flagKey(f)) form = { id: flagKey(f), comment: '' };
       box.appendChild(el('p', 'rr-body', 'A DSQ takes away every race of that night, with the bonus points. Your comment is shown publicly under the race story.'));
@@ -185,16 +188,18 @@
   function drawPolicy() {
     viewF.textContent = '';
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Car and class changes'),
-      el('p', 'rr-body', 'A driver’s car and class are locked by their first confirmed round of the season. Anyone who raced in another car or class later is listed here. You decide.'));
+      el('p', 'rr-body', 'A driver’s class is locked by the first class they raced in the season, and points only ever count there. Anyone who raced in another class or car later is listed here as soon as their results file is uploaded, even before the round is confirmed. You decide.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else {
       if (message) box.appendChild(RR.notice(message.text, message.kind));
+      var openFlags = data.flags.filter(function (f) { return f.state === 'open'; }).length;
+      if (openFlags) box.appendChild(RR.notice(plural(openFlags, 'driver needs', 'drivers need') + ' a decision.', 'warn'));
       box.appendChild(RR.table([
-        { key: 'round', label: 'Round', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'locked', label: 'Locked' }, { key: 'used', label: 'Used' }, { key: 'state', label: 'Decision' }, { key: 'act', label: '' }
+        { key: 'round', label: 'Round', sorted: true }, { key: 'driver', label: 'Driver' }, { key: 'kind', label: 'Change' }, { key: 'locked', label: 'Locked' }, { key: 'used', label: 'Used' }, { key: 'state', label: 'Decision' }, { key: 'act', label: '' }
       ], data.flags.map(function (f) {
         var act = RR.button(f.state === 'open' ? 'Decide' : 'View', function () { openFlag = flagKey(f); form = null; message = null; draw(); });
-        return { cells: { round: 'Round ' + f.n, driver: f.name, locked: RR.cell(f.lockedCar, f.lockedClass), used: RR.cell(f.usedCar, f.usedClass),
+        return { cells: { round: 'Round ' + f.n, driver: f.name, kind: f.classChange ? 'Class' : 'Car', locked: RR.cell(f.lockedCar, f.lockedClass), used: RR.cell(f.usedCar, f.usedClass),
           state: f.state === 'open' ? 'Waiting' : (f.state === 'dsq' ? 'DSQ' : 'Left as it was'), act: act } };
       }), 'Nobody has changed car or class.'));
     }

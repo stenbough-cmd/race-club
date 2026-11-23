@@ -29,8 +29,8 @@
       "Names, results and lap times are public."
     ]),
     panel('One car for the season', [
-      "Pick one car and class and stay in it all season. Points count only in the class you first raced in.",
-      "Racing a later round in another car or class can get you disqualified from that night.",
+      "Pick one car and class and stay in it all season. The first class you race in is your class for the whole season, and you can only ever score points in it.",
+      "Results in any other class are never counted, and the stewards are told about them as soon as the results are uploaded. Racing a later round in another car can also get you disqualified from that night.",
       "Using the same livery all season is encouraged, but it is not a rule."
     ]),
     panel('After the race', [
@@ -58,7 +58,9 @@
     panel('Dropped rounds and ties', [
       "Each season drops its worst rounds. A round you missed counts as zero and is dropped first. Bonus points go with the round they were earned in.",
       "Penalty points are taken off your season total. They stay even when the round they came from is dropped. A total can go below zero.",
-      "If two drivers have the same points, the one with more wins is ahead, then more second places, and so on."
+      "Drivers are ranked inside their own class only. Drivers from different classes are never ranked together.",
+      "If two drivers in a class have the same points, the one with more wins is ahead. If that is level, the one with more second places, then more third places, and so on down the finishing order. If they are still level, the one who reached their best result first, in an earlier round, is ahead.",
+      "Finishing places count from every race you finished, including races in a dropped round. Rounds still waiting out their protest window do not count yet, for points or for this tie-break."
     ])
   ));
 
@@ -66,7 +68,7 @@
   add(RR.view('penalties'), stack(
     panel('What stewards look at', [
       "Penalties given in the game are final. Stewards only look at what the game cannot see, such as contact it missed.",
-      "Stewards also look at drivers who raced in a different car or class than the one they started the season in.",
+      "Stewards also look at drivers who raced in a different car or class than the one they started the season in. A class change never scores, and the steward decides if more is needed.",
       "Penalties are points taken off your season total. There are no time penalties."
     ]),
     panel('The penalties', [

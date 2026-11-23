@@ -138,7 +138,7 @@
         "A newer file for a round that is still waiting replaces it. After a round is confirmed, a newer file is HELD and changes nothing until you confirm it.",
         "Cancel round works only for a round with no results. Restore brings it back.",
         "Stewarding, Protests: Review a protest, then rule on it: dismiss, 1, 3 or 5 points, or a DSQ for that race. Your comment is public, and a DSQ needs one. A ruling can be reopened or reversed.",
-        "Stewarding, Car and class: a driver who raced another car or class than the one they started with. You choose a DSQ for the whole night, or Clear to leave it.",
+        "Stewarding, Car and class: a driver who raced another car or class than the one they started with. You choose a DSQ for the whole night, or Leave it. A driver can only score in the first class they raced in the season: results in another class are always left out of the standings, and the flag appears the moment the file is uploaded (before Confirm too), with a red exclamation on the tab. Stewarding reads protests and these flags in one request.",
         "A round counts in the standings once its window (scheduled start plus 12 hours) has ended and no protest is open.",
         "Posted by the server lists everything the server sent and what happened to it. Upload by hand adds a results file yourself. It has the same checks but sends no alert.",
         "News Editor: write posts, edit a story with a reason (shown at the bottom of the story), withdraw and republish, or delete and undo."
@@ -146,7 +146,7 @@
     ]),
     panel('End of season', [
       list([
-        "Results, Season tab, End season: it names the champion of each class (drop weeks and penalties applied, ties by wins, then second places), sets the season to Finished and writes the recap story.",
+        "Results, Season tab, End season: it names the champion of each class (drop weeks and penalties applied, ties by wins, then second places and so on, then who reached the best result first), sets the season to Finished and writes the recap story.",
         "It refuses while a round is waiting or a protest is open. If some rounds were not raced, it asks first and cancels them.",
         "Reopen season undoes it: the season is Active again, the champions are cleared and the recap story is withdrawn.",
         "Drivers and their career stats carry over. Classes are chosen fresh in the next season."
@@ -256,7 +256,7 @@
         ['Standings or a page show old data', 'Results, Rounds', "Press Publish site data, then hard refresh (Cmd+Shift+R)."],
         ['Publish says GitHub is not set up', 'Race Club menu', "Publish: set up GitHub, and check the token has not expired."],
         ['A story failed or reads badly', 'Results, Rounds', "Retry story, or Rewrite story. Or edit it in the News Editor."],
-        ['A driver is in the wrong class or has no points', 'Stewarding, Car and class; Results tab', "A driver counts in the class of their first confirmed round. Check the flag and the Season page."],
+        ['A driver is in the wrong class or has no points', 'Stewarding, Car and class; Results tab', "A driver counts only in the class of the first round they raced in the season; later rows in another class are left out and flagged in Stewarding, Car and class. Check the flag and the Season page."],
         ['Cannot log in', 'The Sheet, Race Club menu', "Too many wrong tries lock the login for 15 minutes. Add an admin or change a password resets a forgotten password."],
         ['The Race Club menu is missing in the Sheet', 'The browser', "Reload the Sheet tab."],
         ['A picture is old or missing', 'The browser, assets/r3e', "Hard refresh. For RaceRoom pictures see Picture database."],

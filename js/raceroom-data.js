@@ -230,6 +230,7 @@
     data.seasons = live.seasons.map(function (s) {
       var settled = !(s.windowEnd > now) && !(s.openProtests > 0);
       s.totals = settled ? s.totalsWith : s.totals;
+      s.order = settled ? s.order : (s.orderWithout || s.order);   /* the class order follows the same snapshot as the totals */
       s.rounds.forEach(function (r) {
         /* Waiting while the window is open or a protest is still open. Protests can only be filed while the window is open. */
         var inWindow = r.done && r.windowEnd > now, waiting = r.done && (inWindow || r.protestsOpen > 0);
@@ -249,16 +250,19 @@
   data.rounds = data.season.rounds;
   data.results = data.season.results;
 
-  /* Totals per driver. points and the race counts are for the CURRENT season (the Drivers list); career is every season. */
+  /* Totals per driver for the Drivers list: races, wins, podiums and points over every season they raced. */
   data.drivers.forEach(function (d) {
-    function sum(list) {
-      return { races: list.length, wins: list.filter(function (r) { return r.pos === 1 && r.status === 'Finished'; }).length,
-        podiums: list.filter(function (r) { return r.pos <= 3 && r.status === 'Finished'; }).length };
-    }
-    var mine = data.results.filter(function (r) { return r.driver === d.id; });
-    var s = sum(mine);
-    d.races = s.races; d.wins = s.wins; d.podiums = s.podiums;
-    d.points = data.season.totals[d.id] ? data.season.totals[d.id].total : 0;
+    var races = 0, wins = 0, podiums = 0, points = 0;
+    data.seasons.forEach(function (s) {
+      s.results.forEach(function (r) {
+        if (r.driver !== d.id) return;
+        races++;
+        if (r.status === 'Finished' && r.pos === 1) wins++;
+        if (r.status === 'Finished' && r.pos <= 3) podiums++;
+      });
+      if (s.totals[d.id]) points += s.totals[d.id].total;
+    });
+    d.races = races; d.wins = wins; d.podiums = podiums; d.points = points;
   });
 
   window.RR_DATA = data;
