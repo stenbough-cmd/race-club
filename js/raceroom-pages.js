@@ -119,17 +119,6 @@
       paraNo++;
     });
     photos.forEach(function (ph) { art.appendChild(figure(ph)); });     // a photo whose paragraph number is past the end goes last
-    /* What the stewards decided after the race (added once every protest is ruled): driver, what for, the penalty and the steward's comment. */
-    if (n.addendum && n.addendum.length) {
-      art.appendChild(el('h2', 'rr-article-sub', 'Steward decisions'));
-      art.appendChild(RR.table([
-        { key: 'driver', label: 'Driver' }, { key: 'why', label: 'For' }, { key: 'where', label: 'Where' }, { key: 'pen', label: 'Penalty' }
-      ], n.addendum.map(function (a) {
-        var d = byId(D.drivers, a.driver);
-        return { cells: { driver: d ? RR.nameWithFlag(d.name, d.country) : a.name, why: RR.cell(a.infraction, a.comment || ''),
-          where: a.lap ? 'Race ' + a.race + ' · lap ' + a.lap : 'Whole night', pen: a.penalty } };
-      }), ''));
-    }
     /* After an edit: the date and the reason, in italics, at the very bottom. */
     if (n.editNote) art.appendChild(el('p', 'rr-edit-note', 'Edited ' + n.editNote.date + '. Reason: ' + n.editNote.reason + '.'));
     return [banner, art];
