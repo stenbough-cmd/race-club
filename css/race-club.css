@@ -1040,6 +1040,9 @@ button, select { font-family: inherit; }
 
 /* the line under each rules category, the same line that sits under the header row of the Race weekend table */
 .rr-season-rule-head { padding: 8px 0; border-bottom: 1px solid var(--rr-line); }
+.rr-season-rules .rr-stack-tight { gap: 0; }
+.rr-season-rules .rr-kv-row { padding: 6px 8px; }
+.rr-season-rules .rr-kv-row:nth-child(even) { background: var(--rr-panel); }
 .rr-season-rules { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (orientation: portrait) {
   .rr-season-cars, .rr-season-rules { grid-template-columns: minmax(0, 1fr); }

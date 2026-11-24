@@ -423,8 +423,8 @@
     var TIMES_OF_DAY = ['Dawn', 'Morning', 'Noon', 'Afternoon', 'Sunset'];
     function drawSchedule() {
       fill(RR.view('schedule'), RR.table([
-        { key: 'n', label: 'Round', sort: true, sorted: true }, { key: 'track', label: 'Track', sort: true }, { key: 'date', label: 'Date', sort: true },
-        { key: 'time', label: 'Time', sort: true }, { key: 'race', label: 'Race time', sort: true }, { key: 'sky', label: 'Weather', sort: true }, { key: 'status', label: 'Status', sort: true }
+        { key: 'n', label: 'Round', sort: true, sorted: true }, { key: 'date', label: 'Date', sort: true }, { key: 'time', label: 'Time', sort: true },
+        { key: 'track', label: 'Track', sort: true }, { key: 'race', label: 'Race time', sort: true }, { key: 'sky', label: 'Weather', sort: true }, { key: 'status', label: 'Status', sort: true }
       ], season.rounds.filter(function (r) { return !onlyUpcoming || (!r.done && !r.cancelled); }).map(function (r) {
         var at = localStart(r);
         return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
