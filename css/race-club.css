@@ -25,6 +25,9 @@
   --rr-font: "Montserrat", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --rr-pad: 32px;
   --rr-gap: 8px;
+  --rr-purple: #A855F7;
+  --rr-blue: #3B82F6;
+  --rr-gold: #E5B93C;
   --rr-gap-tiles: 16px;   /* space between photo tiles and news tiles */
   --rr-control: rgba(23, 23, 23, 0.06);
   --rr-well: rgba(23, 23, 23, 0.05);
@@ -706,6 +709,12 @@ button, select { font-family: inherit; }
 /* ---------- Change indicator ---------- */
 .rr-delta-up { color: var(--rr-up); }
 .rr-delta-down { color: var(--rr-red); }
+.rr-delta-none { color: var(--rr-muted); }
+.rr-dots { display: inline-flex; gap: 4px; align-items: center; }
+.rr-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.rr-dot-fast { background: var(--rr-purple); }
+.rr-dot-clean { background: var(--rr-blue); }
+.rr-dot-pole { background: var(--rr-gold); }
 
 /* ---------- Photo tile and promo tile ---------- */
 .rr-tile, .rr-promo {

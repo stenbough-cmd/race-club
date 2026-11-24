@@ -216,12 +216,20 @@
   function resultCell(x) {
     return RR.cell(x.status === 'Finished' ? RR.pos(x.pos) : x.status, 'of ' + x.of);
   }
-  /* Places gained (green +n) or lost (red -n) from the start to the finish. A driver who did not finish shows a dash. */
+  /* Places gained (green triangle up and the number) or lost (red triangle down). A dash means the driver kept the grid place, or did not finish. */
   function diffPos(x) {
-    if (x.status !== 'Finished' || !x.start) return '-';
+    if (x.status !== 'Finished' || !x.start) return el('span', 'rr-delta-none', '-');
     var n = x.start - x.pos;
-    if (!n) return '0';
-    return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '+' : '-') + Math.abs(n));
+    if (!n) return el('span', 'rr-delta-none', '-');
+    return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(n));
+  }
+  /* Bonus dots: purple = fastest lap, blue = clean race, gold = pole. Counts, so a night total can show one dot per race. */
+  function bonusDots(fast, clean, pole) {
+    var box = el('span', 'rr-dots'), any = false;
+    [[fast, 'rr-dot-fast', 'Fastest lap'], [clean, 'rr-dot-clean', 'Clean race'], [pole, 'rr-dot-pole', 'Pole']].forEach(function (k) {
+      for (var i = 0; i < k[0]; i++) { box.appendChild(el('span', 'rr-dot ' + k[1])).title = k[2]; any = true; }
+    });
+    return any ? box : el('span', 'rr-delta-none', '-');
   }
   /* Penalty points come off the season total (taken once per night, shown on the first race of the night). */
   function penaltyText(x) { return x.penaltyPoints ? '-' + x.penaltyPoints : '-'; }
@@ -249,6 +257,12 @@
   PAGES.leaderboards = function () {
     var season = D.seasons[0], cls = 'all', pickedRound = null, pickedTrack = null, onlyUpcoming = false, pickedRace = 1, pickedLapRace = 1;
     var classBox = el('div');
+    /* The pole bonus points for a race row: only on the row that carries the pole, and only when the season pays one. */
+    function poleFor(x) {
+      if (!x.pole) return 0;
+      var p = (season.poleBonus || []).filter(function (q) { return q.round === x.round && q.driver === x.driver; })[0];
+      return p ? p.points : 0;
+    }
 
     function drawStandings() {
       var rows = seasonRows(season, cls), done = doneRounds(season), lead = rows[0], second = rows[1];
@@ -313,20 +327,21 @@
           /* Night total: the races added together, plus the night's pole bonus. Best in each class first. */
           var by = {};
           inClass.forEach(function (x) {
-            var g = by[x.driver] = by[x.driver] || { driver: x.driver, cls: x.cls, car: x.car || '', finishes: [], best: 0, inc: 0, points: 0, bonus: 0 };
+            var g = by[x.driver] = by[x.driver] || { driver: x.driver, cls: x.cls, car: x.car || '', finishes: [], best: 0, inc: 0, points: 0, bonus: 0, fast: 0, clean: 0, pole: 0 };
+            g.fast += (x.bonusFastest !== undefined ? x.bonusFastest : x.fastest) ? 1 : 0; g.clean += x.bonusClean ? 1 : 0;
             if (!g.car && x.car) g.car = x.car;
             g.finishes[(x.race || 1) - 1] = x.status === 'Finished' ? 'P' + x.pos : x.status;
             if (x.best > 0 && (!g.best || x.best < g.best)) g.best = x.best;
             g.inc += x.incidents; g.points += x.points; g.bonus += x.bonus;
           });
-          (season.poleBonus || []).forEach(function (p) { if (p.round === pickedRound && by[p.driver]) by[p.driver].bonus += p.points; });
+          (season.poleBonus || []).forEach(function (p) { if (p.round === pickedRound && by[p.driver]) { by[p.driver].bonus += p.points; by[p.driver].pole = 1; } });
           var list2 = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) {
             return a.cls.localeCompare(b.cls) || (b.points + b.bonus) - (a.points + a.bonus) || driver(a.driver).name.localeCompare(driver(b.driver).name);
           });
           var count = {};
           table = RR.table([
             { key: 'pos', label: 'Night', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
-            { key: 'fin', label: 'Race finishes', sort: true }, { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'inc', label: 'Inc', num: true, sort: true },
+            { key: 'fin', label: 'Race finishes', sort: true }, { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'bonus', label: 'Bonus', sort: true, desc: true }, { key: 'inc', label: 'Inc', num: true, sort: true },
             { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], list2.map(function (g) {
             var d = driver(g.driver), fin = [];
@@ -334,31 +349,33 @@
             count[g.cls] = (count[g.cls] || 0) + 1;
             return { href: profileLink(d), linkCol: 1, cells: {
               pos: RR.cell(RR.pos(count[g.cls])), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: RR.cell(g.car || '-', className(g.cls)),
-              fin: fin.join(' · '), best: RR.lap(g.best), inc: g.inc, pts: pointsNode({ points: g.points, bonus: g.bonus })
+              fin: fin.join(' · '), best: RR.lap(g.best), bonus: bonusDots(g.fast, g.clean, g.pole), inc: g.inc, pts: pointsNode({ points: g.points, bonus: g.bonus })
             }, sort: {
               /* Night: best first inside each class. Race finishes: the places added up (a race without a finish counts as 99). */
               pos: g.cls + '|' + ('000' + count[g.cls]).slice(-3), driver: d.name.toLowerCase(), car: String(g.car || '').toLowerCase(),
               fin: fin.reduce(function (a, f) { return a + (/^P\d+$/.test(f) ? Number(f.slice(1)) : 99); }, 0),
-              best: g.best > 0 ? g.best : null, inc: g.inc, pts: g.points + g.bonus
+              best: g.best > 0 ? g.best : null, bonus: g.fast + g.clean + g.pole, inc: g.inc, pts: g.points + g.bonus
             } };
           }), 'No results for this class.');
         } else {
           var rows = inClass.filter(function (x) { return (x.race || 1) === pickedRace; }).sort(function (a, b) { return a.cls.localeCompare(b.cls) || a.pos - b.pos; });
           table = RR.table([
             { key: 'pos', label: 'Result', sorted: true, sort: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
-            { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'gap', label: 'Gap', num: true, sort: true }, { key: 'diff', label: 'Diff pos', num: true, sort: true, desc: true },
-            { key: 'inc', label: 'Inc', num: true, sort: true }, { key: 'pen', label: 'Pen', num: true, sort: true }, { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
+            { key: 'time', label: 'Race time', num: true, sort: true }, { key: 'gap', label: 'Gap', num: true, sort: true }, { key: 'diff', label: 'Diff', num: true, sort: true, desc: true },
+            { key: 'bonus', label: 'Bonus', sort: true, desc: true }, { key: 'inc', label: 'Inc', num: true, sort: true }, { key: 'pen', label: 'Pen', num: true, sort: true }, { key: 'pts', label: 'Points', num: true, sort: true, desc: true }
           ], rows.map(function (x) {
             var d = driver(x.driver);
             return { href: profileLink(d), linkCol: 1, cells: {
               pos: resultCell(x), driver: RR.cell(RR.nameWithFlag(d.name, d.country)), car: RR.cell(x.car || '-', className(x.cls)),
-              best: RR.lap(x.best), gap: RR.gap(x.gap), diff: diffPos(x), inc: x.incidents, pen: penaltyText(x), pts: pointsNode(x)
+              time: RR.raceTime(x.time), gap: RR.gap(x.gap), diff: diffPos(x), bonus: bonusDots(x.bonusFastest !== undefined ? x.bonusFastest : x.fastest ? 1 : 0, x.bonusClean ? 1 : 0, poleFor(x) ? 1 : 0),
+              inc: x.incidents, pen: penaltyText(x), pts: pointsNode({ points: x.points, bonus: x.bonus + poleFor(x) })
             }, sort: {
               /* Result: finishing order inside each class, as the rows come. */
               pos: x.cls + '|' + ('000' + x.pos).slice(-3), driver: d.name.toLowerCase(), car: String(x.car || '').toLowerCase(),
-              best: x.best > 0 ? x.best : null, gap: x.status === 'Finished' && x.pos > 1 ? x.gap : null,
+              time: x.time > 0 ? x.time : null, gap: x.status === 'Finished' && x.pos > 1 ? x.gap : null,
+              bonus: (x.bonusFastest !== undefined ? x.bonusFastest : x.fastest ? 1 : 0) + (x.bonusClean ? 1 : 0) + (poleFor(x) ? 1 : 0),
               diff: x.status === 'Finished' && x.start ? x.start - x.pos : null,
-              inc: x.incidents, pen: x.penaltyPoints || 0, pts: x.points + x.bonus
+              inc: x.incidents, pen: x.penaltyPoints || 0, pts: x.points + x.bonus + poleFor(x)
             } };
           }), 'No results for this class.');
         }
@@ -389,14 +406,14 @@
         var fastest = rows.length ? rows[0].avg : 0;
         fill(right, RR.heading(r.track + ' · ' + r.layout), picker, RR.table([
           { key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }, { key: 'car', label: 'Car / Class', sort: true },
-          { key: 'time', label: 'Race time', num: true, sort: true }, { key: 'lap', label: 'Avg lap time', num: true, sort: true },
+          { key: 'best', label: 'Best lap', num: true, sort: true }, { key: 'lap', label: 'Avg lap time', num: true, sort: true },
           { key: 'delta', label: 'Delta leader', num: true, sort: true }
         ], rows.map(function (x, i) {
           var d = driver(x.driver);
           return { href: profileLink(d), linkCol: 1, cells: {
-            pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country)), time: RR.raceTime(x.time), lap: RR.lap(x.avg), delta: RR.gap(x.avg - fastest),
+            pos: i + 1, driver: RR.cell(RR.nameWithFlag(d.name, d.country)), best: RR.lap(x.best), lap: RR.lap(x.avg), delta: RR.gap(x.avg - fastest),
             car: RR.cell(x.car, className(x.cls))
-          }, sort: { pos: i + 1, driver: d.name.toLowerCase(), time: x.time > 0 ? x.time : null, lap: x.avg, delta: x.avg - fastest, car: String(x.car || '').toLowerCase() } };
+          }, sort: { pos: i + 1, driver: d.name.toLowerCase(), best: x.best > 0 ? x.best : null, lap: x.avg, delta: x.avg - fastest, car: String(x.car || '').toLowerCase() } };
         }), 'No lap times for this class.'));
       }
       drawTable();
