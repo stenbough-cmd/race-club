@@ -41,6 +41,7 @@
   --rr-bar-control: rgba(255, 255, 255, 0.10);
   /* Text laid over a photo or graphic */
   --rr-photo-text: #FFFFFF;
+  --rr-photo-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   --rr-photo-muted: rgba(255, 255, 255, 0.85);
   --rr-photo-fade: rgba(23, 23, 23, 0.88);
   --rr-photo-line: rgba(255, 255, 255, 0.45);
@@ -746,6 +747,10 @@ button, select { font-family: inherit; }
   color: var(--rr-photo-text);
 }
 .rr-promo-feature { min-height: 300px; }
+/* Every bit of text over a photo gets the same very slight shadow so it reads on bright pictures */
+.rr-tile.rr-has-photo, .rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-hero.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
+/* News on a phone (portrait): no preview text under each story title */
+@media (orientation: portrait) { .rr-news-grid .rr-promo-text .rr-body { display: none; } }
 /* Large photo and news blocks that are links lift off the page on hover (no border change). */
 .rr-promo.rr-block-link, .rr-rank-tile.rr-block-link { transition: transform var(--rr-speed) ease, box-shadow var(--rr-speed) ease; }
 .rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible, .rr-rank-tile.rr-block-link:hover, .rr-rank-tile.rr-block-link:focus-visible {
