@@ -974,7 +974,7 @@ button, select { font-family: inherit; }
 .rr-stack-tight > .rr-heading { margin: 8px 0 0; }
 
 /* ---------- Flags ---------- */
-.rr-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.rr-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; text-transform: uppercase; }
 .rr-flag { display: block; flex: none; width: 20px; height: 14px; object-fit: cover; box-shadow: 0 0 0 1px var(--rr-line); }
 .rr-flag-none { display: flex; align-items: center; justify-content: center; background: var(--rr-photo-text); }
 .rr-flag-none img { display: block; height: 70%; width: auto; }
