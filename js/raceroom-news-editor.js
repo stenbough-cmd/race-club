@@ -24,7 +24,6 @@
     if (e === 'no-body') return 'Write the text first.';
     if (e === 'no-reason') return 'Choose the reason for the edit.';
     if (e === 'undo-first') return 'Use Undo delete first.';
-    if (e === 'locked') return 'This story is locked. Unlock it on the Story writer tab first.';
     if (e === 'bad-photo') return 'That picture could not be used. Try another one.';
     if (e === 'github') return 'The picture could not be saved: ' + (res.detail || 'GitHub refused it.');
     return 'Could not do that. Try again.';
@@ -338,10 +337,6 @@
         again.disabled = working;
         buttons.push(again);
       }
-    }
-    if (!isNew && item.locked) {
-      buttons.forEach(function (b) { b.disabled = true; });
-      box.appendChild(RR.notice('This story is locked. Click the lock on the Story writer tab to unlock it before changing it.', 'warn'));
     }
     buttons.push(RR.button('Close', function () { if (modal) modal.close(); }));
     box.appendChild(RR.row.apply(null, buttons));

@@ -120,8 +120,6 @@
     steward: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
     members: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 2 4 5"/>',
     book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
-    lock: '<rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
-    unlock: '<rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/><path d="M12 15v2"/>',
     sky0: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5"/><path d="M12 19.5V22"/><path d="M2 12h2.5"/><path d="M19.5 12H22"/><path d="M4.9 4.9l1.8 1.8"/><path d="M17.3 17.3l1.8 1.8"/><path d="M4.9 19.1l1.8-1.8"/><path d="M17.3 6.7l1.8-1.8"/>',
     sky1: '<circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2v1.6"/><path d="M2 8.5h1.6"/><path d="M3.9 3.9l1.1 1.1"/><path d="M13.1 3.9L12 5"/><path d="M3.9 13.1L5 12"/><path d="M9.5 20h8a3.5 3.5 0 0 0 .3-7A4.8 4.8 0 0 0 9 12.6 3.7 3.7 0 0 0 9.5 20z"/>',
     sky2: '<path d="M5.5 12.5h5a2.8 2.8 0 0 0 .2-5.6A3.8 3.8 0 0 0 4.3 8.8a2.2 2.2 0 0 0 1.2 3.7z"/><path d="M10 20h8.2a3.6 3.6 0 0 0 .3-7.2 5 5 0 0 0-9.6 1.4A3 3 0 0 0 10 20z"/>',

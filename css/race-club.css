@@ -629,7 +629,7 @@ button, select { font-family: inherit; }
 .rr-kv { display: flex; flex-direction: column; gap: 2px; }
 .rr-kv-value { font-size: 13px; font-weight: 600; }
 .rr-kv-row { flex-direction: row; justify-content: space-between; align-items: baseline; padding: 4px 0; }
-.rr-kv-list { display: flex; flex-wrap: wrap; gap: 16px 32px; }
+.rr-kv-list { display: flex; flex-wrap: wrap; gap: 16px 40px; }
 
 /* ---------- Panel (plain box that groups catalogue parts) ---------- */
 .rr-panel { padding: 16px; background: var(--rr-panel); }
@@ -688,9 +688,6 @@ button, select { font-family: inherit; }
 /* ---------- Tags ---------- */
 .rr-select.rr-needs .rr-select-btn { border-color: var(--rr-red); box-shadow: 0 0 0 1px var(--rr-red); }
 .rr-heading-note { font: inherit; font-weight: 400; letter-spacing: inherit; color: var(--rr-muted); }
-.rr-btn-lock { width: 34px; padding: 0; }
-.rr-btn-lock svg { margin-right: 0; }
-.rr-btn-locked { border-color: var(--rr-text); }
 .rr-sky { display: inline-flex; align-items: center; gap: 4px; }
 .rr-sky-icon svg { display: block; width: 22px; height: 22px; }
 .rr-sky-next svg { display: block; width: 12px; height: 12px; opacity: 0.6; }

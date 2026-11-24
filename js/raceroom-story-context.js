@@ -28,7 +28,6 @@
     var item = news.filter(function (i) { return i.kind === kind && i.seasonId === String(sid) && (kind !== 'race' || i.roundId === String(roundId)); })[0];
     if (!item) return null;
     var b = RR.button('Edit story', function () { RR.newsEditor.open(item.key); });
-    if (item.locked) { b.disabled = true; b.title = 'Locked'; }
     return b;
   }
   RR.newsEditor.saved = function () { load(); };
@@ -85,28 +84,12 @@
       else done('The ' + label + ' could not be written: ' + ((res && res.story && res.story.error) || problem(res)), 'warn', res);
     });
   }
-  /* The lock: a locked story cannot be rewritten, retried, edited, withdrawn or have its pictures changed. Clicking again unlocks it. */
-  function lockButton(opts, s) {
-    var b = RR.button('', function () {
-      RR.api('lockStory', { kind: opts.kind, seasonId: opts.seasonId || '', roundId: opts.roundId || '', locked: !s.locked }).then(function (res) {
-        if (res && res.ok) done(res.locked ? 'The story is locked. It cannot be changed until you unlock it.' : 'The story is unlocked.', 'ok', null);
-        else done('The lock could not be changed. Try again.', 'warn', null);
-      });
-    }, false, s.locked ? 'lock' : 'unlock');
-    b.classList.add('rr-btn-lock');
-    if (s.locked) b.classList.add('rr-btn-locked');
-    b.title = s.locked ? 'Locked: click to unlock' : 'Unlocked: click to lock';
-    b.setAttribute('aria-label', b.title);
-    b.setAttribute('aria-pressed', s.locked ? 'true' : 'false');
-    b.disabled = writing;
-    return b;
-  }
   function storyButtons(opts, label, s) {
     var out = [];
     if (s && s.status === 'failed') {
       var retry = RR.button('Retry story', null, false);
       RR.arm(retry, '', 'Confirm retry story', function () { writeStory(opts, label, false); });
-      retry.disabled = writing || !!s.locked;
+      retry.disabled = writing;
       out.push(retry);
     } else if (!s) {
       var first = RR.button('Write story', null, false);
@@ -116,10 +99,9 @@
     } else if (s.status === 'published') {
       var again = RR.button('Rewrite story', null, false, 'redo');
       RR.arm(again, '', 'Confirm rewrite story', function () { writeStory(opts, label, true); });
-      again.disabled = writing || !!s.locked;
+      again.disabled = writing;
       out.push(again);
     }
-    if (s && (s.status === 'published' || s.status === 'failed')) out.push(lockButton(opts, s));
     return out;
   }
 
