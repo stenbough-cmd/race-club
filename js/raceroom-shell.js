@@ -1102,6 +1102,8 @@
      like the top-right icons). The first click turns it red with `confirmText` (for example "Confirm start over") as its
      tooltip, shown while hovering; the second click within 3 seconds runs `action`. After 3 seconds it goes back to normal. */
   RR.arm = function (node, hoverText, confirmText, action, canArm) {
+    /* A two-click button never rests red: red means armed and waiting for the second click. */
+    node.classList.remove('rr-btn-save');
     /* No tooltip on hover: the confirm tooltip shows only after the first click. (hoverText is kept so old calls still work.) */
     node.addEventListener('click', function () {
       /* canArm (optional) is asked on the first click; when it says false (for example, a box is empty) the button does not turn red. */
@@ -1109,6 +1111,10 @@
       armClick(node, confirmText, action);
     });
     return node;
+  };
+  /* A two-click button in one call: outlined at rest, red after the first click, runs `action` on the second. */
+  RR.confirmButton = function (text, confirmText, action, icon, canArm) {
+    return RR.arm(RR.button(text, null, false, icon), '', confirmText, action, canArm);
   };
   /* Put a red exclamation in a circle behind the names of these sub-tabs, e.g. RR.flagTabs(['season', 'calendar']).
      An empty list clears every one. */

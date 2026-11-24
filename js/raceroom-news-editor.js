@@ -230,7 +230,7 @@
       row.appendChild(RR.input({ label: (i === 0 ? 'Banner picture' : 'Picture ' + (i + 1)) + ' caption', value: form.caps[i], wide: true, onChange: function (v) { form.caps[i] = v; } }));
       row.appendChild(RR.button('Swap picture', function () { swapIndex = i; swapInput.click(); }));
       if (i >= 1) row.appendChild(RR.button('Move to cursor', function () { moveMarker(i + 1); }));
-      row.appendChild(RR.button('Save caption', function () {
+      row.appendChild(RR.confirmButton('Save caption', 'Confirm: save this caption', function () {
         RR.api('saveStoryPhoto', { key: item.key, index: i, caption: form.caps[i] }).then(function (res) {
           if (res && res.ok) { message = { text: 'The caption was saved.' + publishNote(res), kind: 'ok' }; load(RR.newsEditor.saved); } else fail(res);
         });

@@ -63,7 +63,7 @@
     box.appendChild(RR.select('Ruling', [['', 'Choose'], ['dismiss', 'Dismiss the protest'], ['1', '1 point (light, or a self report)'], ['3', '3 points (medium)'], ['5', '5 points (severe)'], ['dsq', 'DSQ for this race']],
       function (v) { form.choice = v; }, form.choice));
     box.appendChild(RR.textarea({ label: 'Your comment (shown publicly, up to 400 characters; needed for a DSQ)', value: form.comment, onChange: function (v) { form.comment = v.slice(0, 400); } }));
-    var go = RR.button('Save ruling', null, true);
+    var go = RR.button('Save ruling', null, false, 'steward');
     RR.arm(go, '', 'Confirm: save this ruling', function () {
       var c = form.choice;
       RR.api('ruleProtest', { protestId: p.id, outcome: c === 'dismiss' ? 'dismiss' : 'penalty', penalty: c === 'dismiss' ? '' : c, comment: form.comment }).then(function (res) {
@@ -77,7 +77,7 @@
     });
     var row = [go];
     if (p.status === 'Filed') {
-      row.push(RR.button('Mark as reviewing', function () {
+      row.push(RR.confirmButton('Mark as reviewing', 'Confirm: mark as reviewing', function () {
         RR.api('reviewProtest', { protestId: p.id }).then(function (res) {
           if (res && res.ok) { message = { text: 'Marked as reviewing.', kind: 'ok' }; load(); } else { message = { text: problem(res), kind: 'warn' }; draw(); }
         });

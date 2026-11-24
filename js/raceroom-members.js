@@ -75,7 +75,7 @@
           hide: RR.checkbox('Hide Details', function (v) { m.hide = v; refreshBar(); }, m.hide)
         } };
       }), 'No members yet. Drivers appear here after their first race has been read into the Sheet.'));
-      var saveBtn = RR.button('Save changes', save, true);
+      var saveBtn = RR.confirmButton('Save changes', 'Confirm: save these member changes', save);
       var count = el('span', 'rr-note', '');
       box.appendChild(RR.row(saveBtn, count));
       box._saveBtn = saveBtn; box._count = count;

@@ -179,11 +179,11 @@
     });
     row.appendChild(RR.button(p && p.src ? 'Change photo' : 'Choose photo', function () { pick.click(); }));
     if (p && p.src) {
-      row.appendChild(RR.button('Save caption', function () {
+      row.appendChild(RR.confirmButton('Save caption', 'Confirm: save this caption', function () {
         send({ slot: i + 1, caption: panel.caps[i] }).then(function (res) {
           if (res && res.ok) { message = { text: picNote(res, 'Caption saved.'), kind: 'ok' }; load(); } else panelFail(res);
         });
-      }, true));
+      }));
       var rm = RR.button('Remove', null, false);
       RR.arm(rm, '', 'Confirm remove photo', function () {
         send({ slot: i + 1, remove: true }).then(function (res) {
@@ -217,13 +217,13 @@
     rows.forEach(function (x) { box.appendChild(x); });
     box.appendChild(el('p', 'rr-body', ps.full ? 'Three of your photos are used, which is the most a story has, so there is no room for a track photo.' :
       (ps.ups.length || panel.choice.track !== undefined ? 'The story uses the pictures ticked here. The writer only decides where each one sits among the paragraphs.' : 'Nothing is chosen yet, so the story opens with a picture of the track.')));
-    box.appendChild(RR.row(RR.button('Save picture choices', function () {
+    box.appendChild(RR.row(RR.confirmButton('Save picture choices', 'Confirm: save these picture choices', function () {
       var send = { roundId: r.id, hero: panel.choice.hero };
       if (panel.choice.track !== undefined) send.track = panel.choice.track;
       RR.api('savePhotoChoice', send).then(function (res) {
         if (res && res.ok) { message = { text: picNote(res, 'Picture choices saved.'), kind: 'ok' }; load(); } else panelFail(res);
       });
-    }, true)));
+    })));
     return box;
   }
   function storyPanel() {
@@ -247,12 +247,12 @@
       });
     }
     box.appendChild(RR.textarea({ label: 'Note (up to 500 characters)', value: panel.note, onChange: function (v) { panel.note = v.slice(0, 500); } }));
-    box.appendChild(RR.row(RR.button('Save notes', function () {
+    box.appendChild(RR.row(RR.confirmButton('Save notes', 'Confirm: save these notes', function () {
       var riv = panel.rivals.filter(function (p) { return p[0] && p[1] && p[0] !== p[1]; });
       RR.api('saveRoundNotes', { roundId: r.id, rivalries: riv, note: panel.note }).then(function (res) {
         if (res && res.ok) { message = { text: 'Notes saved.', kind: 'ok' }; load(); } else panelFail(res);
       });
-    }, true)));
+    })));
     box.appendChild(el('h3', 'rr-card-title', 'Photos'));
     box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each. You decide which pictures are used and which one opens the story; the writer only places them among the paragraphs from their captions. If you choose nothing, the story uses a picture of the track.'));
     for (var i = 0; i < 3; i++) box.appendChild(photoSlot(r, i));
@@ -278,11 +278,11 @@
     box.appendChild(el('h3', 'rr-card-title', 'Notes for the writer'));
     box.appendChild(el('p', 'rr-body', (fin ? 'Anything you want in the recap: how the season felt, a moment that mattered, a story from the paddock. You can add to it all season. The writer treats it as true and uses it in its own words, never quoted.' : 'Anything you want in the preview: what these cars mean to you, a story about the series, a detail about a venue or the season. The writer treats it as true and uses it in its own words, never quoted.')));
     box.appendChild(RR.textarea({ label: 'Note (up to 1500 characters)', value: panel.note, onChange: function (v) { panel.note = v.slice(0, 1500); } }));
-    box.appendChild(RR.row(RR.button('Save note', function () {
+    box.appendChild(RR.row(RR.confirmButton('Save note', 'Confirm: save this note', function () {
       RR.api('saveSeasonContext', { seasonId: s.seasonId, kind: panel.kind, note: panel.note }).then(function (res) {
         if (res && res.ok) { message = { text: 'Note saved. It is used the next time the ' + word + ' is written or rewritten.', kind: 'ok' }; load(); } else panelFail(res);
       });
-    }, true)));
+    })));
     box.appendChild(el('h3', 'rr-card-title', 'Photos'));
     box.appendChild(el('p', 'rr-body', 'Up to 3 photos with a caption each, for example ' + (fin ? 'the champions or the best moments of the season' : 'the cars racing') + '. Photo 1 is the hero that opens the ' + word + ' and is the picture on its News tile. Track pictures fill any empty places.'));
     var holder = { photos: (fin ? s.recapPhotos : s.previewPhotos) || [] };

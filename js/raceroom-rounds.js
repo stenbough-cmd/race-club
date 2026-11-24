@@ -174,7 +174,7 @@
     view.textContent = '';
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
-    var publish = RR.button('Publish site data', function () {
+    var publish = RR.confirmButton('Publish site data', 'Confirm: publish the website data', function () {
       RR.api('publishSite').then(function (r) {
         message = r && r.ok ? { text: r.unchanged ? 'The website data is already up to date.' : 'The website data was updated. GitHub Pages shows it in 1 to 2 minutes.', kind: 'ok' }
           : { text: 'Not published. ' + ((r && r.error) || 'Try again.'), kind: 'warn' };

@@ -500,6 +500,8 @@ button, select { font-family: inherit; }
 
 /* ---------- Rows of option boxes, notices ---------- */
 .rr-form-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rr-gap); }
+/* A row of label and value pairs (not buttons) gets room between the columns */
+.rr-form-row:has(> .rr-kv) { align-items: flex-start; gap: 12px 40px; }
 /* Three even columns of option boxes: name at the left, value at the right. */
 .rr-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rr-gap); }
 .rr-form-grid .rr-select { display: block; }

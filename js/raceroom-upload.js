@@ -181,7 +181,7 @@
     items.forEach(function (it) { stack.appendChild(panel(it)); });
     if (items.length) {
       var n = items.filter(ready).length;
-      var save = RR.button(n ? 'Save ' + plural(n, 'file', 'files') + ' to the Sheet' : 'Save to the Sheet', saveAll, true);
+      var save = RR.confirmButton(n ? 'Save ' + plural(n, 'file', 'files') + ' to the Sheet' : 'Save to the Sheet', 'Confirm: save to the Sheet', saveAll);
       var hold = saving || waiting() || unmatched() || !n;
       if (hold) save.disabled = true;
       var bar = el('div', 'rr-upload-actions');
