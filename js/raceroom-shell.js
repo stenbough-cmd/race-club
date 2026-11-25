@@ -285,7 +285,7 @@
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
     topbar.classList.remove('rr-topbar-stacked');
-    if (nav.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
+    if (nav.getBoundingClientRect().left < logo.getBoundingClientRect().right + 24) topbar.classList.add('rr-topbar-stacked');
   }
   window.addEventListener('resize', fitTopbar);
   window.addEventListener('load', fitTopbar);

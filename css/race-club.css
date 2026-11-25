@@ -100,14 +100,19 @@ button, select { font-family: inherit; }
   color: var(--rr-text);
 }
 .rr-logo { display: inline-flex; align-items: center; transition: opacity var(--rr-speed) ease; }
+/* When the row has its own line (or has to scroll), it is centred with auto margins, which fall back to the left edge when it overflows. */
+.rr-nav > :first-child { margin-left: auto; }
+.rr-nav > :last-child { margin-right: auto; }
 .rr-logo:hover { opacity: 0.8; }
 .rr-logo-img { display: block; height: 25px; width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
-.rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: nowrap; flex-shrink: 0; }
+.rr-topbar { position: relative; }
+/* The menu row sits in the middle of the bar. If the logo would touch it, the shell stacks the row under the logo instead (rr-topbar-stacked). */
+.rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: nowrap; flex-shrink: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 /* The menu buttons always stay on one row. When they do not fit beside the logo and icons, the shell adds
    rr-topbar-stacked and the whole row drops under them (also always the case in portrait, see below). */
 .rr-topbar-stacked .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
 .rr-topbar-stacked .rr-topbar-end { order: 2; flex-shrink: 0; }
-.rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
+.rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
 .rr-topbar-end { display: flex; align-items: center; gap: var(--rr-gap); margin-left: auto; }
 
 /* Top buttons: no border, see-through fill. Hover = light border. Active = solid light. */
@@ -890,7 +895,7 @@ a.rr-btn { text-decoration: none; }
   /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
   .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
   .rr-topbar-end { order: 2; flex-shrink: 0; }
-  .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
+  .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
