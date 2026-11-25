@@ -95,7 +95,7 @@
       "League tables sort: click a column heading to sort by it and click again to reverse it. The red heading with an arrow is the current sort. Each table opens in its natural order: standings by position, race results by finishing place inside each class, lap times by average lap, the schedule by round. To make another column sortable, add sort: true to it in js/raceroom-pages.js, with desc: true if the first click should go high to low."
     ]),
     panel('Admin pages', [
-      "Log in with the portrait icon button at the end of the menu row. A login lasts 6 hours or until the tab closes. Once logged in, the same button opens the admin hub. Log out with the Log out link above Admin in the hub.",
+      "Log in with the log in icon button at the end of the menu row. A login lasts 6 hours or until the tab closes. Once logged in, the same button becomes a portrait icon and opens the admin hub. Log out with the Log out link above Admin in the hub.",
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
         ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],

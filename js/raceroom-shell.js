@@ -274,7 +274,7 @@
   });
   /* One portrait icon button ends the menu row, like Back and Forward. Nothing sits at the top right.
      Logged out it opens the log in page. Logged in it opens the admin hub, where Log out / Admin at the top logs out. */
-  var adminBtn = iconBtn('a', 'portrait', 'Log in');
+  var adminBtn = iconBtn('a', 'login', 'Log in');
   adminBtn.href = 'login.html';
   adminBtn.classList.add('rr-tip-end');
   if (mainId === 'admin') adminBtn.setAttribute('aria-current', 'page');
@@ -464,9 +464,10 @@
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
   RR.param = function (name) { return new URLSearchParams(location.search).get(name); };
 
-  /* The portrait button says Log in while logged out and Admin while logged in. */
+  /* Logged out the button shows the log in icon (Log in). Logged in it shows the portrait icon (Admin). */
   RR.setAdmin = function (signedIn) {
     adminBtn.href = signedIn ? 'admin.html' : 'login.html';
+    setIcon(adminBtn, signedIn ? 'portrait' : 'login');
     adminBtn.setAttribute('data-rr-tip', signedIn ? 'Admin' : 'Log in');
     adminBtn.setAttribute('aria-label', signedIn ? 'Admin' : 'Log in');
   };
