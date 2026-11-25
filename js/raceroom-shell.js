@@ -271,13 +271,12 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Admin and Log in are the last buttons of the menu row, styled like the other menu buttons. Nothing sits at the top right.
+  /* Admin and Log in are the last two buttons of the menu row, icon buttons like Back and Forward. Nothing sits at the top right.
      Admin (opens the admin hub) is only shown while an admin is logged in. */
-  var adminLink = el('a', 'rr-nav-item', 'Admin');
+  var adminLink = iconBtn('a', 'admin', 'Admin');
   adminLink.href = 'admin.html';
   if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
-  var adminBtn = el('button', 'rr-nav-item', 'Log in');
-  adminBtn.type = 'button';
+  var adminBtn = iconBtn('button', 'login', 'Log in');
   adminBtn.classList.add('rr-tip-end');
   add(nav, adminLink, adminBtn);
   add(topbar, logo, nav);
@@ -459,8 +458,10 @@
   /* Switch the last menu button between Log in and Log out, and show or hide the Admin button. */
   RR.setAdmin = function (signedIn) {
     adminLink.hidden = !signedIn;
+    setIcon(adminBtn, signedIn ? 'logout' : 'login');
     disarm(adminBtn);
-    adminBtn.textContent = signedIn ? 'Log out' : 'Log in';
+    adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
+    adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');
   };
   RR.setAdmin(!!adminLoad());
   adminBtn.addEventListener('click', function () {

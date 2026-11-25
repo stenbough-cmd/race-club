@@ -51,7 +51,7 @@
     ],
     rules: [
       { group: 'Grid and sessions', items: [['Max players', '12'], ['Reverse grid', 'Off'], ['Join qualifying late', 'Yes']] },
-      { group: 'Car and wear', items: [['Fuel usage', 'Normal'], ['Tyre wear', 'Normal'], ['Damage', 'Full'], ['Mandatory pit stop', 'Off'], ['Fixed setup', 'Yes']] },
+      { group: 'Car and wear', items: [['Fuel usage', 'Normal'], ['Tire wear', 'Normal'], ['Damage', 'Full'], ['Mandatory pit stop', 'Off'], ['Fixed setup', 'Yes']] },
       { group: 'Race rules', items: [['Flag rules', 'Visual only'], ['Cut rules', 'Slow down'], ['Wrecker prevention', 'Off'], ['Max incident points', '30']] },
       { group: 'Drive assists', items: [['Preset', 'Custom'], ['Traction control', 'On'], ['Stability control', 'On'], ['Brake assist', 'On']] }
     ],
@@ -157,7 +157,7 @@
             incidents: (i * 3 + round.n + def.shift) % 7, penalty: (i + round.n) % 9 === 0 ? 5 : 0,
             status: dnf ? 'DNF' : 'Finished', laps: dnf ? 9 : 15, led: i === 0 ? 11 : (i === 1 ? 4 : 0),
             car: classCar(cls.id, d, round.n).name, livery: classCar(cls.id, d, round.n).livery,
-            invalid: (i + round.n) % 4
+            invalid: (i + round.n) % 4, incidentLaps: (i + round.n) % 4 + (i % 3 === 0 ? 1 : 0)
           });
         });
       });

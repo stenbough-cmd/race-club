@@ -132,7 +132,7 @@ button, select { font-family: inherit; }
   transition: background-color var(--rr-speed) ease, border-color var(--rr-speed) ease, color var(--rr-speed) ease;
 }
 .rr-nav-item { font-family: inherit; flex: none; padding: 0 16px; font-weight: 400; white-space: nowrap; }
-.rr-nav-item[hidden] { display: none; }
+.rr-nav-item[hidden], .rr-icon-btn[hidden] { display: none; }
 .rr-icon-btn { width: 34px; padding: 0; }
 .rr-icon-btn svg { display: block; width: 18px; height: 18px; }
 .rr-nav-item:hover, .rr-icon-btn:hover { border-color: var(--rr-text); }
@@ -950,11 +950,11 @@ a.rr-btn { text-decoration: none; }
 .rr-radar-swatch { display: inline-block; width: 14px; height: 8px; }
 .rr-radar-swatch-own { background: var(--rr-red); opacity: 0.7; }
 .rr-radar-swatch-ref { border: 1px dashed var(--rr-muted); background: rgba(83, 101, 117, 0.12); }
-.rr-radar-svg { width: 100%; max-width: 480px; height: auto; }
+.rr-radar-svg { width: 100%; max-width: 500px; height: auto; }
 .rr-radar-web { fill: none; stroke: var(--rr-line); stroke-width: 1; }
 .rr-radar-shape { fill: var(--rr-red); fill-opacity: 0.35; stroke: var(--rr-red); stroke-width: 1.5; }
 .rr-radar-label { fill: var(--rr-muted); font-family: var(--rr-font); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.rr-radar-value { fill: var(--rr-text); font-family: var(--rr-font); font-size: 14px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.rr-radar-value { fill: var(--rr-text); font-family: var(--rr-font); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
 /* Standings by round: the points of a round dropped from the total are struck through, a bonus is a small raised number */
 .rr-dropped { text-decoration: line-through; color: var(--rr-muted); }

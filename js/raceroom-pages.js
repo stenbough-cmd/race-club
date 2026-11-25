@@ -768,17 +768,17 @@
     st.points = D.seasons.reduce(function (n, s) { return n + ((sel === 'all' || s.id === sel) && s.totals[d.id] ? s.totals[d.id].total : 0); }, 0);
     st.incPerRace = st.races ? st.incidents / st.races : 0;
     st.avgGapPct = st.races ? avg(rows, function (r) { return r.x.gapPct; }) : 0;
-    st.cleanLaps = st.laps ? Math.max(0, 100 - st.invalid / st.laps * 100) : 0;
+    /* A clean lap is a lap with no incident points. (Data published before incidentLaps existed falls back to invalid laps until the site data is published again.) */
+    st.incidentLaps = rows.reduce(function (n, r) { return n + (typeof r.x.incidentLaps === 'number' ? r.x.incidentLaps : r.x.invalid); }, 0);
+    st.cleanLaps = st.laps ? Math.max(0, 100 - st.incidentLaps / st.laps * 100) : 0;
     /* The four radar axes, each 0 to 100% (higher is better), all from league data:
        League results = average share of the field beaten (shown as Top n%). Finishing = share of races finished.
-       Clean laps = share of laps that counted; if the files cannot tell us that, Clean races = share of races with no incident points.
+       Clean laps = share of laps with no incident points.
        Pace = where the driver's best-lap gap ranks among every driver in the same seasons (worked out where the radar is drawn, because it needs the other drivers). */
-    st.lapsKnown = st.laps > 0 && rows.every(function (r) { return typeof r.x.invalid === 'number'; });
-    st.cleanRaces = st.races ? rows.filter(function (r) { return !r.x.incidents; }).length / st.races * 100 : 0;
     st.radar = [
       { label: 'League results', value: avg(rows, function (r) { return r.x.of > 1 ? (r.x.of - r.x.pos) / (r.x.of - 1) * 100 : 100; }) },
       { label: 'Finishing', value: st.races ? st.finished / st.races * 100 : 0 },
-      st.lapsKnown ? { label: 'Clean laps', value: st.cleanLaps } : { label: 'Clean races', value: st.cleanRaces },
+      { label: 'Clean laps', value: st.cleanLaps },
       { label: 'Pace', value: 0 }
     ];
     var cars = grouped(rows, function (r) { return r.x.car; }).sort(function (a, b) { return b.rows.length - a.rows.length; });
@@ -919,7 +919,7 @@
       var tips = st.races ? [
         'On average this driver finished ahead of ' + pc(0) + '% of the field.',
         st.finished + ' of ' + st.races + ' races finished.',
-        st.lapsKnown ? (st.laps - st.invalid) + ' of ' + st.laps + ' laps were clean.' : (st.races - Math.round(st.cleanRaces * st.races / 100)) + ' of ' + st.races + ' races had incident points, so ' + pc(2) + '% were clean. The lap files could not tell us how many laps were clean.',
+        (st.laps - st.incidentLaps) + ' of ' + st.laps + ' laps were clean (no incident points).',
         'Best laps average ' + Math.max(0, st.avgGapPct).toFixed(2) + '% slower than the fastest in class. Ranked ' + rank + ' of ' + people + ' drivers.'
       ] : [];
       var sums = [0, 0, 0, 0], counts = [0, 0, 0, 0];
@@ -931,7 +931,7 @@
       });
       var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 && counts[i] ? sums[i] / counts[i] : undefined }; });
       var fav = st.favouriteCar;
-      var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
+      var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favorite Car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
         el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');
       /* Season standing: only what the rest of the profile does not already show (points, wins, podiums and best finish are elsewhere). */
       var standing = add(el('div', 'rr-panel rr-stack'), RR.label('Season standing'));
