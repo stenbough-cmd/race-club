@@ -124,6 +124,13 @@
     sky1: '<circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2v1.6"/><path d="M2 8.5h1.6"/><path d="M3.9 3.9l1.1 1.1"/><path d="M13.1 3.9L12 5"/><path d="M3.9 13.1L5 12"/><path d="M9.5 20h8a3.5 3.5 0 0 0 .3-7A4.8 4.8 0 0 0 9 12.6 3.7 3.7 0 0 0 9.5 20z"/>',
     sky2: '<path d="M5.5 12.5h5a2.8 2.8 0 0 0 .2-5.6A3.8 3.8 0 0 0 4.3 8.8a2.2 2.2 0 0 0 1.2 3.7z"/><path d="M10 20h8.2a3.6 3.6 0 0 0 .3-7.2 5 5 0 0 0-9.6 1.4A3 3 0 0 0 10 20z"/>',
     sky3: '<path d="M7 19h10.5a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 6 11.7 3.7 3.7 0 0 0 7 19z"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+    deny: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6"/><path d="M15 9l-6 6"/>',
+    publish: '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M5 21h14"/>',
+    download: '<path d="M12 4v11"/><path d="M6 10l6 6 6-6"/><path d="M5 21h14"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>',
+    undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
     close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
     trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'
   };
@@ -1088,9 +1095,35 @@
   };
 
   /* Standard button. Outlined; pass save = true only for a button that writes to the sheet. */
+  /* One icon per job, so buttons that do the same thing look the same on every page. Checked in order against the label; the first match wins.
+     Buttons that only open, close, move or choose (Close, Open, Review, Choose photo, Up, Down) match nothing and have no icon. */
+  var BUTTON_ICONS = [
+    [/protest/i, 'protest'],
+    [/^(save|submit)\b/i, 'save'],
+    [/^(delete|remove|clear)\b/i, 'trash'],
+    [/^(create|new\b|add (?!context))/i, 'create'],
+    [/^(publish|upload)\b/i, 'publish'],
+    [/^(export|load)\b/i, 'download'],
+    [/^(refresh|reading|try again)/i, 'refresh'],
+    [/^(rewrite|retry)\b/i, 'redo'],
+    [/^(reopen|undo|restore)\b/i, 'undo'],
+    [/^(confirm|use this file|approve)\b/i, 'check'],
+    [/^(deny|dsq|cancel round)/i, 'deny'],
+    [/^(write|edit)\b/i, 'edit'],
+    [/^(mark as reviewing|save ruling)/i, 'steward'],
+    [/^end season/i, 'trophy'],
+    [/^log in/i, 'login'],
+    [/^start over/i, 'startover']
+  ];
+  RR.buttonIcon = function (text) {
+    for (var i = 0; i < BUTTON_ICONS.length; i++) if (BUTTON_ICONS[i][0].test(String(text))) return BUTTON_ICONS[i][1];
+    return '';
+  };
+  /* icon: a name from ICONS; leave it out to use the job's icon from BUTTON_ICONS; pass '' or null for none. */
   RR.button = function (text, onClick, save, icon) {
     var b = el('button', save ? 'rr-btn rr-btn-save' : 'rr-btn');
     b.type = 'button';
+    if (icon === undefined) icon = RR.buttonIcon(text);
     if (icon) b.innerHTML = iconSvg(icon);
     b.appendChild(document.createTextNode(text));
     if (onClick) b.addEventListener('click', onClick);
