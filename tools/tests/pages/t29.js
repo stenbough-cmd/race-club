@@ -17,7 +17,7 @@ let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else conso
     const p=await load(pg); const c=p.d.querySelector('.rr-crumb');
     ok(c&&c.querySelector('a').getAttribute('href')==='admin.html'&&/^Admin\s*\/\s*\S/.test(c.textContent.trim()),pg+' has an Admin breadcrumb: '+(c&&c.textContent.trim().replace(/\s+/g,' ')));
   }
-  const hub=await load('admin.html'); ok(!hub.d.querySelector('.rr-crumb'),'the Admin hub itself has no breadcrumb');
+  const hub=await load('admin.html'); const hc=hub.d.querySelector('.rr-crumb'); ok(hc&&/^Log out\s*\/\s*Admin$/.test(hc.textContent.trim()),'the Admin hub starts with Log out / Admin');
   const pub=await load('index.html'); ok(!pub.d.querySelector('.rr-crumb'),'public pages have no breadcrumb');
   /* logo: white one gets rr-logo-dark; a coloured one does not */
   const lb=await load('leaderboards.html'); const w=lb.w, I=w.RR.images;

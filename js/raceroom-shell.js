@@ -107,7 +107,6 @@
     login: '<path d="M14 4h6v16h-6"/><path d="M3 12h11"/><path d="M10 8l4 4-4 4"/>',
     portrait: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
-    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
     admin: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
     protest: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>',
@@ -240,6 +239,13 @@
 
   /* ---- Build the frame ---- */
   var body = document.body;
+  /* The tab icon and the home screen icon, the same on every page. */
+  [['icon', 'image/png', '32x32', 'assets/images/favicon-32.png'], ['apple-touch-icon', '', '180x180', 'assets/images/apple-touch-icon.png']].forEach(function (i) {
+    if (document.head.querySelector('link[rel="' + i[0] + '"]')) return;
+    var l = document.createElement('link');
+    l.rel = i[0]; if (i[1]) l.type = i[1]; l.setAttribute('sizes', i[2]); l.href = i[3];
+    document.head.appendChild(l);
+  });
   /* A page marked data-rr-admin="required" is only for a logged-in admin. */
   if (body.getAttribute('data-rr-admin') === 'required' && !adminLoad()) location.replace('login.html');
   var main = document.querySelector('main');
@@ -464,7 +470,6 @@
   var RR = {};
   RR.el = el;
   RR.add = add;
-  RR.dash = dash;
   RR.refresh = showTab;
   RR.setTitle = function (text) { title.textContent = text; document.title = text + ' | Race Club'; };
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
@@ -524,7 +529,6 @@
   /* RR.icon('trophy') is the small picture used on buttons and the admin tool buttons. */
   RR.icon = function (name) { var s = el('span', 'rr-icon'); setIcon(s, name); return s; };
   RR.scrollTop = function () { scroller.scrollTop = 0; };
-  RR.setSteps = setSteps;
   RR.fillContent = function () { main.classList.add('rr-content-fill'); };
 
   /* Page pills. Returns the row to place right under the paged block. count pages, current is 1-based.
@@ -650,10 +654,6 @@
     openModal = api;
     x.focus();
     return api;
-  };
-  RR.delta = function (n) {
-    if (!n) return el('span', '', '-');
-    return el('span', n > 0 ? 'rr-delta-up' : 'rr-delta-down', (n > 0 ? '▲ ' : '▼ ') + Math.abs(n));
   };
 
   /* Two-line cell: main line + small second line */

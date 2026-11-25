@@ -17,7 +17,7 @@ let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else conso
   ok(d.querySelector('.rr-page-title').textContent==='Help','title Help');
   const tabs=[...d.querySelectorAll('.rr-subtab')].map(a=>a.textContent); ok(tabs.join()==='The league,Points,Penalties','tabs '+tabs);
   ok(d.querySelectorAll('[data-rr-view] .rr-panel').length===10,'10 panels: '+d.querySelectorAll('[data-rr-view] .rr-panel').length);
-  const help=d.querySelector('.rr-topbar-end a[aria-label="Help"]'); ok(help&&/help\.html$/.test(help.href)&&help.getAttribute('aria-current')==='page','help icon links and is current');
+  ok(!d.querySelector('.rr-topbar-end'),'nothing sits at the top right of the bar (no help or protest icon)');
   const words=d.querySelector('main').textContent.split(/\s+/).length; console.log('help words',words);
   p=await load('website-options.html',true); d=p.d;
   ok(!p.errs.length,'docs loads '+p.errs.join('|'));

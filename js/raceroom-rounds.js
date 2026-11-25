@@ -192,7 +192,6 @@
       box.appendChild(RR.row(pick, refresh, publish));
       if (message) box.appendChild(RR.notice(message.text, message.kind));
       var rounds = data.rounds.filter(function (r) { return r.season === seasonId; });
-      var thisSeason = data.seasons.filter(function (x) { return x.seasonId === seasonId; })[0] || {};
       box.appendChild(RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Scheduled', sorted: true },
         { key: 'status', label: 'Status' }, { key: 'act', label: '' }

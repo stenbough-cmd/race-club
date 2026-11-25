@@ -49,7 +49,7 @@
 }
 
 /* ---------- Cards and panels: white with a thin silver outline ---------- */
-.rr-panel, .rr-card, .rr-stat, .rr-hero, .rr-rank-tile, .rr-barlist, .rr-article, .rr-empty, .rr-notice, .rr-tile, .rr-promo { box-shadow: var(--rr-shadow); }
+.rr-panel, .rr-card, .rr-stat, .rr-hero, .rr-rank-tile, .rr-barlist, .rr-article, .rr-empty, .rr-notice, .rr-promo { box-shadow: var(--rr-shadow); }
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
@@ -112,9 +112,8 @@ button, select { font-family: inherit; }
    rr-topbar-stacked and the whole row drops under them (also always the case in portrait, see below). */
 .rr-topbar-stacked .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
 .rr-topbar-stacked .rr-logo, .rr-topbar-stacked .rr-logo-img { justify-content: center; object-position: center; }   /* the menu row is on its own line: the logo is centered above it */
-.rr-topbar-stacked .rr-topbar-end { order: 2; flex-shrink: 0; }
+
 .rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
-.rr-topbar-end { display: flex; align-items: center; gap: var(--rr-gap); margin-left: auto; }
 
 /* Top buttons: no border, see-through fill. Hover = light border. Active = solid light. */
 .rr-nav-item, .rr-icon-btn {
@@ -143,13 +142,12 @@ button, select { font-family: inherit; }
   color: var(--rr-invert-text);
 }
 /* Icons at the far right are not part of the navbar: icon only, no fill, same white border on hover. */
-.rr-topbar-end .rr-icon-btn { background: transparent; }
+
 .rr-icon-btn[aria-current="page"] { border-color: var(--rr-text); }
 /* The small icons at the far right never keep a border for the page you are on; the border only shows on hover. */
-.rr-topbar-end .rr-icon-btn[aria-current="page"] { border-color: transparent; }
-.rr-topbar-end .rr-icon-btn[aria-current="page"]:hover { border-color: var(--rr-text); }
+
 /* Home button while on the home pages: white button, black filled icon */
-.rr-icon-btn.rr-icon-solid[aria-current="page"], .rr-topbar-end .rr-icon-btn.rr-icon-solid[aria-current="page"] {
+.rr-icon-btn.rr-icon-solid[aria-current="page"] {
   background: var(--rr-invert-bg);
   border-color: var(--rr-invert-bg);
   color: var(--rr-invert-text);
@@ -277,7 +275,6 @@ button, select { font-family: inherit; }
 .rr-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .rr-row-stats { display: grid; gap: var(--rr-gap); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 .rr-split { display: grid; gap: 16px; grid-template-columns: 220px minmax(0, 1fr); align-items: start; }
-.rr-span-2 { grid-column: span 2; }
 
 .rr-heading {
   margin: 0 0 8px;
@@ -522,7 +519,6 @@ button, select { font-family: inherit; }
 .rr-form-grid .rr-input input { text-align: right; }
 .rr-subheading { margin: 8px 0 0; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rr-muted); }
 .rr-notice { margin: 0; padding: 8px 12px; border-left: 2px solid var(--rr-text); background: var(--rr-panel); }
-.rr-notice-warn { border-left-color: var(--rr-red); }
 
 /* ---------- Tree (class, then cars, then liveries) ---------- */
 .rr-tree-row { display: flex; align-items: center; gap: 8px; min-height: 34px; border-bottom: 1px solid var(--rr-line); }
@@ -727,7 +723,7 @@ button, select { font-family: inherit; }
 .rr-dot-pole { background: var(--rr-gold); }
 
 /* ---------- Photo tile and promo tile ---------- */
-.rr-tile, .rr-promo {
+.rr-promo {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -739,15 +735,15 @@ button, select { font-family: inherit; }
   background-position: center;
   background-size: cover;
 }
-.rr-tile.rr-has-photo::before, .rr-promo.rr-has-photo::before {
+.rr-promo.rr-has-photo::before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, var(--rr-photo-fade), transparent 75%);
 }
-.rr-tile > *, .rr-promo > * { position: relative; }
+.rr-promo > * { position: relative; }
 /* Text over a photo or graphic is always light, on the dark fade */
-.rr-tile.rr-has-photo, .rr-promo.rr-has-photo {
+.rr-promo.rr-has-photo {
   --rr-text: var(--rr-photo-text);
   --rr-muted: var(--rr-photo-muted);
   --rr-line: var(--rr-photo-line);
@@ -757,7 +753,7 @@ button, select { font-family: inherit; }
 }
 .rr-promo-feature { min-height: 300px; }
 /* Every bit of text over a photo gets the same very slight shadow so it reads on bright pictures */
-.rr-tile.rr-has-photo, .rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
+.rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
 /* News on a phone (portrait): no preview text under each story title */
 @media (orientation: portrait) { .rr-news-grid .rr-promo-text .rr-body { display: none; } }
 /* Large photo and news blocks that are links lift off the page on hover (no border change). */
@@ -820,16 +816,13 @@ a.rr-btn { text-decoration: none; }
    its tooltip text becomes the confirm text. The white border and the tooltip show ONLY while the pointer is over the button
    (or it has keyboard focus); move away and both go, the button stays red; move back and both return. After 3 seconds it resets. */
 .rr-btn.rr-confirming, .rr-btn.rr-confirming:hover, .rr-nav-item.rr-confirming, .rr-nav-item.rr-confirming:hover,
-.rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming,
-.rr-topbar-end .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn[aria-current="page"].rr-confirming {
+.rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover {
   background: var(--rr-red);
   border-color: var(--rr-red);
   color: var(--rr-on-red);
 }
 .rr-btn.rr-confirming:hover, .rr-btn.rr-confirming:focus-visible, .rr-nav-item.rr-confirming:hover, .rr-nav-item.rr-confirming:focus-visible,
-.rr-icon-btn.rr-confirming:hover, .rr-icon-btn.rr-confirming:focus-visible,
-.rr-topbar-end .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming:focus-visible,
-.rr-topbar-end .rr-icon-btn[aria-current="page"].rr-confirming:hover {
+.rr-icon-btn.rr-confirming:hover, .rr-icon-btn.rr-confirming:focus-visible {
   border-color: var(--rr-on-red);
 }
 /* Buttons inside a table: the tooltip opens ABOVE the button and lines up with its right edge, so it is never cut off
@@ -901,7 +894,6 @@ a.rr-btn { text-decoration: none; }
   .rr-logo { justify-content: center; }
   .rr-logo-img { object-position: center; }
   .rr-logo-img { height: auto; max-width: 100%; }   /* portrait: the shell sets the width to match the menu buttons below it (fitTopbar) */
-  .rr-topbar-end { order: 2; flex-shrink: 0; }
   .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
   .rr-page-title { font-size: 28px; }
@@ -914,7 +906,6 @@ a.rr-btn { text-decoration: none; }
   .rr-news-grid { flex: 0 0 auto; grid-template-rows: none; grid-auto-rows: 170px; }
   .rr-news-first > :first-child { grid-row: auto; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }
-  .rr-span-2 { grid-column: auto; }
   .rr-row-stats, .rr-row-stats-wide { display: grid; grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rr-row-stats-wide > .rr-stat-wide { grid-column: 1 / -1; }
 }
@@ -922,7 +913,6 @@ a.rr-btn { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
-
 
 /* ---------- Ranking strip: rank 1 large, ranks 2 to 5 equal tiles sharing the rest ---------- */
 .rr-strip { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, 136px); }
@@ -966,7 +956,6 @@ a.rr-btn { text-decoration: none; }
 /* Standings by round: the points of a round dropped from the total are struck through, a bonus is a small raised number */
 .rr-dropped { text-decoration: line-through; color: var(--rr-muted); }
 .rr-bonus { font-size: 9px; font-weight: 700; vertical-align: super; margin-left: 2px; color: var(--rr-red); }
-.rr-group-title { margin: 8px 0 0; }
 
 @media (orientation: portrait) {
   .rr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: auto; }
@@ -1031,13 +1020,12 @@ a.rr-btn { text-decoration: none; }
 .rr-banner-who { display: flex; align-items: center; gap: 16px; }
 .rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; overflow: hidden; background: var(--rr-bar); }
 .rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.rr-banner-avatar .rr-banner-avatar-mark { width: 56%; height: auto; object-fit: contain; }
+
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
 .rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 44px; height: auto; opacity: 1; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
 @media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } }
-
 
 /* ---------- Season sub-tab and track layout pictures ---------- */
 .rr-track-cell { display: flex; align-items: center; gap: 12px; }
@@ -1090,8 +1078,7 @@ a.rr-btn { text-decoration: none; }
 .rr-article-sub { margin: 24px 0 12px; font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; clear: none; }
 .rr-article-sub:first-of-type { margin-top: 0; }
 .rr-figure { width: 42%; max-width: 440px; margin: 4px 0 12px; }
-.rr-figure-right { float: right; margin-left: 24px; }
-.rr-figure-left { float: left; margin-right: 24px; }
+
 .rr-figure-wide { float: none; width: 100%; max-width: none; margin: 0 0 16px; }
 .rr-quote { margin: 0 0 16px; padding: 4px 0 4px 16px; border-left: 2px solid var(--rr-red); font-size: 15px; line-height: 1.6; font-style: italic; }
 .rr-article a { color: var(--rr-text); text-decoration: underline; }

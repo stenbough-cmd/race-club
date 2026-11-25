@@ -67,12 +67,6 @@
     if (s.status === 'writing') return ['Writing...', '', ''];
     return ['Failed', 'rr-status-bad', (s.error || '').slice(0, 140)];
   }
-  function storyDone(res, label) {
-    var st = res && res.story;
-    if (!st) return '';
-    if (st.already) return '';
-    return st.ok ? ' The ' + label + ' was written.' : ' The ' + label + ' could not be written: ' + (st.error || 'unknown reason') + ' Use Retry story.';
-  }
   /* Write, retry or rewrite a story. Takes about a minute: the page says so and waits. */
   function writeStory(opts, label, rewrite) {
     writing = true;

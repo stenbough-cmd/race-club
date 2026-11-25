@@ -720,7 +720,6 @@
   };
 
   /* ---------------- ONE DRIVER (driver.html?driver=...): career pages, filtered by the Season dropdown ---------------- */
-  var INCIDENT_LIMIT = 30;   /* the server's default incident point limit; used for the Clean racing axis */
 
   /* Every race a driver ran in the chosen seasons, newest first: [{ x: result, season, round }]. */
   function profileRows(d, sel) {

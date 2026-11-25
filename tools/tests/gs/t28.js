@@ -19,7 +19,7 @@ ok(!vm.runInContext('rcPreviewResults_({})',ctx).rounds||true,'upload by hand ok
 /* create it */
 season.seasonId=sid; ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3'],activate:true};
 r=vm.runInContext('rcApi_(__req)',ctx);
-ok(r.ok&&r.story&&vm.runInContext('__previews.join()',ctx)==='preview:'+sid,'Create a season writes the preview story');
+ok(r.ok&&!r.story&&vm.runInContext('__previews.length',ctx)===0,'Create a season does not write the preview story (the organizer adds context, then presses Write story)');
 const lr2=vm.runInContext('rcListRounds_()',ctx);
 ok(lr2.seasons.some(s=>s.seasonId===sid)&&lr2.rounds.some(x=>x.season===sid),'after Create the season and its round show in the Rounds tab');
 /* Gemini: a busy answer is asked once more, then the next model */
@@ -32,7 +32,7 @@ ctx.__p={}; let g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,c
 ok(g.ok&&g.model==='model-a'&&calls.join()==='model-a,model-a','a 503 is retried on the same model once and then succeeds ('+calls.join()+')');
 calls=[]; ctx.UrlFetchApp={fetch:(u)=>{calls.push(u.split('/models/')[1].split(':')[0]); return {getResponseCode:()=>503,getContentText:()=>'busy'};}};
 g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,ctx);
-ok(!g.ok&&calls.join()==='model-a,model-a,model-b,model-b','two tries per model, then the next model ('+calls.join()+')');
+ok(!g.ok&&calls.join()==='model-a,model-a,model-a,model-b,model-b,model-b','three tries per model, then the next model ('+calls.join()+')');
 calls=[]; ctx.UrlFetchApp={fetch:(u)=>{calls.push('x'); return {getResponseCode:()=>400,getContentText:()=>'bad request'};}};
 g=vm.runInContext(`rcStoryGemini_('K','model-a','prompt',__p)`,ctx);
 ok(calls.length===2,'a real error (400) is not retried: one try per model ('+calls.length+')');
