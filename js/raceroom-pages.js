@@ -257,12 +257,8 @@
     }
 
     function drawStandings() {
-      var rows = seasonRows(season, cls), done = doneRounds(season), lead = rows[0], second = rows[1];
+      var rows = seasonRows(season, cls);
       var finished = season.status === 'Finished';
-      /* Season tiles: how many different drivers have won, and the quickest lap of the season (counted rounds only). */
-      var counted = season.results.filter(function (x) { return (cls === 'all' || x.cls === cls) && roundCounts(season, x.round); }), seen = {}, winners = [];
-      counted.forEach(function (x) { if (x.pos === 1 && x.status === 'Finished' && !seen[x.driver]) { seen[x.driver] = 1; winners.push(x.driver); } });
-      var quick = counted.filter(function (x) { return x.best > 0; }).sort(function (a, b) { return a.best - b.best; })[0];
       /* The rows come best first, so Pos is the sorted column. Points columns sort high to low on the first click. */
       var cols = [{ key: 'pos', label: 'Pos', sort: true, sorted: true }, { key: 'driver', label: 'Driver', sort: true }];
       season.rounds.forEach(function (r) { cols.push({ key: 'r' + r.n, label: 'R' + r.n, num: true, sort: true, desc: true }); });
@@ -271,14 +267,6 @@
         RR.strip(rows.slice(0, 5).map(function (r) {
           return { title: r.d.name, country: r.d.country, sub: className(classIn(season, r.d)), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
-        RR.statRow([
-          RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
-          RR.stat('Drivers', rows.length, cls === 'all' ? 'All classes' : className(cls)),
-          cls === 'all' && classesIn(season).length > 1 ? RR.stat(finished ? 'Champions' : 'Leaders', 'One per class', 'Choose a class')
-            : RR.wide(RR.stat(finished ? 'Champion' : 'Leader', lead ? lead.d.name : '-', lead && second ? '+' + (lead.t.total - second.t.total) + ' pts over second place' : (lead ? 'No one to chase yet' : ''))),
-          RR.stat('Winners', winners.length || '-', winners.length ? (winners.length === 1 ? 'driver has won' : 'different drivers have won') + ' in ' + plural(done.length, 'round', 'rounds') : 'No races won yet'),
-          RR.stat('Fastest lap', quick ? RR.lap(quick.best) : '-', quick ? driver(quick.driver).name + ' \u00B7 ' + ((roundOf(season, quick.round) || {}).track || '') : 'No laps counted yet')
-        ]),
         finished && season.champions && Object.keys(season.champions).length ? RR.table([{ key: 'cls', label: 'Champions' }, { key: 'who', label: 'Driver' }],
           Object.keys(season.champions).filter(function (c) { return cls === 'all' || String(c) === String(cls); }).map(function (c) {
             var dr = byId(D.drivers, season.champions[c]);
