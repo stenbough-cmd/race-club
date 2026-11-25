@@ -271,28 +271,21 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Icon area at the far right (not part of the navbar): Help, Protest, then admin Log in / Log out.
-     Protest opens the protest page. Help opens the league rules (help.html). */
-  var topEnd = el('div', 'rr-topbar-end');
-  var helpBtn = iconBtn('a', 'help', 'Help');
-  helpBtn.href = 'help.html';
-  if (mainId === 'help') helpBtn.setAttribute('aria-current', 'page');
-  var protestBtn = iconBtn('a', 'protest', 'Protest');
-  protestBtn.href = 'protest.html';
-  if (mainId === 'protest') protestBtn.setAttribute('aria-current', 'page');
-  /* Admin (cogwheel icon): only shown while an admin is logged in. It opens the admin hub. */
-  var adminLink = iconBtn('a', 'admin', 'Admin');
+  /* Admin and Log in are the last buttons of the menu row, styled like the other menu buttons. Nothing sits at the top right.
+     Admin (opens the admin hub) is only shown while an admin is logged in. */
+  var adminLink = el('a', 'rr-nav-item', 'Admin');
   adminLink.href = 'admin.html';
   if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
-  var adminBtn = iconBtn('button', 'login', 'Log in');
+  var adminBtn = el('button', 'rr-nav-item', 'Log in');
+  adminBtn.type = 'button';
   adminBtn.classList.add('rr-tip-end');
-  add(topEnd, helpBtn, protestBtn, adminLink, adminBtn);
-  add(topbar, logo, nav, topEnd);
+  add(nav, adminLink, adminBtn);
+  add(topbar, logo, nav);
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
     topbar.classList.remove('rr-topbar-stacked');
-    if (nav.offsetTop > logo.offsetTop + 4 || topEnd.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
+    if (nav.offsetTop > logo.offsetTop + 4) topbar.classList.add('rr-topbar-stacked');
   }
   window.addEventListener('resize', fitTopbar);
   window.addEventListener('load', fitTopbar);
@@ -463,13 +456,11 @@
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
   RR.param = function (name) { return new URLSearchParams(location.search).get(name); };
 
-  /* Switch the top-right icon between Log in and Log out. */
+  /* Switch the last menu button between Log in and Log out, and show or hide the Admin button. */
   RR.setAdmin = function (signedIn) {
     adminLink.hidden = !signedIn;
-    setIcon(adminBtn, signedIn ? 'logout' : 'login');
     disarm(adminBtn);
-    adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
-    adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');
+    adminBtn.textContent = signedIn ? 'Log out' : 'Log in';
   };
   RR.setAdmin(!!adminLoad());
   adminBtn.addEventListener('click', function () {
@@ -920,7 +911,7 @@
      the label with a percentage line under it (text, for example "84% finished"; it must be the same percentage as value); with no text the rounded value and a % sign are shown.
      tip (optional) is the plain fact behind the percentage, shown on hover.
      ref (optional, 0 to 100) is the league average for that axis, drawn as a dashed grey shape behind the red one, with a small key under the chart. */
-  RR.radar = function (axes) {
+  RR.radar = function (axes, title) {
     var NS = 'http://www.w3.org/2000/svg', W = 500, H = 290, cx = W / 2, cy = H / 2, R = 86, n = axes.length;
     function node(tag, attrs, text) {
       var x = document.createElementNS(NS, tag);
@@ -944,7 +935,7 @@
       g.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, a.text !== undefined ? a.text : Math.round(a.value) + '%'));
       svg.appendChild(g);
     });
-    var box = add(el('div', 'rr-panel rr-radar'), svg);
+    var box = add(el('div', 'rr-panel rr-radar'), title ? RR.heading(title) : null, svg);
     var key = el('div', 'rr-radar-key');
     key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-own'), document.createTextNode('This driver')));
     if (hasRef) key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-ref'), document.createTextNode('League average')));
@@ -1105,6 +1096,7 @@
     [/^(write|edit)\b/i, 'edit'],
     [/^(mark as reviewing|save ruling)/i, 'steward'],
     [/^end season/i, 'trophy'],
+    [/^help\b/i, 'help'],
     [/^log in/i, 'login'],
     [/^start over/i, 'startover']
   ];
@@ -1121,6 +1113,15 @@
     b.appendChild(document.createTextNode(text));
     if (onClick) b.addEventListener('click', onClick);
     return b;
+  };
+  /* A link that looks and sounds like a button (same look, same icon rule as RR.button). */
+  RR.linkButton = function (text, href, icon) {
+    var a = el('a', 'rr-btn');
+    a.href = href;
+    if (icon === undefined) icon = RR.buttonIcon(text);
+    if (icon) a.innerHTML = iconSvg(icon);
+    a.appendChild(document.createTextNode(text));
+    return a;
   };
   /* Make any button two-click. `hoverText` is not used (a button only has a hover tooltip if its own design has one,
      like the top-right icons). The first click turns it red with `confirmText` (for example "Confirm start over") as its

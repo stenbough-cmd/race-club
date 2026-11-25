@@ -87,7 +87,7 @@
         ['News', 'news.html, story.html', "The race stories and your own posts, newest first. A story opens in a popup."],
         ['League', 'leaderboards.html', "The League menu item. Tabs: Standings, Race Results, Lap Times, Schedule, Season. A season dropdown covers old seasons too."],
         ['Drivers', 'drivers.html, driver.html', "Every driver. A profile has Overview, Race History, Statistics, Achievements and Leaderboards."],
-        ['File a Protest', 'protest.html', "The protest form (flag icon, top right). It needs the round password."],
+        ['File a Protest', 'protest.html', "The protest form (the File a protest button on League, Season). It needs the round password."],
         ['Help', 'help.html, raceroom-help.js', "The league rules in short: The league, Points, Penalties."],
         ['About, Legal, 404', 'about.html, legal.html, 404.html', "Plain text pages."]
       ]),
@@ -95,7 +95,7 @@
       "League tables sort: click a column heading to sort by it and click again to reverse it. The red heading with an arrow is the current sort. Each table opens in its natural order: standings by position, race results by finishing place inside each class, lap times by average lap, the schedule by round. To make another column sortable, add sort: true to it in js/raceroom-pages.js, with desc: true if the first click should go high to low."
     ]),
     panel('Admin pages', [
-      "Log in with the key icon at the top right. A login lasts 6 hours or until the tab closes. The cog icon then opens the admin hub.",
+      "Log in with the Log in button at the end of the menu row. A login lasts 6 hours or until the tab closes. The Admin button next to it then opens the admin hub.",
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
         ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],

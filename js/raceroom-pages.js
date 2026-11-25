@@ -498,10 +498,34 @@
           add(el('div'), RR.heading(c.name), RR.label(plural(c.cars.length, 'car', 'cars') + ' \u00B7 ' + plural(liveries, 'livery', 'liveries')))),
         cars);
     }
+    /* The box at the top of the Season tab: the season's name, how big it is, and what is worth knowing at a glance, with the two links most people need. */
+    function seasonSummary() {
+      var live = season.rounds.filter(function (r) { return !r.cancelled; }), dates = live.map(function (r) { return r.date; }).filter(Boolean);
+      var nClasses = season.setup && season.setup.classes ? season.setup.classes.length : classesIn(season).length;
+      var sub = [plural(live.length, 'round', 'rounds')];
+      if (dates.length) sub.push(dates.length > 1 && dates[0] !== dates[dates.length - 1] ? dates[0] + ' to ' + dates[dates.length - 1] : dates[0]);
+      sub.push(nClasses > 1 ? 'Multi-class' : 'Single class');
+      var ran = live.filter(function (r) { return r.done; }).length, next = live.filter(function (r) { return !r.done; })[0];
+      var kv = el('div', 'rr-kv-list');
+      kv.appendChild(RR.kv('Status', season.status === 'Active' ? 'In progress' : (season.status === 'Finished' ? 'Finished' : season.status)));
+      kv.appendChild(RR.kv('Rounds run', ran + ' of ' + live.length));
+      if (next) kv.appendChild(RR.kv('Next round', next.track + (next.layout && next.layout !== next.track ? ', ' + next.layout : '') + (next.date ? ' \u00B7 ' + next.date : '')));
+      kv.appendChild(RR.kv('Classes', (season.setup && season.setup.classes ? season.setup.classes.map(function (c) { return c.name; }) : classesIn(season).map(function (c) { return c.name; })).join(', ')));
+      if (season.format && season.format.races > 1) kv.appendChild(RR.kv('Races per round', String(season.format.races)));
+      kv.appendChild(RR.kv('Dropped rounds', season.dropWeeks ? String(season.dropWeeks) : 'None'));
+      if (season.status === 'Finished' && season.champions && Object.keys(season.champions).length) {
+        var names = Object.keys(season.champions).map(function (c) { var dr = byId(D.drivers, season.champions[c]); return dr ? dr.name : ''; }).filter(Boolean);
+        if (names.length) kv.appendChild(RR.kv(names.length > 1 ? 'Champions' : 'Champion', names.join(', ')));
+      }
+      kv.appendChild(RR.kv('Protests', 'Open for 12 hours after each race'));
+      return seasonPanel(season.name, RR.label(sub.join(' \u00B7 ')), kv,
+        add(el('div', 'rr-form-row'), RR.linkButton('Help and rules', 'help.html', 'help'), RR.linkButton('File a protest', 'protest.html', 'protest')));
+    }
     function drawSeason() {
       var setup = season.setup, node = RR.view('season');
-      if (!setup) { fill(node, RR.empty('The details for this season have not been posted yet.')); return; }
       var out = el('div', 'rr-stack');
+      out.appendChild(seasonSummary());
+      if (!setup) { out.appendChild(RR.empty('The details for this season have not been posted yet.')); fill(node, out); return; }
       setup.classes.filter(function (c) { return cls === 'all' || c.id === cls; }).forEach(function (c) { out.appendChild(seasonClass(c)); });
       var rules = el('div', 'rr-season-rules');
       setup.rules.forEach(function (g) {
@@ -745,15 +769,17 @@
     st.incPerRace = st.races ? st.incidents / st.races : 0;
     st.avgGapPct = st.races ? avg(rows, function (r) { return r.x.gapPct; }) : 0;
     st.cleanLaps = st.laps ? Math.max(0, 100 - st.invalid / st.laps * 100) : 0;
-    /* The four radar axes, each 0 to 100, all from league data:
-       Results = average share of the field beaten. Finishing = share of races finished.
-       Clean racing = 100 minus incident points per race as a share of the server limit.
-       Pace = 100 minus 20 for every 1% the best lap was off the class fastest. */
+    /* The four radar axes, each 0 to 100% (higher is better), all from league data:
+       League results = average share of the field beaten (shown as Top n%). Finishing = share of races finished.
+       Clean laps = share of laps that counted; if the files cannot tell us that, Clean races = share of races with no incident points.
+       Pace = where the driver's best-lap gap ranks among every driver in the same seasons (worked out where the radar is drawn, because it needs the other drivers). */
+    st.lapsKnown = st.laps > 0 && rows.every(function (r) { return typeof r.x.invalid === 'number'; });
+    st.cleanRaces = st.races ? rows.filter(function (r) { return !r.x.incidents; }).length / st.races * 100 : 0;
     st.radar = [
-      { label: 'Results', value: avg(rows, function (r) { return r.x.of > 1 ? (r.x.of - r.x.pos) / (r.x.of - 1) * 100 : 100; }) },
+      { label: 'League results', value: avg(rows, function (r) { return r.x.of > 1 ? (r.x.of - r.x.pos) / (r.x.of - 1) * 100 : 100; }) },
       { label: 'Finishing', value: st.races ? st.finished / st.races * 100 : 0 },
-      { label: 'Clean racing', value: st.races ? Math.max(0, 100 - st.incPerRace / INCIDENT_LIMIT * 100) : 0 },
-      { label: 'Pace', value: st.races ? Math.min(100, Math.max(0, 100 - avg(rows, function (r) { return r.x.gapPct; }) * 20)) : 0 }
+      st.lapsKnown ? { label: 'Clean laps', value: st.cleanLaps } : { label: 'Clean races', value: st.cleanRaces },
+      { label: 'Pace', value: 0 }
     ];
     var cars = grouped(rows, function (r) { return r.x.car; }).sort(function (a, b) { return b.rows.length - a.rows.length; });
     st.favouriteCar = cars[0] ? { name: cars[0].key, share: Math.round(cars[0].rows.length / st.races * 100) } : null;
@@ -874,24 +900,36 @@
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
-      /* The radar: the grid is percentages, so every axis shows the same percentage the point is plotted at (0% in the centre, 100% at the edge).
-         The plain facts behind each percentage are the hover text. A dashed shape shows the league average over every driver in the same seasons. */
-      function pc(i) { return Math.round(st.radar[i].value) + '%'; }
-      var texts = st.races ? [pc(0) + ' beaten', pc(1) + ' finished', pc(2) + ' clean', pc(3) + ' pace'] : ['-', '-', '-', '-'];
-      var tips = st.races ? [
-        'On average this driver finished ahead of ' + pc(0) + ' of the field.',
-        st.finished + ' of ' + st.races + ' races finished.',
-        st.incPerRace.toFixed(1) + ' incident points per race. The server limit is ' + INCIDENT_LIMIT + ', and 100% means none used.',
-        'Best laps average ' + Math.max(0, st.avgGapPct).toFixed(2) + '% slower than the fastest in class. 100% is the fastest, and 0% is 5% or more slower.'
-      ] : [];
-      var sums = [0, 0, 0, 0], people = 0;
+      /* The radar: the grid is percentages (0% in the centre, 100% at the edge) and higher is better. Results and Pace are shown as Top n%, so
+         Top 1% sits at the edge. Pace is the driver's rank by best-lap gap among every driver in the same seasons. The plain facts behind each
+         number are the hover text. A dashed shape shows the league average over the same drivers. */
+      var field = [];
       D.drivers.forEach(function (x) {
         var xr = profileRows(x, sel);
-        if (!xr.length) return;
-        profileStats(x, xr, sel).radar.forEach(function (a, i) { sums[i] += a.value; });
-        people++;
+        if (xr.length) field.push({ id: x.id, p: profileStats(x, xr, sel) });
       });
-      var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 ? sums[i] / people : undefined }; });
+      var people = field.length, rank = 1;
+      field.forEach(function (f) { if (st.races && f.p.avgGapPct < st.avgGapPct) rank++; });
+      function paceOf(f) { var r = 1; field.forEach(function (g) { if (g.p.avgGapPct < f.p.avgGapPct) r++; }); return people > 1 ? (people - r) / (people - 1) * 100 : 100; }
+      st.radar[3].value = people > 1 ? (people - rank) / (people - 1) * 100 : 100;
+      function pc(i) { return Math.round(st.radar[i].value); }
+      function top(v) { return 'Top ' + Math.max(1, 100 - Math.round(v)) + '%'; }
+      var paceTop = 'Top ' + Math.max(1, Math.ceil(rank / Math.max(1, people) * 100)) + '%';
+      var texts = st.races ? [top(st.radar[0].value), pc(1) + '% finished', pc(2) + '% clean', paceTop] : ['-', '-', '-', '-'];
+      var tips = st.races ? [
+        'On average this driver finished ahead of ' + pc(0) + '% of the field.',
+        st.finished + ' of ' + st.races + ' races finished.',
+        st.lapsKnown ? (st.laps - st.invalid) + ' of ' + st.laps + ' laps were clean.' : (st.races - Math.round(st.cleanRaces * st.races / 100)) + ' of ' + st.races + ' races had incident points, so ' + pc(2) + '% were clean. The lap files could not tell us how many laps were clean.',
+        'Best laps average ' + Math.max(0, st.avgGapPct).toFixed(2) + '% slower than the fastest in class. Ranked ' + rank + ' of ' + people + ' drivers.'
+      ] : [];
+      var sums = [0, 0, 0, 0], counts = [0, 0, 0, 0];
+      field.forEach(function (f) {
+        f.p.radar.forEach(function (a, i) {
+          if (i === 3) { sums[i] += paceOf(f); counts[i]++; }
+          else if (a.label === st.radar[i].label) { sums[i] += a.value; counts[i]++; }
+        });
+      });
+      var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 && counts[i] ? sums[i] / counts[i] : undefined }; });
       var fav = st.favouriteCar;
       var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
         el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');
@@ -932,7 +970,7 @@
       next.forEach(function (a) { nextGrid.appendChild(RR.card(a)); });
       fill(RR.view('overview'), add(el('div', 'rr-stack rr-stack-tight'),
         add(el('div', 'rr-grid-2'), card, hero),
-        add(el('div', 'rr-grid-2'), RR.radar(radarAxes), standing),
+        add(el('div', 'rr-grid-2'), RR.radar(radarAxes, 'League radar'), standing),
         RR.statRow([
           RR.stat('Last race', last ? (last.x.status === 'Finished' ? RR.pos(last.x.pos) : last.x.status) : '-', last ? last.round.track : 'No races yet'),
           RR.stat('Best finish', best ? RR.pos(best.x.pos) : '-', best ? best.round.track : 'No races yet'),

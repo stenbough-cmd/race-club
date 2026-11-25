@@ -79,7 +79,7 @@
       "Intentionally wrecking another driver can lead to a disqualification."
     ]),
     panel('Filing a protest', [
-      "Use the flag icon at the top right of any page. You need the round password from Discord, so only league members can protest.",
+      "Open League, then the Season tab, and use the File a protest button. You need the round password from Discord, so only league members can protest.",
       "Choose the race, the driver, the lap and a reason, then describe what happened. If you caused the contact yourself, tick Self report.",
       "A protest must be filed within 12 hours of the scheduled start of the round.",
       "The league admin rules on every protest. They can dismiss it or give a penalty.",

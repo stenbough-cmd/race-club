@@ -126,7 +126,8 @@ button, select { font-family: inherit; }
   cursor: pointer;
   transition: background-color var(--rr-speed) ease, border-color var(--rr-speed) ease, color var(--rr-speed) ease;
 }
-.rr-nav-item { padding: 0 16px; font-weight: 400; }
+.rr-nav-item { font-family: inherit; flex: none; padding: 0 16px; font-weight: 400; white-space: nowrap; }
+.rr-nav-item[hidden] { display: none; }
 .rr-icon-btn { width: 34px; padding: 0; }
 .rr-icon-btn svg { display: block; width: 18px; height: 18px; }
 .rr-nav-item:hover, .rr-icon-btn:hover { border-color: var(--rr-text); }
@@ -211,7 +212,7 @@ button, select { font-family: inherit; }
 .rr-head-tools { display: flex; align-items: flex-end; gap: var(--rr-gap); flex-wrap: wrap; }
 
 /* ---------- Sub-tabs ---------- */
-.rr-subtabs { display: flex; padding: 0 var(--rr-pad); }
+.rr-subtabs { display: flex; position: relative; z-index: 5; padding: 0 var(--rr-pad) 7px; margin-bottom: -7px; }
 .rr-subtab {
   position: relative;
   flex: 1 1 0;
@@ -747,7 +748,7 @@ button, select { font-family: inherit; }
 }
 .rr-promo-feature { min-height: 300px; }
 /* Every bit of text over a photo gets the same very slight shadow so it reads on bright pictures */
-.rr-tile.rr-has-photo, .rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-hero.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
+.rr-tile.rr-has-photo, .rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
 /* News on a phone (portrait): no preview text under each story title */
 @media (orientation: portrait) { .rr-news-grid .rr-promo-text .rr-body { display: none; } }
 /* Large photo and news blocks that are links lift off the page on hover (no border change). */
@@ -803,19 +804,20 @@ button, select { font-family: inherit; }
 .rr-working-pill::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--rr-red); clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
 .rr-working-pill[hidden] { display: none; }
 .rr-icon-solid svg { fill: currentColor; }
+a.rr-btn { text-decoration: none; }
 .rr-btn svg { display: block; flex: none; width: 16px; height: 16px; margin-right: 8px; }
 
 /* Two-click confirm (see the skill race-club-two-click-button). After the first click the button is a red fill with white text and
    its tooltip text becomes the confirm text. The white border and the tooltip show ONLY while the pointer is over the button
    (or it has keyboard focus); move away and both go, the button stays red; move back and both return. After 3 seconds it resets. */
-.rr-btn.rr-confirming, .rr-btn.rr-confirming:hover,
+.rr-btn.rr-confirming, .rr-btn.rr-confirming:hover, .rr-nav-item.rr-confirming, .rr-nav-item.rr-confirming:hover,
 .rr-icon-btn.rr-confirming, .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming,
 .rr-topbar-end .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn[aria-current="page"].rr-confirming {
   background: var(--rr-red);
   border-color: var(--rr-red);
   color: var(--rr-on-red);
 }
-.rr-btn.rr-confirming:hover, .rr-btn.rr-confirming:focus-visible,
+.rr-btn.rr-confirming:hover, .rr-btn.rr-confirming:focus-visible, .rr-nav-item.rr-confirming:hover, .rr-nav-item.rr-confirming:focus-visible,
 .rr-icon-btn.rr-confirming:hover, .rr-icon-btn.rr-confirming:focus-visible,
 .rr-topbar-end .rr-icon-btn.rr-confirming:hover, .rr-topbar-end .rr-icon-btn.rr-confirming:focus-visible,
 .rr-topbar-end .rr-icon-btn[aria-current="page"].rr-confirming:hover {
@@ -894,6 +896,9 @@ button, select { font-family: inherit; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
   .rr-subtab { flex: 0 0 auto; padding-left: 16px; padding-right: 16px; }
   .rr-grid-2, .rr-grid-3, .rr-split, .rr-news-first, .rr-news-rest, .rr-news-quad, .rr-form-grid { grid-template-columns: minmax(0, 1fr); }
+  /* When these collapse to one column their boxes are big, so they get the same space as every other stack. Small tiles (stat rows) keep the tight gap. */
+  .rr-grid-2, .rr-grid-3 { gap: 16px; }
+  .rr-form-grid { gap: var(--rr-gap); }
   .rr-news-grid { flex: 0 0 auto; grid-template-rows: none; grid-auto-rows: 170px; }
   .rr-news-first > :first-child { grid-row: auto; }
   .rr-news .rr-pager { position: sticky; bottom: -24px; margin-top: auto; padding-bottom: 8px; background: var(--rr-bg); }
@@ -952,10 +957,10 @@ button, select { font-family: inherit; }
 .rr-group-title { margin: 8px 0 0; }
 
 @media (orientation: portrait) {
-  .rr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: 136px; }
-  .rr-strip .rr-rank-tile { grid-column: auto; grid-row: auto; }
+  .rr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: auto; }
+  .rr-strip .rr-rank-tile { grid-column: auto; grid-row: auto; min-height: 136px; }
   .rr-strip .rr-rank-1 { grid-column: 1 / span 2; grid-row: auto; min-height: 176px; }
-  .rr-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rr-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 }
 
 /* Seven stat tiles in a row (profile Leaderboards tab) */
@@ -964,6 +969,12 @@ button, select { font-family: inherit; }
 .rr-row-stats-wide > .rr-stat { flex: 1 1 0; min-width: 0; }
 .rr-row-stats-wide > .rr-stat-wide { flex: 2.4 1 0; }
 .rr-row-stats-wide .rr-stat-value { overflow-wrap: anywhere; }
+/* Portrait: rounds and drivers on one row, the leader on the next, winners and fastest lap on the last. Must come after the rule above. */
+@media (orientation: portrait) {
+  .rr-row-stats-wide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rr-row-stats-wide > .rr-stat-wide { grid-column: 1 / -1; }
+}
+.rr-radar > .rr-heading { align-self: flex-start; }
 
 /* Earned achievement: a trophy in the top right corner of the card */
 .rr-card-earned .rr-card-title { padding-right: 32px; }
