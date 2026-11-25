@@ -111,6 +111,7 @@ button, select { font-family: inherit; }
 /* The menu buttons always stay on one row. When they do not fit beside the logo and icons, the shell adds
    rr-topbar-stacked and the whole row drops under them (also always the case in portrait, see below). */
 .rr-topbar-stacked .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
+.rr-topbar-stacked .rr-logo, .rr-topbar-stacked .rr-logo-img { justify-content: center; object-position: center; }   /* the menu row is on its own line: the logo is centered above it */
 .rr-topbar-stacked .rr-topbar-end { order: 2; flex-shrink: 0; }
 .rr-topbar-stacked .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
 .rr-topbar-end { display: flex; align-items: center; gap: var(--rr-gap); margin-left: auto; }
@@ -897,6 +898,8 @@ a.rr-btn { text-decoration: none; }
   .rr-topbar { gap: 12px; min-height: 0; padding-top: 26px; padding-bottom: 26px; }
   /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
   .rr-logo { order: 1; min-width: 0; flex: 0 0 100%; }
+  .rr-logo { justify-content: center; }
+  .rr-logo-img { object-position: center; }
   .rr-logo-img { height: auto; max-width: 100%; }   /* portrait: the shell sets the width to match the menu buttons below it (fitTopbar) */
   .rr-topbar-end { order: 2; flex-shrink: 0; }
   .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
