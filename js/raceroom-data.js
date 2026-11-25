@@ -193,8 +193,7 @@
     return season;
   });
 
-  /* Protests (sample). ruling: 'Pending', 'Penalised' or 'Dismissed'; penalty is what was given ('1 point', '3 points', '5 points' or 'DSQ'); comment is the steward's.
-     self: true means the driver reported their own collision with the driver named in "against". */
+  /* Protests (sample). Public protests are rulings that ended in a penalty: driver (the penalised one), race, lap, reason, penalty ('1 point', '3 points', '5 points' or 'DSQ') and the steward's comment. */
   var PROTEST_REASONS = ['Bad Rejoin', 'Blocking or Weaving', 'Reckless Driving', 'Intentional Wrecking'];
   data.protestReasons = PROTEST_REASONS;
   /* SAMPLE ONLY: a stand-in so the protest page can be tried. The real race password is never in the page: the service checks it. */
@@ -207,11 +206,10 @@
       var a = field[(round.n + 1) % field.length], b = field[(round.n + 2) % field.length];
       var open = round.status === 'Waiting';
       var self = round.n % 2 === 0;
-      data.protests.push({ season: season.id, round: round.n, by: a.id, against: b.id, self: self, lap: 3 + round.n,
-        reason: PROTEST_REASONS[round.n % 4], narrative: self ? 'I went in too deep into the braking zone and hit the car ahead.' : 'Moved across on the straight while I was alongside and we touched.',
-        ruling: open ? 'Pending' : (round.n % 3 === 0 ? 'Dismissed' : 'Penalised'),
-        penalty: open || round.n % 3 === 0 ? '' : (round.n % 2 === 0 ? '1 point' : '3 points'),
-        comment: open ? '' : (round.n % 3 === 0 ? 'Racing incident.' : 'Moved across under braking.') });
+      /* Only a ruled protest that ended in a penalty is public, and it names the penalised driver only. */
+      if (open || round.n % 3 === 0) return;
+      data.protests.push({ season: season.id, round: round.n, race: 1, driver: self ? a.id : b.id, lap: 3 + round.n,
+        reason: PROTEST_REASONS[round.n % 4], ruling: 'Penalised', penalty: round.n % 2 === 0 ? '1 point' : '3 points', comment: 'Moved across under braking.' });
     });
   });
 

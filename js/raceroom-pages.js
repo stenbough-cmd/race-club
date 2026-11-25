@@ -223,19 +223,22 @@
   /* Penalty points come off the season total (taken once per night, shown on the first race of the night). */
   function penaltyText(x) { return x.penaltyPoints ? '-' + x.penaltyPoints : '-'; }
   /* Protests filed for one round of one season (newest first as stored). */
-  function protestsFor(season, n) { return (D.protests || []).filter(function (p) { return p.season === season.id && p.round === n; }); }
-  /* The rulings table for a round: who, against whom, the lap, why, the ruling and the penalty. null when nobody protested. */
+  /* Only rulings with a penalty are public. A file published before this rule (it still names who filed) has no driver field and is ignored until the site data is published again. */
+  function protestsFor(season, n) { return (D.protests || []).filter(function (p) { return p.season === season.id && p.round === n && p.driver !== undefined && p.ruling === 'Penalised'; }); }
+  /* The rulings table for a round: the driver who got a penalty, what for, the steward's comment and the points. Only ruled protests that ended in a penalty
+     are ever published, and nobody who filed is named. null when there is none. */
   function protestTable(season, n) {
     var list = protestsFor(season, n);
     if (!list.length) return null;
+    var multi = (roundOf(season, n) || {}).races > 1;
     return RR.table([
-      { key: 'by', label: 'Filed by', sort: true }, { key: 'against', label: 'Against', sort: true }, { key: 'lap', label: 'Lap', num: true, sort: true },
-      { key: 'reason', label: 'Reason', sort: true }, { key: 'ruling', label: 'Ruling', sort: true }, { key: 'pen', label: 'Penalty', sort: true }
+      { key: 'driver', label: 'Driver', sort: true }, { key: 'reason', label: 'Infraction', sort: true }, { key: 'ruling', label: 'Ruling', sort: true }, { key: 'pen', label: 'Penalty', sort: true }
     ], list.map(function (p) {
-      var by = driver(p.by), against = driver(p.against);
-      return { cells: { by: RR.cell(RR.nameWithFlag(by.name, by.country), p.self ? 'Self report' : ''), against: RR.nameWithFlag(against.name, against.country),
-        lap: (p.race > 1 || (roundOf(season, n) || {}).races > 1) && p.race ? 'Race ' + p.race + ' · ' + p.lap : p.lap, reason: p.reason, ruling: RR.cell(p.ruling === 'Pending' ? RR.tag(p.status === 'Reviewing' ? 'Reviewing' : 'Pending', true) : RR.tag(p.ruling, p.ruling === 'Dismissed'), p.comment || ''), pen: p.penalty || '-' } };
-    }), 'No protests.');
+      var d = driver(p.driver) || { name: String(p.driver), country: '' };
+      return { cells: { driver: RR.nameWithFlag(d.name, d.country), reason: RR.cell(p.reason, (multi && p.race ? 'Race ' + p.race + ' · ' : '') + 'Lap ' + p.lap),
+        ruling: p.comment || '-', pen: p.penalty || '-' },
+        sort: { driver: d.name.toLowerCase(), reason: p.reason.toLowerCase(), ruling: String(p.comment || '').toLowerCase(), pen: p.penalty || '' } };
+    }), 'No penalties were given from protests.');
   }
   /* Mark the row of a sidebar list that matches `index` as the chosen one (the list starts with its first row chosen). */
   function pressRow(list, index) {
@@ -372,7 +375,7 @@
         if (open) head.appendChild(el('span', 'rr-heading-note', ' (Protests close ' + r.protestCloses + ')'));
         fill(right, head,
           picker, table,
-          protestTable(season, pickedRound) ? RR.heading('Protests') : null, protestTable(season, pickedRound));
+          protestTable(season, pickedRound) ? RR.heading('Protest rulings') : null, protestTable(season, pickedRound));
       }
       drawTable();
       fill(RR.view('results'), add(el('div', 'rr-split'), add(el('div'), list), right));
@@ -563,8 +566,8 @@
           add(el('div', 'rr-form-row'), RR.tag(open ? 'Protests open' : 'Protests closed', !open),
             RR.label(open ? 'Protests close ' + r.protestCloses : 'The 12 hour protest window is over')),
           open ? protestForm(r) : null,
-          RR.heading('Protests and rulings'),
-          rulings || RR.empty(open ? 'No protests have been filed for this race yet.' : 'No protests were filed for this race.'));
+          RR.heading('Protest rulings'),
+          rulings || RR.empty(open ? 'Protests stay private until they are ruled. Penalties from them appear here.' : 'No penalties were given from protests for this race.'));
       }
       drawRound();
       fill(holder, add(el('div', 'rr-split'), add(el('div'), list), right));
@@ -640,8 +643,7 @@
             submit.disabled = false;
             if (!(res && res.ok)) { fill(warn, RR.notice(reasons[res && res.error] || 'Your protest could not be filed. Check the boxes and try again.', 'warn')); return; }
             fill(warn);
-            D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, race: Number(f.race), lap: Number(f.lap), reason: f.reason, status: 'Filed', ruling: 'Pending', penalty: '', comment: '' });
-            message = RR.notice('Your protest was filed. The stewards will rule on it.', 'ok');
+            message = RR.notice('Your protest was filed. It stays private until the stewards rule on it.', 'ok');
             pickedRound = r.n;
             drawBody();
           });
@@ -650,8 +652,7 @@
         /* SAMPLE check (sample data only). The real check is done by the service, so the password is never in the page. */
         if (f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the race password. Only league members have it.', 'warn')); return; }
         fill(warn);
-        D.protests.push({ season: season.id, round: r.n, by: f.me, against: f.other, self: f.self, race: Number(f.race), lap: Number(f.lap), reason: f.reason, narrative: f.note.trim(), ruling: 'Pending', penalty: '' });
-        message = RR.notice('Your protest was submitted. The stewards will rule on it after the 12 hour window closes.', 'ok');
+        message = RR.notice('Your protest was submitted. It stays private until the stewards rule on it.', 'ok');
         pickedRound = r.n;
         drawBody();
       }, function () {
@@ -664,6 +665,7 @@
       drawOther();
       refresh();
       add(box, RR.label('File a protest'),
+        RR.notice('Filing a false or misleading protest, including one filed in another driver\u2019s name, is against Race Club\u2019s rules and the spirit of fair competition. A protest stays private until the stewards rule on it, and only a driver who is given a penalty is named in public.', 'warn'),
         RR.row(meSelect, selfBox),
         otherBox,
         RR.row(reasonSelect, raceSelect, lapSelect),

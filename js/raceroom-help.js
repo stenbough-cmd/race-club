@@ -83,7 +83,8 @@
       "Choose the race, the driver, the lap and a reason, then describe what happened. If you caused the contact yourself, tick Self report.",
       "A protest must be filed within 12 hours of the scheduled start of the round.",
       "The league admin rules on every protest. They can dismiss it or give a penalty.",
-      "Protests are public, including the ones that were dismissed, with the outcome and the steward's comment. Only what you wrote in the description stays private."
+      "Protests are private until the stewards rule on them. Only a protest that ends in a penalty is shown, and it names only the driver who got the penalty, the infraction, the steward\u2019s comment and the points. Dismissed protests are never shown, and nobody who filed a protest is ever named.",
+      "Filing a false or misleading protest, including one filed in another driver\u2019s name, is against Race Club\u2019s rules and the spirit of fair competition."
     ]),
     panel('Good to know', [
       "A ruling never changes the race result itself. It is added on top, and it can be reversed.",
