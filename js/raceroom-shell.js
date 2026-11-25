@@ -869,23 +869,19 @@
     return node;
   };
 
-  /* The Driver box on a driver's page: the driver's RaceRoom banner fills the box, with the profile picture at the left and the
-     driver's information (o.info, a list of nodes) beside it. o: { banner (picture address or ''), avatar (picture address or ''), alt, info }.
-     With a banner picture it fills the box under a dark fade; with none the box is black and carries a small Race Club R in the lower
-     right corner. The profile picture is RaceRoom's helmet unless the driver uploaded one; with no picture, a dark square with the R. */
+  /* The Driver box on a driver's page: the standard plain banner (black, with a small Race Club R in the lower right corner) and the
+     Race Club helmet at the left for every driver, with the driver's information (o.info, a list of nodes) beside it.
+     o: { alt, info }. RaceRoom banners and profile pictures are not looked up or used. */
   RR.banner = function (o) {
     var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar'), text = el('div', 'rr-banner-text');
-    function fallback() { pic.textContent = ''; var r = el('img', 'rr-banner-avatar-mark'); r.src = 'assets/images/Race Club R White.webp'; r.alt = ''; pic.appendChild(r); }
-    if (/^https:\/\//.test(String(o.avatar || ''))) {
-      var a = el('img'); a.alt = (o.alt || 'Driver') + ' profile picture'; a.onerror = fallback; a.src = o.avatar; pic.appendChild(a);
-    } else fallback();
+    var helmet = el('img'); helmet.alt = (o.alt || 'Driver') + ' profile picture'; helmet.src = 'assets/images/race_club_helmet.png'; pic.appendChild(helmet);
     (o.info || []).forEach(function (n) { if (n) text.appendChild(n); });
     add(who, pic, text);
     var mark = el('img', 'rr-banner-mark');
     mark.src = 'assets/images/Race Club R White.webp';
     mark.alt = '';
     add(b, who, mark);
-    return RR.photo(b, o.banner, 'full');
+    return b;
   };
 
   /* Ranking strip: the top of a table as tiles. Rank 1 is large; 2 to 5 are equal small tiles that share the rest of the space.

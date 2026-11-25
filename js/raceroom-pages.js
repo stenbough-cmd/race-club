@@ -269,7 +269,7 @@
       cols.push({ key: 'wins', label: 'Wins', num: true, sort: true, desc: true }, { key: 'total', label: 'Total', num: true, sort: true, desc: true });
       fill(RR.view('standings'), add(el('div', 'rr-stack'),
         RR.strip(rows.slice(0, 5).map(function (r) {
-          return { title: r.d.name, country: r.d.country, livery: r.d.banner, sub: className(classIn(season, r.d)), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
+          return { title: r.d.name, country: r.d.country, sub: className(classIn(season, r.d)), value: r.t.total, valueLabel: 'pts', href: profileLink(r.d) };
         })),
         RR.statRow([
           RR.stat('Rounds run', done.length + ' / ' + season.rounds.length, season.name),
@@ -868,9 +868,9 @@
       var myCls = classIn(season, d), table = seasonRows(season, myCls), place = table.map(function (r) { return r.d.id; }).indexOf(d.id) + 1;
       var lead = table[0], mineRow = table[place - 1], last = rows[0];
       var best = rows.filter(function (r) { return r.x.status === 'Finished'; }).sort(function (a, b) { return a.x.pos - b.x.pos; })[0];
-      /* The Driver box carries the driver's banner and profile picture, with the driver's information beside the picture.
+      /* The Driver box carries the plain banner and the Race Club helmet, with the driver's information beside the helmet.
          The name and flag are in the page title. A driver has no team, and the class changes from season to season, so neither is shown here. */
-      var card = RR.banner({ banner: d.banner, avatar: d.avatar, alt: d.name, info: [RR.label('Driver'),
+      var card = RR.banner({ alt: d.name, info: [RR.label('Driver'),
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
@@ -1090,24 +1090,8 @@
     drawAll();
   };
 
-  /* SAMPLE ONLY: asks RaceRoom's user-info page for each sample driver's banner (and avatar) so the pages can be seen with real pictures.
-     The real site gets these from the Sheet (the service saves them). If the browser is not allowed to read RaceRoom's page, or the
-     driver has no banner (null), nothing is shown and the page still draws normally. Waits at most 3 seconds. */
-  function loadSamplePictures() {
-    function clean(v) { v = String(v || ''); if (v.indexOf('//') === 0) v = 'https:' + v; return /^https:\/\/[^\s"'<>]+$/.test(v) ? v : ''; }
-    var jobs = D.drivers.filter(function (d) { return d.userId !== undefined; }).map(function (d) {
-      return fetch('https://game.raceroom.com/utils/user-info/' + d.userId)
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (info) { if (info) { d.banner = clean(info.banner); d.avatar = clean(info.avatar); } })
-        .catch(function () {});
-    });
-    return Promise.race([Promise.all(jobs), new Promise(function (done) { setTimeout(done, 3000); })]);
-  }
-
   var run = PAGES[document.body.getAttribute('data-rr-page')];
   if (run) {
-    if (D.sample && window.fetch && /^(leaderboards|profile)$/.test(document.body.getAttribute('data-rr-page'))) {
-      loadSamplePictures().then(function () { run(); RR.refresh(); });
-    } else { run(); RR.refresh(); }
+    run(); RR.refresh();
   }
 })();
