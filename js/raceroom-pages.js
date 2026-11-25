@@ -874,13 +874,16 @@
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
-      /* The radar: each axis shows its real measure under its name (the point on the chart is still 0 to 100), and a dashed shape shows the league average over every driver in the same seasons. */
-      var texts = st.races ? [
-        Math.round(st.radar[0].value) + '% beaten',
-        Math.round(st.radar[1].value) + '% finished',
-        st.incPerRace.toFixed(1) + ' inc / race',
-        Math.max(0, st.avgGapPct).toFixed(2) + '% slower'
-      ] : ['-', '-', '-', '-'];
+      /* The radar: the grid is percentages, so every axis shows the same percentage the point is plotted at (0% in the centre, 100% at the edge).
+         The plain facts behind each percentage are the hover text. A dashed shape shows the league average over every driver in the same seasons. */
+      function pc(i) { return Math.round(st.radar[i].value) + '%'; }
+      var texts = st.races ? [pc(0) + ' beaten', pc(1) + ' finished', pc(2) + ' clean', pc(3) + ' pace'] : ['-', '-', '-', '-'];
+      var tips = st.races ? [
+        'On average this driver finished ahead of ' + pc(0) + ' of the field.',
+        st.finished + ' of ' + st.races + ' races finished.',
+        st.incPerRace.toFixed(1) + ' incident points per race. The server limit is ' + INCIDENT_LIMIT + ', and 100% means none used.',
+        'Best laps average ' + Math.max(0, st.avgGapPct).toFixed(2) + '% slower than the fastest in class. 100% is the fastest, and 0% is 5% or more slower.'
+      ] : [];
       var sums = [0, 0, 0, 0], people = 0;
       D.drivers.forEach(function (x) {
         var xr = profileRows(x, sel);
@@ -888,7 +891,7 @@
         profileStats(x, xr, sel).radar.forEach(function (a, i) { sums[i] += a.value; });
         people++;
       });
-      var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], ref: people > 1 ? sums[i] / people : undefined }; });
+      var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 ? sums[i] / people : undefined }; });
       var fav = st.favouriteCar;
       var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favourite car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
         el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');

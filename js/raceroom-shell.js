@@ -916,8 +916,9 @@
     return box;
   };
 
-  /* Radar chart. axes: [{ label, value, text, ref }] with value 0 to 100 (where the point sits). Draws a thin web, a red shape, and at each point
-     the label with a line of context under it (text, for example "84% finished" or "3.64% slower"); with no text the rounded value is shown.
+  /* Radar chart. axes: [{ label, value, text, tip, ref }] with value 0 to 100 (where the point sits, a percentage). Draws a thin web, a red shape, and at each point
+     the label with a percentage line under it (text, for example "84% finished"; it must be the same percentage as value); with no text the rounded value and a % sign are shown.
+     tip (optional) is the plain fact behind the percentage, shown on hover.
      ref (optional, 0 to 100) is the league average for that axis, drawn as a dashed grey shape behind the red one, with a small key under the chart. */
   RR.radar = function (axes) {
     var NS = 'http://www.w3.org/2000/svg', W = 500, H = 290, cx = W / 2, cy = H / 2, R = 86, n = axes.length;
@@ -937,8 +938,11 @@
     svg.appendChild(node('polygon', { points: axes.map(function (a, i) { return point(i, Math.max(0, Math.min(100, a.value)) / 100).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '), class: 'rr-radar-shape' }));
     axes.forEach(function (a, i) {
       var p = point(i, 1.2), anchor = Math.abs(p[0] - cx) < 4 ? 'middle' : (p[0] > cx ? 'start' : 'end'), dy = p[1] < cy - 4 ? -6 : (p[1] > cy + 4 ? 14 : 4);
-      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy - 14).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-label' }, a.label));
-      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, a.text !== undefined ? a.text : Math.round(a.value)));
+      var g = node('g', {});
+      if (a.tip) g.appendChild(node('title', {}, a.tip));
+      g.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy - 14).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-label' }, a.label));
+      g.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, a.text !== undefined ? a.text : Math.round(a.value) + '%'));
+      svg.appendChild(g);
     });
     var box = add(el('div', 'rr-panel rr-radar'), svg);
     var key = el('div', 'rr-radar-key');
