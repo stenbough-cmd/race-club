@@ -283,6 +283,12 @@
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
+    /* Portrait: the Race Club graphic is as wide as the menu buttons under it (first button to last), so it stays one steady size. */
+    if (window.matchMedia('(orientation: portrait)').matches && nav.firstElementChild) {
+      var first = nav.firstElementChild, last = nav.lastElementChild;
+      var w = last.offsetLeft + last.offsetWidth - first.offsetLeft;
+      logoImg.style.width = w > 0 ? Math.min(w, logo.clientWidth || w) + 'px' : '';
+    } else logoImg.style.width = '';
     topbar.classList.remove('rr-topbar-stacked');
     if (nav.getBoundingClientRect().left < logo.getBoundingClientRect().right + 24) topbar.classList.add('rr-topbar-stacked');
   }
