@@ -948,7 +948,7 @@
       g.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, a.text !== undefined ? a.text : Math.round(a.value) + '%'));
       svg.appendChild(g);
     });
-    var box = add(el('div', 'rr-panel rr-radar'), title ? RR.heading(title) : null, svg);
+    var box = add(el('div', 'rr-panel rr-radar'), title ? RR.label(title) : null, svg);
     var key = el('div', 'rr-radar-key');
     key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-own'), document.createTextNode('This driver')));
     if (hasRef) key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-ref'), document.createTextNode('League average')));

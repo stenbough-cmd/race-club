@@ -986,7 +986,7 @@ a.rr-btn { text-decoration: none; }
   .rr-row-stats-wide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rr-row-stats-wide > .rr-stat-wide { grid-column: 1 / -1; }
 }
-.rr-radar > .rr-heading { align-self: flex-start; }
+.rr-radar > .rr-label { align-self: flex-start; }
 
 /* Earned achievement: a trophy in the top right corner of the card */
 .rr-card-earned .rr-card-title { padding-right: 32px; }
