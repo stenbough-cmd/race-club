@@ -897,7 +897,7 @@ a.rr-btn { text-decoration: none; }
   .rr-topbar { gap: 12px; min-height: 0; padding-top: 26px; padding-bottom: 26px; }
   /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
   .rr-logo { order: 1; min-width: 0; flex: 0 0 100%; }
-  .rr-logo-img { width: 100%; height: auto; max-width: none; }   /* the Race Club graphic spans the full width of the window */
+  .rr-logo-img { width: 100%; height: auto; max-width: 900px; }   /* the Race Club graphic spans the window width, up to 900px */
   .rr-topbar-end { order: 2; flex-shrink: 0; }
   .rr-nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; position: static; transform: none; }
   .rr-page-head { flex-direction: column; align-items: flex-start; }
