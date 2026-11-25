@@ -18,9 +18,15 @@
 
   /* ---------------- Lookup helpers ---------------- */
   var layoutIndex = {};
+  /* RaceRoom's list names a track version "Brands Hatch Circuit - Indy" and its layout "Indy". The game's own files say "Brands Hatch Circuit" and "Indy",
+     so the part after the dash is dropped when it only repeats the layout name. "Indianapolis Motor Speedway - Modern" (layout Road Course) keeps its version. */
+  function venueName(track, layout) {
+    var m = /^(.*\S)\s+-\s+(.+)$/.exec(String(track));
+    return m && m[2].trim().toLowerCase() === String(layout).trim().toLowerCase() ? m[1] : track;
+  }
   function indexLayouts() {
     layoutIndex = {};
-    R3E.tracks.forEach(function (t) { t.l.forEach(function (l) { layoutIndex[l.id] = { track: t.n, layout: l.n, max: l.m }; }); });
+    R3E.tracks.forEach(function (t) { t.l.forEach(function (l) { layoutIndex[l.id] = { track: venueName(t.n, l.n), layout: l.n, max: l.m }; }); });
   }
   indexLayouts();
 
