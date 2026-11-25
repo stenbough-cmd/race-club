@@ -916,11 +916,11 @@
     return box;
   };
 
-  /* Radar chart. axes: [{ label, value, ref, note }] with value 0 to 100. Draws a thin web, a red shape, and label plus value at each point.
-     ref (optional, 0 to 100) is the league average for that axis, drawn as a dashed grey shape behind the red one, with a small key under the chart.
-     note (optional) is a plain sentence saying what the number means; the notes are listed under the chart. */
+  /* Radar chart. axes: [{ label, value, text, ref }] with value 0 to 100 (where the point sits). Draws a thin web, a red shape, and at each point
+     the label with a line of context under it (text, for example "84% finished" or "3.64% slower"); with no text the rounded value is shown.
+     ref (optional, 0 to 100) is the league average for that axis, drawn as a dashed grey shape behind the red one, with a small key under the chart. */
   RR.radar = function (axes) {
-    var NS = 'http://www.w3.org/2000/svg', W = 380, H = 280, cx = W / 2, cy = H / 2, R = 88, n = axes.length;
+    var NS = 'http://www.w3.org/2000/svg', W = 500, H = 290, cx = W / 2, cy = H / 2, R = 86, n = axes.length;
     function node(tag, attrs, text) {
       var x = document.createElementNS(NS, tag);
       Object.keys(attrs || {}).forEach(function (k) { x.setAttribute(k, attrs[k]); });
@@ -929,29 +929,22 @@
     }
     function point(i, f) { var a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * f, cy + Math.sin(a) * R * f]; }
     function poly(f) { return axes.map(function (_, i) { return point(i, f).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '); }
-    var svg = node('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'rr-radar-svg', role: 'img', 'aria-label': 'Driver profile: ' + axes.map(function (a) { return a.label + ' ' + a.value; }).join(', ') });
+    var svg = node('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'rr-radar-svg', role: 'img', 'aria-label': 'Driver profile: ' + axes.map(function (a) { return a.label + ' ' + (a.text !== undefined ? a.text : Math.round(a.value)); }).join(', ') });
     [0.25, 0.5, 0.75, 1].forEach(function (f) { svg.appendChild(node('polygon', { points: poly(f), class: 'rr-radar-web' })); });
     axes.forEach(function (_, i) { var p = point(i, 1); svg.appendChild(node('line', { x1: cx, y1: cy, x2: p[0].toFixed(1), y2: p[1].toFixed(1), class: 'rr-radar-web' })); });
     var hasRef = axes.every(function (a) { return typeof a.ref === 'number'; });
     if (hasRef) svg.appendChild(node('polygon', { points: axes.map(function (a, i) { return point(i, Math.max(0, Math.min(100, a.ref)) / 100).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '), class: 'rr-radar-ref' }));
     svg.appendChild(node('polygon', { points: axes.map(function (a, i) { return point(i, Math.max(0, Math.min(100, a.value)) / 100).map(function (v) { return v.toFixed(1); }).join(','); }).join(' '), class: 'rr-radar-shape' }));
     axes.forEach(function (a, i) {
-      var p = point(i, 1.22), anchor = Math.abs(p[0] - cx) < 4 ? 'middle' : (p[0] > cx ? 'start' : 'end'), dy = p[1] < cy - 4 ? -6 : (p[1] > cy + 4 ? 14 : 4);
+      var p = point(i, 1.2), anchor = Math.abs(p[0] - cx) < 4 ? 'middle' : (p[0] > cx ? 'start' : 'end'), dy = p[1] < cy - 4 ? -6 : (p[1] > cy + 4 ? 14 : 4);
       svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy - 14).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-label' }, a.label));
-      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, Math.round(a.value)));
+      svg.appendChild(node('text', { x: p[0].toFixed(1), y: (p[1] + dy + 6).toFixed(1), 'text-anchor': anchor, class: 'rr-radar-value' }, a.text !== undefined ? a.text : Math.round(a.value)));
     });
     var box = add(el('div', 'rr-panel rr-radar'), svg);
     var key = el('div', 'rr-radar-key');
     key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-own'), document.createTextNode('This driver')));
     if (hasRef) key.appendChild(add(el('span', 'rr-radar-key-item'), el('span', 'rr-radar-swatch rr-radar-swatch-ref'), document.createTextNode('League average')));
     box.appendChild(key);
-    var notes = axes.filter(function (a) { return a.note; });
-    if (notes.length) {
-      var ul = el('ul', 'rr-radar-notes');
-      notes.forEach(function (a) { ul.appendChild(add(el('li'), el('strong', '', a.label + ' ' + Math.round(a.value)), document.createTextNode(': ' + a.note))); });
-      box.appendChild(ul);
-    }
-    box.appendChild(el('p', 'rr-note rr-radar-scale', 'Every axis runs from 0 at the centre to 100 at the edge. Higher is better.'));
     return box;
   };
 
