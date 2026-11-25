@@ -105,6 +105,7 @@
     forward: '<path d="M9 5l7 7-7 7"/>',
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
     login: '<path d="M14 4h6v16h-6"/><path d="M3 12h11"/><path d="M10 8l4 4-4 4"/>',
+    portrait: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
@@ -271,14 +272,13 @@
     if (item.id === mainId) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   });
-  /* Admin and Log in are the last two buttons of the menu row, icon buttons like Back and Forward. Nothing sits at the top right.
-     Admin (opens the admin hub) is only shown while an admin is logged in. */
-  var adminLink = iconBtn('a', 'admin', 'Admin');
-  adminLink.href = 'admin.html';
-  if (mainId === 'admin') adminLink.setAttribute('aria-current', 'page');
-  var adminBtn = iconBtn('button', 'login', 'Log in');
+  /* One portrait icon button ends the menu row, like Back and Forward. Nothing sits at the top right.
+     Logged out it opens the log in page. Logged in it opens the admin hub, where Log out / Admin at the top logs out. */
+  var adminBtn = iconBtn('a', 'portrait', 'Log in');
+  adminBtn.href = 'login.html';
   adminBtn.classList.add('rr-tip-end');
-  add(nav, adminLink, adminBtn);
+  if (mainId === 'admin') adminBtn.setAttribute('aria-current', 'page');
+  add(nav, adminBtn);
   add(topbar, logo, nav);
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
@@ -295,12 +295,21 @@
   var tools = el('div', 'rr-head-tools');
   /* Every admin page except the Admin hub itself starts with a breadcrumb: Admin / This page. "Admin" goes back to the hub. */
   var titleBox = title;
-  if (body.getAttribute('data-rr-main') === 'admin' && body.getAttribute('data-rr-page') !== 'admin-hub') {
+  var isHub = body.getAttribute('data-rr-page') === 'admin-hub';
+  if (body.getAttribute('data-rr-main') === 'admin' && !isHub) {
     var crumb = el('nav', 'rr-crumb'), crumbBack = el('a', 'rr-crumb-link', 'Admin');
     crumb.setAttribute('aria-label', 'Breadcrumb');
     crumbBack.href = 'admin.html';
     add(crumb, crumbBack, el('span', 'rr-crumb-sep', '/'), el('span', 'rr-crumb-here', body.getAttribute('data-rr-title') || ''));
     titleBox = add(el('div', 'rr-title-box'), crumb, title);
+  } else if (isHub) {
+    /* The admin hub starts with Log out / Admin. Log out is the only way to log out, and it takes two clicks. */
+    var hubCrumb = el('nav', 'rr-crumb'), outBtn = el('button', 'rr-crumb-link rr-crumb-btn', 'Log out');
+    outBtn.type = 'button';
+    hubCrumb.setAttribute('aria-label', 'Breadcrumb');
+    outBtn.addEventListener('click', function () { armClick(outBtn, 'Confirm log out', logOut); });
+    add(hubCrumb, outBtn, el('span', 'rr-crumb-sep', '/'), el('span', 'rr-crumb-here', 'Admin'));
+    titleBox = add(el('div', 'rr-title-box'), hubCrumb, title);
   }
   add(head, titleBox, tools);
 
@@ -455,23 +464,19 @@
   RR.view = function (id) { return main.querySelector('[data-rr-view="' + id + '"]') || main; };
   RR.param = function (name) { return new URLSearchParams(location.search).get(name); };
 
-  /* Switch the last menu button between Log in and Log out, and show or hide the Admin button. */
+  /* The portrait button says Log in while logged out and Admin while logged in. */
   RR.setAdmin = function (signedIn) {
-    adminLink.hidden = !signedIn;
-    setIcon(adminBtn, signedIn ? 'logout' : 'login');
-    disarm(adminBtn);
-    adminBtn.setAttribute('data-rr-tip', signedIn ? 'Log out' : 'Log in');
-    adminBtn.setAttribute('aria-label', signedIn ? 'Log out' : 'Log in');
+    adminBtn.href = signedIn ? 'admin.html' : 'login.html';
+    adminBtn.setAttribute('data-rr-tip', signedIn ? 'Admin' : 'Log in');
+    adminBtn.setAttribute('aria-label', signedIn ? 'Admin' : 'Log in');
   };
   RR.setAdmin(!!adminLoad());
-  adminBtn.addEventListener('click', function () {
+  function logOut() {
     var a = adminLoad();
-    if (!a) { location.href = 'login.html'; return; }
-    armClick(adminBtn, 'Confirm log out', function () {
-      adminClear();
-      apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'index.html'; });
-    });
-  });
+    adminClear();
+    if (!a) { location.href = 'index.html'; return; }
+    apiCall(apiAddress(), { action: 'logout', token: a.token }).then(function () { location.href = 'index.html'; });
+  }
 
   /* The logged-in admin ({ name }) or null. */
   RR.admin = function () { var a = adminLoad(); return a ? { name: a.name } : null; };

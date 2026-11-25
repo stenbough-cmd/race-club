@@ -207,6 +207,9 @@ button, select { font-family: inherit; }
 .rr-crumb-link { color: var(--rr-text); text-decoration: none; }
 .rr-crumb-link:hover, .rr-crumb-link:focus-visible { text-decoration: underline; }
 .rr-crumb-sep { color: var(--rr-muted); }
+.rr-crumb-btn { background: none; border: 1px solid transparent; padding: 2px 6px; margin: -3px -6px; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.rr-crumb-btn.rr-confirming { background: var(--rr-red); border-color: var(--rr-red); color: var(--rr-on-red); text-decoration: none; }
+.rr-crumb-btn.rr-confirming:hover, .rr-crumb-btn.rr-confirming:focus-visible { border-color: var(--rr-on-red); }
 .rr-page-title {
   margin: 0;
   font-size: 28px;
