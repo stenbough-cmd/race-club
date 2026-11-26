@@ -927,8 +927,8 @@ a.rr-btn { text-decoration: none; }
 .rr-rank-value { display: flex; align-items: baseline; gap: 8px; margin-top: auto; }
 .rr-rank-value .rr-stat-value { font-size: 22px; }
 /* The black Race Club R in the lower right corner of a tile with no banner picture (hidden when the picture shows) */
-.rr-rank-mark { position: absolute; right: 12px; bottom: 12px; width: 52px; height: auto; }   /* the helmet, twice the size of the R it replaced */
-.rr-rank-1 .rr-rank-mark { width: 80px; }
+.rr-rank-mark { position: absolute; right: 12px; bottom: 12px; width: 39px; height: auto; }   /* the helmet */
+.rr-rank-1 .rr-rank-mark { width: 60px; }
 .rr-rank-tile.rr-has-photo > .rr-rank-mark { display: none; }
 .rr-rank-1 { grid-column: 1; grid-row: 1 / span 2; }
 .rr-rank-1 .rr-rank-name { font-size: 24px; white-space: normal; }
@@ -1025,8 +1025,9 @@ a.rr-btn { text-decoration: none; }
 .rr-banner > .rr-label { margin-bottom: 12px; }
 
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-/* The Race Club helmet in the lower right corner (twice the size of the R it replaced): only on the plain black banner (no banner picture) */
-.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 88px; height: auto; opacity: 1; }
+.rr-banner-text > .rr-label + .rr-hero-title { margin-top: -7px; }   /* the NAME heading sits the same distance from the name as Current Car does from the car name */
+/* The Race Club helmet in the lower right corner : only on the plain black banner (no banner picture) */
+.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 66px; height: auto; opacity: 1; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
 
 /* ---------- A banner or ranking tile with no picture (the driver's box, and a ranking tile with no livery) ----------
