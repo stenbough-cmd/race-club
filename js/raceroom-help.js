@@ -25,7 +25,7 @@
     panel('The format', [
       "Race Club is a RaceRoom league run in seasons. Each season has its own classes, cars, rules and calendar.",
       "A round is one night on a dedicated server: practice, qualifying, then one or more races. The season page shows the exact format.",
-      "Join in Discord to get the server name and the password for the round. There is no sign up on this site. You are in a season once you finish a session in one of its rounds.",
+      "Join in Discord to get the server name and, if the league has one, its password. There is no sign up on this site. You are in a season once you finish a session in one of its rounds.",
       "Names, results and lap times are public."
     ]),
     panel('One car for the season', [
@@ -79,7 +79,7 @@
       "Intentionally wrecking another driver can lead to a disqualification."
     ]),
     panel('Filing a protest', [
-      "Open League, then the Season tab, and use the File a protest button. You need the round password from Discord, so only league members can protest.",
+      "Open League, then the Season tab, and use the File a protest button. You need the league password from Discord, so only league members can protest.",
       "Choose the race, the driver, the lap and a reason, then describe what happened. If you caused the contact yourself, tick Self report.",
       "A protest must be filed within 12 hours of the scheduled start of the round.",
       "The league admin rules on every protest. They can dismiss it or give a penalty.",

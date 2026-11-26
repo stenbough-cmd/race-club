@@ -110,6 +110,7 @@ button, select { font-family: inherit; }
 .rr-nav { display: flex; align-items: center; gap: var(--rr-gap); flex-wrap: nowrap; flex-shrink: 0; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 /* The menu buttons always stay on one row. When they do not fit beside the logo and icons, the shell adds
    rr-topbar-stacked and the whole row drops under them (also always the case in portrait, see below). */
+.rr-topbar-stacked { row-gap: 20px; }
 .rr-topbar-stacked .rr-logo { order: 1; min-width: 0; flex: 1 1 0; }
 .rr-topbar-stacked .rr-logo, .rr-topbar-stacked .rr-logo-img { justify-content: center; object-position: center; }   /* the menu row is on its own line: the logo is centered above it */
 
@@ -120,7 +121,7 @@ button, select { font-family: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
+  height: var(--rr-nav-h, 34px);
   border: 1px solid transparent;
   background: var(--rr-control);
   color: var(--rr-text);
@@ -131,9 +132,9 @@ button, select { font-family: inherit; }
   cursor: pointer;
   transition: background-color var(--rr-speed) ease, border-color var(--rr-speed) ease, color var(--rr-speed) ease;
 }
-.rr-nav-item { font-family: inherit; flex: none; padding: 0 16px; font-weight: 400; white-space: nowrap; }
+.rr-nav-item { font-family: inherit; flex: none; padding: 0 var(--rr-nav-px, 16px); font-weight: 400; white-space: nowrap; }
 .rr-nav-item[hidden], .rr-icon-btn[hidden] { display: none; }
-.rr-icon-btn { width: 34px; padding: 0; }
+.rr-icon-btn { flex: none; width: var(--rr-nav-h, 34px); padding: 0; }   /* square; never squeezed narrower than tall */
 .rr-icon-btn svg { display: block; width: 18px; height: 18px; }
 .rr-nav-item:hover, .rr-icon-btn:hover { border-color: var(--rr-text); }
 .rr-nav-item[aria-current="page"] {
@@ -888,7 +889,7 @@ a.rr-btn { text-decoration: none; }
 /* ---------- Portrait (window taller than wide) ---------- */
 @media (orientation: portrait) {
   :root { --rr-pad: 16px; }
-  .rr-topbar { gap: 12px; min-height: 0; padding-top: 26px; padding-bottom: 26px; }
+  .rr-topbar { gap: 20px 12px; min-height: 0; padding-top: 26px; padding-bottom: 26px; }   /* a little more room between the logo and the buttons */
   /* Row 1: logo at the left, small icons at the right. Row 2: the menu buttons. */
   .rr-logo { order: 1; min-width: 0; flex: 0 0 100%; }
   .rr-logo { justify-content: center; }
@@ -1017,7 +1018,8 @@ a.rr-btn { text-decoration: none; }
 
 /* Wide banner at the top of a page */
 .rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-bar); box-shadow: var(--rr-shadow); }
-.rr-banner-who { display: flex; align-items: center; gap: 16px; }
+.rr-banner > .rr-label { margin-bottom: 12px; }
+.rr-banner-who { display: flex; align-items: flex-start; justify-content: flex-start; gap: 16px; }
 .rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; overflow: hidden; background: var(--rr-bar); }
 .rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 

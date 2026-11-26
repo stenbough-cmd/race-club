@@ -289,14 +289,26 @@
   /* Keep the menu buttons on one row: if the row does not fit beside the logo and icons, send the whole row
      to its own line (the CSS class rr-topbar-stacked). Checked on load and whenever the window changes. */
   function fitTopbar() {
+    var portrait = window.matchMedia('(orientation: portrait)').matches;
+    nav.style.removeProperty('--rr-nav-px');
+    nav.style.removeProperty('--rr-nav-h');
+    logoImg.style.width = '';
+    topbar.classList.remove('rr-topbar-stacked');
+    if (!portrait && nav.getBoundingClientRect().left < logo.getBoundingClientRect().right + 24) topbar.classList.add('rr-topbar-stacked');
+    if (!portrait && !topbar.classList.contains('rr-topbar-stacked')) return;
+    /* The menu row is on its own line. When it is wider than the window, every button gets less padding left and right and the same amount less
+       above and below (height = 2 x side padding + 2), so the buttons keep their proportions instead of turning tall and thin. At the
+       normal 16px the height is the usual 34px. Below 10px the row scrolls sideways instead. */
+    for (var p = 16; p > 10 && nav.scrollWidth > nav.clientWidth + 1; p--) {
+      nav.style.setProperty('--rr-nav-px', (p - 1) + 'px');
+      nav.style.setProperty('--rr-nav-h', (2 * (p - 1) + 2) + 'px');
+    }
     /* Portrait: the Race Club graphic is as wide as the menu buttons under it (first button to last), so it stays one steady size. */
-    if (window.matchMedia('(orientation: portrait)').matches && nav.firstElementChild) {
+    if (portrait && nav.firstElementChild) {
       var first = nav.firstElementChild, last = nav.lastElementChild;
       var w = last.offsetLeft + last.offsetWidth - first.offsetLeft;
       logoImg.style.width = w > 0 ? Math.min(w, logo.clientWidth || w) + 'px' : '';
-    } else logoImg.style.width = '';
-    topbar.classList.remove('rr-topbar-stacked');
-    if (nav.getBoundingClientRect().left < logo.getBoundingClientRect().right + 24) topbar.classList.add('rr-topbar-stacked');
+    }
   }
   window.addEventListener('resize', fitTopbar);
   window.addEventListener('load', fitTopbar);
@@ -875,12 +887,13 @@
 
   /* The Driver box on a driver's page: the standard plain banner (black, with a small Race Club R in the lower right corner) and the
      Race Club helmet at the left for every driver, with the driver's information (o.info, a list of nodes) beside it.
-     o: { alt, info }. RaceRoom banners and profile pictures are not looked up or used. */
+     o: { alt, title, info }. RaceRoom banners and profile pictures are not looked up or used. */
   RR.banner = function (o) {
     var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar'), text = el('div', 'rr-banner-text');
     var helmet = el('img'); helmet.alt = (o.alt || 'Driver') + ' profile picture'; helmet.src = 'assets/images/race_club_helmet.png'; pic.appendChild(helmet);
     (o.info || []).forEach(function (n) { if (n) text.appendChild(n); });
     add(who, pic, text);
+    if (o.title) b.appendChild(RR.label(o.title));   /* the header sits at the top left of the box, like every other box */
     var mark = el('img', 'rr-banner-mark');
     mark.src = 'assets/images/Race Club R White.webp';
     mark.alt = '';
@@ -1111,7 +1124,7 @@
     [/^end season/i, 'trophy'],
     [/^help\b/i, 'help'],
     [/^log in/i, 'login'],
-    [/^start over/i, 'startover']
+    [/^reset wizard/i, 'startover']
   ];
   RR.buttonIcon = function (text) {
     for (var i = 0; i < BUTTON_ICONS.length; i++) if (BUTTON_ICONS[i][0].test(String(text))) return BUTTON_ICONS[i][1];

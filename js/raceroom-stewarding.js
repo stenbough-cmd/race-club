@@ -1,5 +1,5 @@
 /* Race Club admin: Stewarding.
-   Protests tab: every protest of a season (filed with the round password on the public Protest page). Open one to read it, then dismiss
+   Protests tab: every protest of a season (filed with the league password on the public Protest page). Open one to read it, then dismiss
    it or give 1, 3 or 5 points, or a DSQ (a DSQ needs a comment). Penalties given in the game are final; this is only for what the game
    cannot see. The filer's own words are shown here and are never public. Everything else, including your comment, is public.
    A ruling can be reopened: the penalty is cancelled by a new record, the old one stays on the Penalties tab.
@@ -119,7 +119,7 @@
     var refresh = RR.button(busy ? 'Reading...' : 'Refresh', load);
     if (busy) refresh.disabled = true;
     var box = add(el('div', 'rr-panel rr-stack'), RR.heading('Protests'),
-      el('p', 'rr-body', 'Drivers file a protest on the Protest page with the round password, until 12 hours after the round’s scheduled start. Nothing in the game is changed by a ruling; points are taken off the season total.'));
+      el('p', 'rr-body', 'Drivers file a protest on the Protest page with the league password, until 12 hours after the round’s scheduled start. Nothing in the game is changed by a ruling; points are taken off the season total.'));
     if (failed) box.appendChild(RR.notice('Could not reach the Sheet. Try again.', 'warn'));
     else if (data === null) box.appendChild(RR.notice('Reading the Sheet...', 'ok'));
     else if (!data.seasons.length) box.appendChild(RR.empty('No seasons are saved in the Sheet yet.'));

@@ -590,7 +590,7 @@
       var field = D.drivers.filter(function (d) { return season.results.some(function (x) { return x.round === r.n && x.driver === d.id; }); })
         .sort(function (a, b) { return a.name.localeCompare(b.name); });
       var laps = Math.max.apply(null, season.results.filter(function (x) { return x.round === r.n; }).map(function (x) { return x.laps; }));
-      var races = r.races || 1;
+      var races = r.races || 1, needsPassword = !season.openServer;   /* a league with no password (public server) is asked for none */
       var f = { me: '', other: '', self: false, reason: '', race: races > 1 ? '' : '1', lap: '', note: '', password: '' };
       var box = el('div', 'rr-panel rr-stack');
       var submit = RR.button('Submit protest', null, false), warn = el('div');
@@ -606,7 +606,7 @@
         if (!f.reason) m.push('a reason');
         if (!f.race) m.push('the race');
         if (!f.lap) m.push('the lap');
-        if (!f.password) m.push('the race password');
+        if (needsPassword && !f.password) m.push('the league password');
         if (!f.note.trim()) m.push('what happened');
         return m;
       }
@@ -618,7 +618,7 @@
       var flagged = false, meSelect, reasonSelect, raceSelect, lapSelect, passwordBox, narrative;
       function mark() {
         function set(box, bad) { if (!box) return; if (flagged && bad) box.setAttribute('aria-invalid', 'true'); else box.removeAttribute('aria-invalid'); }
-        set(meSelect, !f.me); set(otherBox.firstChild, !f.other); set(reasonSelect, !f.reason); set(raceSelect, !f.race); set(lapSelect, !f.lap); set(passwordBox, !f.password); set(narrative, !f.note.trim());
+        set(meSelect, !f.me); set(otherBox.firstChild, !f.other); set(reasonSelect, !f.reason); set(raceSelect, !f.race); set(lapSelect, !f.lap); set(passwordBox, needsPassword && !f.password); set(narrative, !f.note.trim());
       }
       function drawOther() {
         fill(otherBox, RR.select(f.self ? 'Driver you interfered with' : 'Driver you are reporting', drivers(f.me), function (v) { f.other = v; refresh(); }, f.other));
@@ -640,10 +640,10 @@
       var lapOptions = [['', 'Choose a lap']];
       for (var i = 1; i <= laps; i++) lapOptions.push([String(i), 'Lap ' + i]);
       lapSelect = RR.select('Lap', lapOptions, function (v) { f.lap = v; refresh(); }, f.lap);
-      passwordBox = RR.input({ label: 'Round ' + r.n + ' password', type: 'password', onChange: function (v) { f.password = v; refresh(); } });
+      passwordBox = needsPassword ? RR.input({ label: 'League password', type: 'password', onChange: function (v) { f.password = v; refresh(); } }) : null;
       narrative = RR.textarea({ label: 'What happened?', value: '', onChange: function (v) { f.note = v; refresh(); } });
 
-      var reasons = { 'wrong-password': 'That is not the round password. Only league members have it.', locked: 'Too many wrong passwords for this round. Try again in 10 minutes.',
+      var reasons = { 'wrong-password': 'That is not the league password. Only league members have it.', locked: 'Too many wrong passwords for this round. Try again in 10 minutes.',
         closed: 'The protest window for this round is over.', 'not-open': 'This round is not open for protests.', duplicate: 'You already filed this protest.',
         'too-many': 'You have filed the most protests allowed for this round.', busy: 'Many protests are being filed right now. Try again in a few minutes.',
         unreachable: 'Could not reach the league service. Try again.', 'no-address': 'Protests cannot be filed from this page yet.' };
@@ -662,7 +662,7 @@
           return;
         }
         /* SAMPLE check (sample data only). The real check is done by the service, so the password is never in the page. */
-        if (f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the race password. Only league members have it.', 'warn')); return; }
+        if (needsPassword && f.password !== D.sampleRacePassword) { fill(warn, RR.notice('That is not the league password. Only league members have it.', 'warn')); return; }
         fill(warn);
         message = RR.notice('Your protest was submitted. It stays private until the stewards rule on it.', 'ok');
         pickedRound = r.n;
@@ -682,7 +682,7 @@
         otherBox,
         RR.row(reasonSelect, raceSelect, lapSelect),
         narrative,
-        RR.row(passwordBox),
+        passwordBox ? RR.row(passwordBox) : null,
         warn, submitWrap);
       return box;
     }
@@ -883,7 +883,7 @@
       var best = rows.filter(function (r) { return r.x.status === 'Finished'; }).sort(function (a, b) { return a.x.pos - b.x.pos; })[0];
       /* The Driver box carries the plain banner and the Race Club helmet, with the driver's information beside the helmet.
          The name and flag are in the page title. A driver has no team, and the class changes from season to season, so neither is shown here. */
-      var card = RR.banner({ alt: d.name, info: [RR.label('Driver'),
+      var card = RR.banner({ alt: d.name, title: 'Driver', info: [
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });

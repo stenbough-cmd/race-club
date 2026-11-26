@@ -52,7 +52,7 @@
         ['3 Relay', "The cloud function passes the file to Apps Script. Duplicates are ignored and the raw file is kept in a private Drive folder.", 'Cloud Run, Apps Script'],
         ['4 Waiting', "The round shows Awaiting confirmation. Nothing is public yet. You get an email, and a Discord message if set.", 'Results, Rounds tab'],
         ['5 Confirm', "Results go live and the public data is sent to race-club-data. The story is written later, when you press Write story.", 'Results, Rounds tab'],
-        ['6 Protests', "Drivers file with the round password until 12 hours after the scheduled start. You rule on them.", 'Stewarding'],
+        ['6 Protests', "Drivers file with the league password (none in a no-password league) until 12 hours after the scheduled start. You rule on them.", 'Stewarding'],
         ['7 Standings', "A round counts once its protest window has ended and no protest is open. The page works this out from the clock.", 'Automatic'],
         ['8 End of season', "Champions per class, a recap story, and a Reopen button if you end too soon.", 'Results, Season tab']
       ])
@@ -87,7 +87,7 @@
         ['News', 'news.html, story.html', "The race stories and your own posts, newest first. A story opens in a popup."],
         ['League', 'leaderboards.html', "The League menu item. Tabs: Standings, Race Results, Lap Times, Schedule, Season. A season dropdown covers old seasons too."],
         ['Drivers', 'drivers.html, driver.html', "Every driver. A profile has Overview, Race History, Statistics, Achievements and Leaderboards."],
-        ['File a Protest', 'protest.html', "The protest form (the File a protest button on League, Season). It needs the round password."],
+        ['File a Protest', 'protest.html', "The protest form (the File a protest button on League, Season). It needs the league password, unless the season has no password."],
         ['Help', 'help.html, raceroom-help.js', "The league rules in short: The league, Points, Penalties."],
         ['About, Legal, 404', 'about.html, legal.html, 404.html', "Plain text pages."]
       ]),
@@ -99,7 +99,7 @@
       grid(['Page', 'Files', 'What it is for'], [
         ['Log in', 'login.html, raceroom-login.js', "Name and password."],
         ['Admin hub', 'admin.html, raceroom-hub.js', "One button for each tool, with an icon in the middle. A new tool gets its button in raceroom-hub.js; the icons are in raceroom-shell.js (ICONS) and the look is .rr-tool in race-club.css."],
-        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. Save a draft (kept in the Sheet, shown nowhere else), Create a season (goes live; the preview story is written later from the News Editor, Story writer tab, after you add context), Export season (.zip)."],
+        ['Season Wizard', 'season-wizard.html, raceroom-admin.js', "Seven steps: Season, Classes and cars, Rules, Weekend format, Points, Calendar, Review and export. The server password is on step 1 (or tick No password for a public server). Create season (the season goes live and is the running season; only one can run at a time; the preview story is written later from the News Editor, Story writer tab, after you add context), Delete season (the running season, only before it has results), Reset wizard (blank form). The seasons in the Sheet are listed under the buttons, each with Export season (.zip) and Delete. Nothing is kept in the browser."],
         ['News Editor', 'news-editor.html, raceroom-news-editor.js', "Two tabs. News: the posts you write yourself (write, edit, withdraw, delete). Story writer: every AI story (race stories, season preview and recap): Add context (notes and photos), Write, Retry, Rewrite, and Edit story (change the text, withdraw or delete). Changing a photo updates a written story, no rewrite needed."],
         ['Stewarding', 'stewarding.html, raceroom-stewarding.js', "Tabs: Protests, and Car and class (drivers who changed car or class)."],
         ['Member Management', 'members.html, raceroom-members.js', "Blacklist (banned from the servers) and Hide Details (kept out of stories by name) for each driver."],
@@ -126,7 +126,7 @@
       list([
         "Results, Season tab: press Clear test data once, before Season 1. You type the word CLEAR. It empties results, protests, penalties, stories, posts, seasons and rounds. It keeps the admins, the drivers' own settings and the site options.",
         "Member Management: tick Blacklist for any driver who is banned. The ticks are written into the Bans list of every server file at export.",
-        "Season Wizard: fill in the seven steps. A red exclamation on a step means something is missing. Create a season saves it as Active, with its server passwords (private). The Season Preview story is NOT written automatically: open News Editor, Story writer, add context, then press Write story.",
+        "Season Wizard: fill in the seven steps. A red exclamation on a step means something is missing. Create season saves it as the running season, with its server password (private). A season cannot be created while another is running, and a created season is never changed: delete it (only before it has results) and create it again. The Season Preview story is NOT written automatically: open News Editor, Story writer, add context, then press Write story.",
         "Export season (.zip) makes one server file per round, named round-NN-ID-track.json. Load each file in the RaceRoom server tool. The server name ends with the 7-digit Round ID, and the results address in the tool is the relay address."
       ])
     ]),
@@ -219,7 +219,7 @@
       list([
         "The relay is a Google Cloud Run function. It takes the server's post, checks a token in the path, and forwards it unchanged to the Apps Script address with the results secret. It is needed because the RaceRoom tool only accepts an address ending in /*.json, and Apps Script needs one ending in /exec.",
         "Admin login: passwords are hashed (PBKDF2) and never stored. 5 wrong tries for one name, or 30 in all, lock the login for 15 minutes.",
-        "Protest forms lock after 10 minutes of wrong round passwords, and you get an email once.",
+        "Protest forms lock after 10 minutes of wrong league passwords, and you get an email once.",
         "Nothing runs on a timer. The public data is rebuilt after Confirm, Deny, Cancel or Restore, a protest, a ruling, ending a season, a round read again, and the Publish site data button.",
         "The GitHub workflow RaceRoom pictures runs by itself every day and keeps assets/r3e current (see Picture database)."
       ])
@@ -230,7 +230,7 @@
   add(RR.view('change'), stack(
     panel('I want to change...', [
       grid(['What', 'Where', 'How'], [
-        ['Points, bonuses, drop weeks, rules, classes or calendar for a season', 'Season Wizard', "Open the season in the wizard, change the step, press Create a season, then press Publish site data on Results, Rounds. Check the Season page and the standings after."],
+        ['Points, bonuses, drop weeks, rules, classes or calendar for a season', 'Season Wizard', "A created season cannot be edited. Delete it in the Season Wizard (only possible before it has results), create it again with the changes, then press Publish site data on Results, Rounds."],
         ['The scoring rules themselves (the 50% laps rule, the order, how bonuses work)', 'Scoring.gs', "Edit it, paste into Apps Script, deploy a new version, then Race Club > Results: read a round again for rounds already raced."],
         ['Protest window length (12 hours)', 'Results.gs, RC_PROTEST_HOURS. Also the text on help.html and the protest page', "Change the number, deploy, then update the wording in js/raceroom-help.js."],
         ['Penalty sizes (1, 3, 5) or the DSQ rule', 'Stewarding.gs and js/raceroom-stewarding.js', "Both files list the options. Change both, deploy, push. Then update js/raceroom-help.js."],

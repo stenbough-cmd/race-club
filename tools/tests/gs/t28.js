@@ -1,27 +1,30 @@
-/* t28: a saved draft is invisible outside the wizard, the preview story is only written on Create, Gemini retries a busy answer */
+/* t28: creating a season (no drafts, one running season at a time, the season password), Delete season, Gemini retries a busy answer */
 const fs=require('fs'),vm=require('vm'); const {ctx,tabs}=require('./harness.js'); const T=tabs;
 vm.runInContext(fs.readFileSync('/mnt/user-data/uploads/Race Club/_raceroom-apps-script/Stories.gs','utf8'),ctx,{filename:'Stories.gs'});
 T.SeasonFiles=[]; T.Seasons=[]; vm.runInContext('rcEnsureColumns_=function(){}',ctx);
 let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else console.log('ok  ',m); };
 ctx.__previews=[]; vm.runInContext(`rcSessionAdmin_=function(){return 'Matt'}; rcStoryWrite_=function(id,kind){__previews.push(kind+':'+id);return {ok:true};}; rcThenPublish_=function(r){return r;}; rcStoryEnsureTabs_=function(){}; rcStoryList_=function(){return {byRound:{},preview:{},finale:{}};}; rcGithubConfig_=function(){return null;};`,ctx);
-const season={version:1,seasonId:'',name:'Draft One',zone:'America/Detroit',prefix:'RC',calendar:{date:'2026-12-01'},points:{dropWeeks:0},rounds:[{id:'1234567',layoutId:1,date:'2026-12-01',time:'20:00'}]};
-ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3'],activate:false};
-let r=vm.runInContext('rcApi_(__req)',ctx); console.log('SAVE->',JSON.stringify(r).slice(0,400));
-ok(r.ok&&!r.story,'saving a draft writes no preview story ('+JSON.stringify(r.story)+')');
-ok(vm.runInContext('__previews.length',ctx)===0,'no preview was requested for the draft');
+const mk=(id,name,pw,extra)=>Object.assign({version:1,seasonId:'',name:name,zone:'America/Detroit',prefix:'RC',password:pw,noPassword:false,calendar:{date:'2026-12-01'},points:{dropWeeks:0},rounds:[{id:id,layoutId:1,date:'2026-12-01',time:'20:00'}]},extra||{});
+const save=(season)=>{ ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3']}; return vm.runInContext('rcApi_(__req)',ctx); };
+let r=save(mk('1234567','Season One','secret-pass'));
+ok(r.ok&&!r.story&&vm.runInContext('__previews.length',ctx)===0,'Create season writes no preview story (the organizer adds context, then presses Write story)');
 const sid=r.seasonId;
-ok(vm.runInContext('rcListSeasons_()',ctx).seasons.some(s=>s.seasonId===sid&&s.status==='Draft'),'the wizard still lists the draft');
+const ls=vm.runInContext('rcListSeasons_()',ctx).seasons;
+ok(ls.length===1&&ls[0].status==='Active','the new season is the running season (Active), never a Draft ('+JSON.stringify(ls.map(s=>s.status))+')');
 const lr=vm.runInContext('rcListRounds_()',ctx);
-ok(!lr.seasons.some(s=>s.seasonId===sid)&&!lr.rounds.some(x=>x.season===sid),'the Rounds tab shows neither the draft season nor its round');
-ok(!vm.runInContext('rcGetSeasonEnd_({})',ctx).seasons.some(s=>s.seasonId===sid),'the Season tab does not list the draft');
-ok(!vm.runInContext('rcListStewarding_({})',ctx).seasons.some(s=>s.seasonId===sid),'Stewarding does not list the draft');
-ok(!vm.runInContext('rcPreviewResults_({})',ctx).rounds||true,'upload by hand ok');
-/* create it */
-season.seasonId=sid; ctx.__req={action:'saveSeason',token:'x'.repeat(40),season,layouts:{1:{track:'Monza',layout:'GP'}},classes:['GT3'],activate:true};
-r=vm.runInContext('rcApi_(__req)',ctx);
-ok(r.ok&&!r.story&&vm.runInContext('__previews.length',ctx)===0,'Create a season does not write the preview story (the organizer adds context, then presses Write story)');
-const lr2=vm.runInContext('rcListRounds_()',ctx);
-ok(lr2.seasons.some(s=>s.seasonId===sid)&&lr2.rounds.some(x=>x.season===sid),'after Create the season and its round show in the Rounds tab');
+ok(lr.seasons.some(s=>s.seasonId===sid)&&lr.rounds.some(x=>x.season===sid),'the season and its round show in the Rounds tab');
+ok(JSON.stringify(vm.runInContext('rcLoadSeason_("'+sid+'")',ctx).season).indexOf('secret-pass')>=0,'the season password is kept in the season file');
+const again=save(mk('7654321','Season Two','other'));
+ok(!again.ok&&again.error==='season-running'&&again.name==='Season One'&&again.seasonId===sid,'a second season is refused while one is running, and the answer names the running season ('+JSON.stringify(again)+')');
+ok(vm.runInContext('rcListSeasons_()',ctx).seasons.length===1,'nothing was added by the refused create');
+const del=vm.runInContext('rcDeleteSeason_("'+sid+'","Matt")',ctx);
+ok(del.ok&&vm.runInContext('rcListSeasons_()',ctx).seasons.length===0,'Delete season removes the running season');
+const next=save(mk('7654321','Season Two','other'));
+ok(next.ok,'after the running season is gone a new one can be created');
+/* after End season (status Finished) the next season can be created too */
+T.Seasons.forEach(s=>{ s['Status']='Finished'; });
+const after=save(mk('1111111','Season Three','third'));
+ok(after.ok,'a Finished season does not block a new one');
 /* Gemini: a busy answer is asked once more, then the next model */
 let calls=[]; ctx.UrlFetchApp={fetch:(u,o)=>{calls.push(u.split('/models/')[1].split(':')[0]); const n=calls.length;
   if(n<2) return {getResponseCode:()=>503,getContentText:()=>'busy'};

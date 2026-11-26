@@ -1,8 +1,9 @@
 /* Race Club RaceRoom site: admin season wizard and server exporter.
-   The wizard works in the browser: the season is kept in this browser's storage, and the server
-   files are built here and downloaded as a .zip. "Save a draft" and "Create a season" (Review step) sends the
-   season, with its server passwords, to the league's private Google Sheet through the service,
-   which only accepts it from a logged-in admin. Nothing is ever written into the website itself.
+   The wizard works in the browser and keeps nothing between visits: every visit starts with a blank season.
+   Create season (Review step) sends the season, with its server password, to the league's private Google Sheet
+   through the service, which only accepts it from a logged-in admin, and only while no other season is running.
+   Once created, that is the season. The server files are built here from the saved season and downloaded as a .zip.
+   Nothing is ever written into the website itself.
 
    The server file format is recorded in the Project doc raceroom-server-export-format-2026-11-16.md.
    Every part of the screen is made with the shared builders in raceroom-shell.js (RR.*). */
@@ -10,7 +11,6 @@
   'use strict';
   var RR = window.RR, R3E = window.RR_R3E;
   var el = RR.el, add = RR.add;
-  var STORE = 'rr-admin-season';
   /* The Race Club server picture, uploaded once in the RaceRoom server tool. Every server file carries this same address
      (unless "Show server banner" is turned off). It is not editable in the wizard. If the picture is ever uploaded again in
      the tool it gets a new address: copy the new one from an exported file's "Thumbnail" and paste it here. */
@@ -155,6 +155,8 @@
       name: 'Season 01',
       prefix: 'RACE CLUB ONLINE: SEASON 01',
       serverId: 516491,
+      password: '',
+      noPassword: false,
       showBanner: true,
       motd: '',
       zone: browserZone(),
@@ -175,11 +177,15 @@
     };
   }
   var S = newSeason();
-  try { var kept = JSON.parse(localStorage.getItem(STORE)); if (kept && kept.version === 1) S = kept; } catch (e) {}
   function tidy() {   /* fill in anything an older saved season does not have */
     S.zone = browserZone();
     delete S.thumbnail;   /* the picture address is a fixed setting above, never kept per season */
     if (S.showBanner === undefined) S.showBanner = true;
+    if (S.password === undefined) {   /* a season made before the season password: its first round's password becomes the season's */
+      var first = S.rounds.filter(function (r) { return r.password; })[0];
+      S.password = first ? first.password : '';
+      S.noPassword = false;
+    }
     if (!S.format) {   /* a season saved before formats existed: more than one race length set means multi-race */
       S.format = newFormat();
       var n = Number(S.weekend.Race3.len) > 0 ? 3 : (Number(S.weekend.Race2.len) > 0 ? 2 : 1);
@@ -188,7 +194,7 @@
     if (!S.calendar) S.calendar = { date: (S.rounds[0] && S.rounds[0].date) || '', time: (S.rounds[0] && S.rounds[0].time) || '20:00', gap: 1 };
     setDates();
   }
-  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} if (typeof flagSteps === 'function' && flagged) flagSteps(); }
+  function save() { if (typeof flagSteps === 'function' && flagged) flagSteps(); }
   /* true once an export was refused: boxes that fail a check then show a red border until fixed */
   var flagged = false;
 
@@ -287,7 +293,7 @@
     var w = weekendOf(r), g = {}, id = Number(S.serverId);
     g.Id = id;
     g.Name = serverName(r);
-    g.Password = r.password || '';
+    g.Password = S.noPassword ? '' : (r.password || S.password || '');   /* one password for the whole season (r.password only in a season made before that) */
     if (S.showBanner !== false) g.Thumbnail = SERVER_IMAGE;
     g.Experience = 2481;
     if (Number(S.preset)) g.DriveAssistPreset = Number(S.preset);
@@ -340,13 +346,13 @@
     function add(step, text) { out.push({ step: step, text: text }); }
     if (!String(S.prefix).trim()) add('season', 'Step 1: the server name is empty.');
     if (!Number(S.serverId)) add('season', 'Step 1: the server ID is missing.');
+    if (!S.noPassword && !String(S.password).trim()) add('season', 'Step 1: the server password is empty. Type one, or tick No password.');
     if (!cars.length) add('cars', 'Step 2: no cars are chosen.');
     if (!races().length) add('calendar', 'Step 6: there are no rounds.');
     else if (!S.calendar.date) add('calendar', 'Step 6: the first round date is missing.');
     races().forEach(function (r, i) {
       var n = 'Round ' + (i + 1) + ': ', w = weekendOf(r), L = layoutIndex[r.layoutId];
       if (!r.time) add('calendar', n + 'the server online time is missing.');
-      if (!r.password) add('calendar', n + 'there is no password.');
       for (var q = 1; q <= raceCount(); q++) {
         if (!Number(w['Race' + q].len)) add(r.weekend ? 'calendar' : 'weekend', n + (raceCount() > 1 ? 'Race ' + q + ' has no length.' : 'no race has a length.'));
       }
@@ -466,7 +472,7 @@
     /* A date or time box sends a value after every typed digit (a month of "1" is already a date). Redrawing the page then would throw the
        cursor out of the box after one or two digits, so for these the value is kept at once and the redraw waits until the box is left. */
     var later = o.type === 'date' || o.type === 'time', pending = false;
-    var box = RR.input({ label: label, value: obj[key], type: o.type, placeholder: o.placeholder, wide: o.wide, min: o.min, max: o.max,
+    var box = RR.input({ label: label, value: obj[key], type: o.type, placeholder: o.placeholder, wide: o.wide, min: o.min, max: o.max, readOnly: o.readOnly,
       onChange: function (v) { obj[key] = o.type === 'number' ? Number(v) : v; save(); mark(); if (o.after) { if (later) pending = true; else o.after(); } } });
     if (later) box.querySelector('input').addEventListener('blur', function () {
       if (!pending) return;
@@ -495,6 +501,10 @@
       panel('Server',
         RR.row(text('Server ID', S, 'serverId', { type: 'number', bad: function () { return !Number(S.serverId); } }),
           RR.input({ label: 'Time zone', value: zoneLabel(S.zone), readOnly: true })),
+        RR.row(
+          text('Server password', S, 'password', { wide: true, readOnly: S.noPassword, bad: function () { return !S.noPassword && !String(S.password).trim(); } }),
+          RR.checkbox('No password (public racing server)', function (v) { S.noPassword = v; if (v) S.password = ''; save(); drawSeason(); drawExport(); }, !!S.noPassword)),
+        note('One password for the whole season, the same in every round file. Drivers use it to join the server and to file a protest. Tick No password for a public server that anyone can join; the blacklist then keeps out anyone who is not allowed.'),
         RR.row(RR.checkbox('Show server banner', function (v) { S.showBanner = v; save(); }, S.showBanner !== false)),
         note('The server banner is the Race Club picture shown for the server in the RaceRoom game. It is the same picture in every file. Untick the box to leave it out.'),
         note('The server ID is the number of your server in the RaceRoom server tool. Every round is imported onto that one server.'),
@@ -693,7 +703,7 @@
       }, addTrack),
       RR.select('Layout', track.l.map(function (l) { return [l.id, l.n + ' (' + l.m + ' cars)']; }), function (v) { addLayout = Number(v); }, addLayout),
       RR.button('Add round', function () {
-        S.rounds.push({ id: newRoundId(), layoutId: addLayout, date: '', time: S.calendar.time, password: '', weekend: null });
+        S.rounds.push({ id: newRoundId(), layoutId: addLayout, date: '', time: S.calendar.time, weekend: null });
         changed();
       }),
       RR.button('Add bye week', function () {
@@ -737,7 +747,6 @@
         RR.row(
           dateBox,
           text('Server online', r, 'time', { type: 'time', after: showTimes, bad: function () { return !r.time; } }),
-          text('Password', r, 'password', { bad: function () { return !r.password; } }),
           order[0], order[1], order[2]),
         times,
         L.max && Number(S.rules.MaxNumOfPlayers) > L.max
@@ -754,70 +763,65 @@
   }
 
   /* ---------------- The season in the Google Sheet ---------------- */
+  /* The wizard only starts a season. Create season saves it to the Sheet as the running season (one at a time) and that is the season: it is never
+     saved again or loaded back. The seasons already in the Sheet are listed under the buttons as soon as the page opens. */
   var sheetNote = null, sheetSeasons = null, sheetBusy = false;
   var SHEET_ERRORS = {
     'no-address': 'The site is missing its service address (js/config.js).',
     'unreachable': 'The service could not be reached. Check your connection and try again.',
-    'bad-season': 'The season needs a name before it can be saved.',
+    'bad-season': 'The season needs a name before it can be created.',
     'not-found': 'That season is no longer in the Sheet.',
     'has-results': 'Not deleted. This season already has race results in the Sheet.',
     'signed-out': 'Your log in has ended. Log in again.'
   };
   function sheetError(res) {
-    if (res.error === 'round-ids-taken') return 'Not saved. Round ID ' + res.ids.join(', ') + ' already belongs to another season in the Sheet. Remove that round here and add it again to give it a new ID.';
-    if (res.error === 'bad-round-ids') return 'Not saved. These round IDs are not valid: ' + res.ids.join(', ') + '.';
-    return SHEET_ERRORS[res.error] || 'Not saved. The service answered: ' + (res.detail || res.error || 'nothing') + '.';
+    if (res.error === 'round-ids-taken') return 'Not created. Round ID ' + res.ids.join(', ') + ' already belongs to a season in the Sheet. Remove that round here and add it again to give it a new ID.';
+    if (res.error === 'bad-round-ids') return 'Not created. These round IDs are not valid: ' + res.ids.join(', ') + '.';
+    if (res.error === 'season-running') return 'Not created. "' + res.name + '" (' + res.seasonId + ') is still running. End it on the Results page, Season tab, or delete it first.';
+    return SHEET_ERRORS[res.error] || 'The service answered: ' + (res.detail || res.error || 'nothing') + '.';
   }
   function sheetDone(text, kind) { sheetBusy = false; sheetNote = { text: text, kind: kind || 'ok' }; drawExport(); }
-  function saveToSheet(activate) {
+  /* The season that is running now (Status Active), or undefined. A new season cannot be created while one is running. */
+  function runningSeason() { return (sheetSeasons || []).filter(function (s) { return s.status === 'Active'; })[0]; }
+  function createSeason() {
     if (sheetBusy) return;
-    if (activate) {
-      var left = problems();
-      if (left.length) {
-        /* Refused: the steps that need attention get a red mark, and their boxes a red border, until fixed. */
-        flagged = true;
-        sheetNote = { text: 'Not created. Fix the ' + left.length + ' item(s) under Checks first. The steps that need attention have a red mark.', kind: 'warn' };
-        drawAll();
-        return;
-      }
-      flagged = false;
+    var left = problems();
+    if (left.length) {
+      /* Refused: the steps that need attention get a red mark, and their boxes a red border, until fixed. */
+      flagged = true;
+      sheetNote = { text: 'Not created. Fix the ' + left.length + ' item(s) under Checks first. The steps that need attention have a red mark.', kind: 'warn' };
+      drawAll();
+      return;
     }
+    flagged = false;
     var layouts = {};
     races().forEach(function (r) { var L = layoutIndex[r.layoutId]; if (L) layouts[r.layoutId] = { track: L.track, layout: L.layout }; });
-    sheetBusy = true; sheetNote = { text: activate ? 'Creating the season in the Sheet...' : 'Saving the draft to the Sheet...', kind: 'ok' }; drawExport();
-    RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }), activate: !!activate }).then(function (res) {
-      if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
-      S.seasonId = res.seasonId;
-      if (activate) S.live = true;   /* the season is live in the Sheet: the server files can be exported */
-      save();
-      sheetSeasons = null;
-      var storyNote = activate ? ' Add your context and write the season preview on the News Editor, Story writer tab.' : '';
-      sheetDone((activate
-        ? 'Created. ' + S.name + ' is live in the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.'
-        : 'Draft saved to the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s), ' + res.saved + '.') + storyNote, undefined);
-      if (activate) listFromSheet(true);   /* the list reloads with the new season so it can be exported from there */
+    sheetBusy = true; sheetNote = { text: 'Creating the season in the Sheet...', kind: 'ok' }; drawExport();
+    RR.api('saveSeason', { season: S, layouts: layouts, classes: classIds().map(function (id) { return classById(id).n; }) }).then(function (res) {
+      if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); listFromSheet(true); return; }
+      sheetDone('Created. ' + S.name + ' is the running season, saved in the Sheet as ' + res.seasonId + ' with ' + res.rounds + ' round(s). Export its server files from the list below. Add your context and write the season preview on the News Editor, Story writer tab.');
+      listFromSheet(true);
     });
   }
   function deleteFromSheet(seasonId, name) {
     if (sheetBusy) return;
-    sheetBusy = true; sheetNote = { text: 'Deleting from the Sheet...', kind: 'ok' }; drawExport();
+    sheetBusy = true; sheetNote = { text: 'Deleting "' + name + '" from the Sheet...', kind: 'ok' }; drawExport();
     RR.api('deleteSeason', { seasonId: seasonId }).then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
-      if (S.seasonId === seasonId) { delete S.seasonId; delete S.live; save(); }
       if (sheetSeasons) sheetSeasons = sheetSeasons.filter(function (x) { return x.seasonId !== seasonId; });
-      sheetDone('Deleted "' + name + '" from the Sheet. What is in the wizard was kept.');
+      sheetDone('Deleted "' + name + '" (' + seasonId + ') from the Sheet.');
     });
   }
-  /* Reads the season list from the Sheet. keepNote: leave the message on screen (used right after Create a season). */
+  /* Reads the season list from the Sheet. keepNote: leave the message on screen (used right after Create season). */
   function listFromSheet(keepNote) {
     if (sheetBusy && keepNote !== true) return;
     sheetBusy = true;
-    if (keepNote !== true) sheetNote = { text: 'Reading the Sheet...', kind: 'ok' };
+    if (keepNote !== true) sheetNote = null;
     drawExport();
     RR.api('listSeasons').then(function (res) {
       if (!res || !res.ok) { sheetDone(sheetError(res || {}), 'warn'); return; }
       sheetSeasons = res.seasons;
-      sheetBusy = false; if (keepNote !== true) sheetNote = null; drawExport();
+      sheetBusy = false; drawExport();
     });
   }
   /* Downloads one saved season's server files (one zip). The season is read from the Sheet, checked, then built with the same code as the wizard's own season. */
@@ -834,53 +838,41 @@
         left = problems();
         if (!left.length) files = { zip: makeZip(exportFiles(bans)), file: slug(S.name || 'season') + '-server-files.zip', n: races().length };
       } finally { S = mine; }
-      if (!files) { sheetDone('Nothing was exported. "' + name + '" has ' + left.length + ' item(s) that are not filled in. Load it into the wizard and see Checks.', 'warn'); return; }
+      if (!files) { sheetDone('Nothing was exported. "' + name + '" has ' + left.length + ' item(s) that are not filled in: ' + left.join(' '), 'warn'); return; }
       download(files.zip, files.file);
-      sheetDone('Downloaded ' + files.n + ' round file(s) for "' + name + '" in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.') + ' The zip contains your server passwords. Keep it on your computer.');
-    });
-  }
-  function loadFromSheet(seasonId, name) {
-    if (sheetBusy) return;
-    sheetBusy = true; sheetNote = { text: 'Loading from the Sheet...', kind: 'ok' }; drawExport();
-    RR.api('loadSeason', { seasonId: seasonId }).then(function (res) {
-      if (!res || !res.ok || !res.season || res.season.version !== 1) { sheetDone(sheetError(res || {}), 'warn'); return; }
-      S = res.season;
-      S.live = res.status === 'Active' || res.status === 'Finished';
-      flagged = false;
-      tidy();
-      save();
-      sheetBusy = false; sheetNote = { text: 'Loaded "' + S.name + '" from the Sheet.', kind: 'ok' };
-      drawAll();
+      sheetDone('Downloaded ' + files.n + ' round file(s) for "' + name + '" in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.') + ' The zip contains your server password. Keep it on your computer.');
     });
   }
   function sheetPanel() {
-    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), 'Delete this season from the Sheet', 'Confirm delete season', function () { deleteFromSheet(S.seasonId, S.name); });
-    if (!S.seasonId) del.disabled = true;
+    var running = runningSeason();
+    /* Delete season removes the running season, and says which one before and after. */
+    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), '', running ? 'Confirm delete "' + running.name + '"' : '', function () { deleteFromSheet(running.seasonId, running.name); });
+    if (!running) { del.disabled = true; del.setAttribute('data-rr-tip', 'No season is running'); }
+    var create = RR.arm(RR.button('Create season', null, false, 'create'), '', 'Confirm create season', createSeason);
+    if (running) { create.disabled = true; create.setAttribute('data-rr-tip', '"' + running.name + '" is still running'); }
     var p = panel('Google Sheet', RR.row(
-      RR.arm(RR.button('Create a season', null, false, 'create'), 'Create this season in the Sheet', 'Confirm create season', function () { saveToSheet(true); }),
+      create,
       del,
-      RR.arm(RR.button('Save a draft', null, false, 'save'), 'Save the draft to the Sheet', 'Confirm save draft', function () { saveToSheet(false); }),
-      RR.button('Show saved seasons', function () { listFromSheet(); }),
-      RR.arm(RR.button('Start over', null, false, 'startover'), 'Clear the wizard and start over', 'Confirm start over', function () {
-        S = newSeason(); flagged = false; sheetNote = null; save(); drawAll();
+      RR.arm(RR.button('Reset wizard', null, false, 'startover'), '', 'Confirm reset wizard', function () {
+        S = newSeason(); flagged = false; sheetNote = null; drawAll();
       })));
+    if (running) p.appendChild(note('"' + running.name + '" (' + running.seasonId + ') is the running season. Delete season removes it from the Sheet, and only while it has no race results. To start a new season, end it on the Results page, Season tab, or delete it.'));
     if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
     if (sheetSeasons) {
       p.appendChild(RR.table([
         { key: 'name', label: 'Season' }, { key: 'id', label: 'Season ID' }, { key: 'status', label: 'Status' },
-        { key: 'first', label: 'First round' }, { key: 'rounds', label: 'Rounds', num: true }, { key: 'saved', label: 'Saved' },
-        { key: 'by', label: 'Saved by' }, { key: 'load', label: '' }
+        { key: 'first', label: 'First round' }, { key: 'rounds', label: 'Rounds', num: true }, { key: 'saved', label: 'Created' },
+        { key: 'by', label: 'Created by' }, { key: 'act', label: '' }
       ], sheetSeasons.map(function (s) {
-        var load = RR.arm(RR.button('Load', null), 'Replace the wizard with this season', 'Confirm load season', function () { loadFromSheet(s.seasonId, s.name); });
-        var remove = RR.arm(RR.button('Delete', null, false, 'trash'), 'Delete this season from the Sheet', 'Confirm delete season', function () { deleteFromSheet(s.seasonId, s.name); });
+        var remove = RR.arm(RR.button('Delete', null, false, 'trash'), '', 'Confirm delete "' + s.name + '"', function () { deleteFromSheet(s.seasonId, s.name); });
         var exp = RR.button('Export season (.zip)', function () { exportFromSheet(s.seasonId, s.name); });
-        if (s.status === 'Draft') { exp.disabled = true; exp.setAttribute('data-rr-tip', 'Create the season first'); }
         return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
-          rounds: s.rounds, saved: s.saved, by: s.savedBy, load: RR.row(load, exp, remove) } };
-      }), 'No seasons are saved in the Sheet yet.'));
+          rounds: s.rounds, saved: s.saved, by: s.savedBy, act: RR.row(exp, remove) } };
+      }), 'No seasons are in the Sheet yet.'));
+    } else {
+      p.appendChild(note('Reading the seasons in the Sheet...'));
     }
-    p.appendChild(note((S.seasonId ? 'This season is in the Sheet as ' + S.seasonId + '. Saving a draft again updates it.' : 'This season has not been saved to the Sheet yet.') +
-      ' A draft can be saved at any time. Create a season makes it live once everything under Checks is filled in. Results are matched to a round by its round ID, so create the season before its first race. Export season (.zip) is on each created season in the list; it carries the server blacklist read from the Sheet, and the zip holds your server passwords, so keep it on your computer and out of the website folder. The Sheet keeps the server passwords; keep the Sheet private.'));
+    p.appendChild(note('Create season makes the season live once everything under Checks is filled in, and it can be done only while no other season is running. A season is never changed after it is created. Results are matched to a round by its round ID, so create the season before its first race. Export season (.zip) in the list gives the server files, with the season password in them.'));
     return p;
   }
 
@@ -892,10 +884,10 @@
     var status = el('p', 'rr-body', (window.RR_ADMIN && window.RR_ADMIN.lastStatus) || '');
     if (window.RR_ADMIN) window.RR_ADMIN.lastStatus = '';
     var rows = S.rounds.map(function (r) {
-      if (r.bye) return { cells: { n: 'Bye week', track: '-', date: r.date ? longDate(r.date) : '-', online: '-', race: '-', id: '-', pw: '-', own: '-' } };
+      if (r.bye) return { cells: { n: 'Bye week', track: '-', date: r.date ? longDate(r.date) : '-', online: '-', race: '-', id: '-', own: '-' } };
       var L = layoutIndex[r.layoutId] || { track: '-', layout: '' }, t = startTimes(r);
       return { cells: { n: 'Round ' + roundNo(r), track: RR.cell(L.track, L.layout), date: r.date ? longDate(r.date) : '-', online: r.time || '-',
-        race: t.race, id: r.id, pw: r.password ? 'Set' : '-', own: r.weekend ? 'Own' : 'Season' } };
+        race: t.race, id: r.id, own: r.weekend ? 'Own' : 'Season' } };
     });
     fill(RR.view('export'), stack(
       checks,
@@ -905,7 +897,7 @@
         note('3. Start the server before the online time. It goes online by itself at that time.')),
       panel('Rounds', RR.table([
         { key: 'n', label: 'Round' }, { key: 'track', label: 'Track' }, { key: 'date', label: 'Date' }, { key: 'online', label: 'Server online' },
-        { key: 'race', label: 'Race 1 starts' }, { key: 'id', label: 'Round ID' }, { key: 'pw', label: 'Password' }, { key: 'own', label: 'Weekend format' }
+        { key: 'race', label: 'Race 1 starts' }, { key: 'id', label: 'Round ID' }, { key: 'own', label: 'Weekend format' }
       ], rows, 'No rounds yet.')),
       sheetPanel()
     ));
@@ -933,6 +925,7 @@
 
   tidy();
   drawAll();
+  listFromSheet();   /* the seasons already in the Sheet are listed under the buttons */
   /* Then try for the newest car and track list, and redraw the steps that use it. */
   loadLiveList(function () { drawCars(); drawPoints(); drawCalendar(); drawExport(); RR.refresh(); });
 })();
