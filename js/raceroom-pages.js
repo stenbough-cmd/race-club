@@ -803,8 +803,6 @@
       { label: 'Clean laps', value: st.cleanLaps },
       { label: 'Pace', value: 0 }
     ];
-    var cars = grouped(rows, function (r) { return r.x.car; }).sort(function (a, b) { return b.rows.length - a.rows.length; });
-    st.favouriteCar = cars[0] ? { name: cars[0].key, share: Math.round(cars[0].rows.length / st.races * 100) } : null;
     /* Rounds in a row: every finished round of the chosen seasons, oldest first, counted as attended or missed. */
     var seq = [];
     D.seasons.slice().reverse().forEach(function (s) {
@@ -918,7 +916,7 @@
       var best = rows.filter(function (r) { return r.x.status === 'Finished'; }).sort(function (a, b) { return a.x.pos - b.x.pos; })[0];
       /* The Driver box carries the plain banner and the Race Club helmet, with the driver's information beside the helmet.
          The name and flag are in the page title. A driver has no team, and the class changes from season to season, so neither is shown here. */
-      var card = RR.banner({ alt: d.name, title: 'Driver', info: [
+      var card = RR.banner({ alt: d.name, info: [
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
@@ -952,9 +950,20 @@
         });
       });
       var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 && counts[i] ? sums[i] / counts[i] : undefined }; });
-      var fav = st.favouriteCar;
-      var hero = RR.photo(add(el('div', 'rr-hero'), RR.label('Favorite Car'), el('h2', 'rr-hero-title', fav ? fav.name : '-'),
-        el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', fav ? fav.share + '% of races' : 'No races yet')), d.livery, 'full');
+      /* The car box shows the car the driver races in the league now: the car locked in the newest season the driver raced in. A driver who is not
+         in the running season keeps showing the last car used. The line under it is about the league: the season and how many of its rounds the driver ran. */
+      var leagueSeason = D.seasons.filter(function (s) { return s.results.some(function (x) { return x.driver === d.id; }); })[0];
+      var inLeague = d.current !== false && !!leagueSeason && leagueSeason.status === 'Active';
+      var leagueLine = 'No races yet';
+      if (leagueSeason) {
+        var ran = {};
+        leagueSeason.results.forEach(function (x) { if (x.driver === d.id) ran[x.round] = 1; });
+        var nRan = Object.keys(ran).length, nDone = doneRounds(leagueSeason).length;
+        leagueLine = inLeague ? leagueSeason.name + ' \u00B7 raced ' + nRan + ' of ' + nDone + (nDone === 1 ? ' round' : ' rounds')
+          : 'Last raced in ' + leagueSeason.name;
+      }
+      var hero = RR.photo(add(el('div', 'rr-hero'), RR.label(inLeague ? 'Current Car' : 'Last Car'), el('h2', 'rr-hero-title', d.car || '-'),
+        el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', leagueLine)), d.livery, 'full');
       /* Season standing: only what the rest of the profile does not already show (points, wins, podiums and best finish are elsewhere). */
       var standing = add(el('div', 'rr-panel rr-stack'), RR.label('Season standing'));
       function pts(v) { return Math.round(v * 100) / 100; }

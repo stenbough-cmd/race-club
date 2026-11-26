@@ -886,17 +886,16 @@
     return node;
   };
 
-  /* The Driver box on a driver's page: the standard plain banner (black, with a small Race Club R in the lower right corner) and the
+  /* The Driver box on a driver's page: the standard plain banner (white, with a small Race Club R in the lower right corner) and the
      Race Club helmet at the left for every driver, with the driver's information (o.info, a list of nodes) beside it.
-     o: { alt, title, info }. RaceRoom banners and profile pictures are not looked up or used. */
+     o: { alt, info }. RaceRoom banners and profile pictures are not looked up or used. */
   RR.banner = function (o) {
     var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar'), text = el('div', 'rr-banner-text');
     var helmet = el('img'); helmet.alt = (o.alt || 'Driver') + ' profile picture'; helmet.src = 'assets/images/race_club_helmet.png'; pic.appendChild(helmet);
     (o.info || []).forEach(function (n) { if (n) text.appendChild(n); });
     add(who, pic, text);
-    if (o.title) b.appendChild(RR.label(o.title));   /* the header sits at the top left of the box, like every other box */
     var mark = el('img', 'rr-banner-mark');
-    mark.src = 'assets/images/Race Club R White.webp';
+    mark.src = 'assets/images/Race Club R Black.webp';   /* the standard mark: dark R with the red bar in the middle */
     mark.alt = '';
     add(b, who, mark);
     return b;
