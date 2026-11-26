@@ -1036,8 +1036,9 @@ a.rr-btn { text-decoration: none; }
 .rr-season-class-img { height: 40px; width: auto; max-width: 120px; object-fit: contain; flex: none; }
 .rr-season-cars { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .rr-season-car { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--rr-well); }
-.rr-season-car-title { display: flex; align-items: center; gap: 8px; }
-.rr-season-mfr { flex: none; height: 22px; width: auto; max-width: 36px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(23, 23, 23, 0.45)); }
+.rr-season-car-title { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--rr-ink); color: var(--rr-photo-text); }   /* a black bar, like RaceRoom's own dark pages: white and colored logos show as they were made */
+.rr-season-mfr { flex: none; height: 22px; width: auto; max-width: 36px; object-fit: contain; }
+.rr-season-car-title .rr-logo-dark { filter: none; }   /* white logos stay white on the black bar */
 .rr-logo-dark { filter: brightness(0) drop-shadow(0 1px 2px rgba(23, 23, 23, 0.35)); }   /* a white logo turned black so it shows on the light page */
 .rr-season-car-pic { aspect-ratio: 16 / 9; display: flex; }
 .rr-season-car-img { width: 100%; height: 100%; object-fit: contain; }
