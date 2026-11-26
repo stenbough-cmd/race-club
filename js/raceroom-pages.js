@@ -487,11 +487,30 @@
     /* RaceRoom's store page for a class: /store/cars/<class name as a web address>/<class id> (DTM 1992 is /store/cars/dtm-1992/3499). */
     function storeLabel(c, text) {
       var slug = String(c.name).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      return storeLine(text, 'https://game.raceroomracing.com/store/cars/' + slug + '/' + c.classId);
+    }
+    /* A small caps line: the text, a dot, then the link to the RaceRoom store. */
+    function storeLine(text, url) {
       var label = RR.label(text + ' \u00B7 '), a = el('a', 'rr-link', 'Visit the RaceRoom store to purchase content');
-      a.href = 'https://game.raceroomracing.com/store/cars/' + slug + '/' + c.classId;
-      a.target = '_blank'; a.rel = 'noopener';
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
       label.appendChild(a);
       return label;
+    }
+    /* The tracks of the season, each track and layout once, in calendar order. */
+    function seasonTracks() {
+      var seen = {}, list = [];
+      season.rounds.filter(function (r) { return !r.cancelled && r.track; }).forEach(function (r) {
+        var key = (r.layoutId || r.track) + '|' + r.track + '|' + (r.layout || '');
+        if (!seen[key]) { seen[key] = 1; list.push(r); }
+      });
+      return list;
+    }
+    function seasonTrackList() {
+      var list = seasonTracks();
+      return seasonPanel('Tracks',
+        storeLine(plural(list.length, 'track', 'tracks'), 'https://game.raceroomracing.com/store/tracks'),
+        RR.table([{ key: 'track', label: 'Track' }, { key: 'layout', label: 'Layout' }],
+          list.map(function (r) { return { cells: { track: trackCell(r), layout: layoutCell(r) } }; }), 'The schedule has not been posted yet.'));
     }
     function seasonClass(c) {
       var liveries = c.cars.reduce(function (n, k) { return n + k.liveries.length; }, 0), cars = el('div', 'rr-season-cars');
@@ -530,6 +549,7 @@
       out.appendChild(seasonSummary());
       if (!setup) { out.appendChild(RR.empty('The details for this season have not been posted yet.')); fill(node, out); return; }
       setup.classes.filter(function (c) { return cls === 'all' || c.id === cls; }).forEach(function (c) { out.appendChild(seasonClass(c)); });
+      if (seasonTracks().length) out.appendChild(seasonTrackList());
       var rules = el('div', 'rr-season-rules');
       setup.rules.forEach(function (g) {
         var col = el('div', 'rr-stack-tight');
