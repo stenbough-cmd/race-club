@@ -803,6 +803,7 @@ button, select { font-family: inherit; }
   border-color: var(--rr-invert-bg);
   color: var(--rr-invert-text);
 }
+.rr-promo:hover .rr-btn, .rr-promo:focus-visible .rr-btn { text-shadow: none; }   /* the dark text on the white hovered button has no soft shadow */
 .rr-btn-save { background: var(--rr-red); border-color: var(--rr-red); color: var(--rr-on-red); }
 .rr-btn[disabled] { opacity: 0.4; cursor: default; pointer-events: none; }
 /* While the service is busy (RR.api / RR.post pending) every button is disabled and greyed, and a note shows at the top of the screen. */
