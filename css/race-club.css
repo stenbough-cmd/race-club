@@ -30,6 +30,7 @@
   --rr-gold: #E5B93C;
   --rr-gap-tiles: 16px;   /* space between photo tiles and news tiles */
   --rr-control: rgba(23, 23, 23, 0.06);
+  --rr-stripe: rgba(23, 23, 23, 0.03);   /* the slanted bands on a banner or tile with no picture */
   --rr-well: rgba(23, 23, 23, 0.05);
   --rr-pill: rgba(23, 23, 23, 0.12);
   --rr-pill-on: rgba(23, 23, 23, 0.65);
@@ -1002,7 +1003,7 @@ a.rr-btn { text-decoration: none; }
 }
 .rr-banner.rr-has-photo::before { background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.6)); }   /* even fade: the driver's information sits across the whole banner */
 .rr-rank-tile.rr-has-photo > :not(.rr-photo-img), .rr-banner > :not(.rr-photo-img) { position: relative; z-index: 1; }
-.rr-rank-tile.rr-has-photo, .rr-banner {
+.rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo {
   --rr-text: var(--rr-photo-text);
   --rr-muted: var(--rr-photo-muted);
   --rr-line: var(--rr-photo-line);
@@ -1017,17 +1018,42 @@ a.rr-btn { text-decoration: none; }
 .rr-hero .rr-photo-img { position: absolute; top: 0; bottom: 0; right: 0; left: auto; width: 50%; height: 100%; object-fit: contain; object-position: center; padding: 8px 8px 8px 0; box-sizing: border-box; }
 
 /* Wide banner at the top of a page */
-.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-bar); box-shadow: var(--rr-shadow); }
+.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-panel); box-shadow: var(--rr-shadow); }
 .rr-banner > .rr-label { margin-bottom: 12px; }
 .rr-banner-who { display: flex; align-items: flex-start; justify-content: flex-start; gap: 16px; }
-.rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; overflow: hidden; background: var(--rr-bar); }
+.rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 128px; height: 128px; overflow: hidden; }
 .rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 /* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
 .rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 44px; height: auto; opacity: 1; }
-.rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
-@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 72px; height: 72px; } }
+.rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; filter: brightness(0); opacity: 0.75; }   /* the white mark turned dark for the light banner */
+
+/* ---------- A banner or ranking tile with no picture (the driver's box, and a ranking tile with no livery) ----------
+   White with soft slanted bands, a large faint Race Club R at the right, and the small R in the corner. Drawn with CSS only. */
+.rr-banner:not(.rr-has-photo), .rr-rank-tile:not(.rr-has-photo) {
+  background-color: var(--rr-panel);
+  background-image: linear-gradient(112deg, transparent 0 28%, var(--rr-stripe) 28% 46%, transparent 46% 60%, var(--rr-stripe) 60% 78%, transparent 78%);
+}
+.rr-banner:not(.rr-has-photo)::after, .rr-rank-tile:not(.rr-has-photo)::after {
+  content: ""; position: absolute; right: 4%; top: 50%; width: 46%; aspect-ratio: 430 / 181; transform: translateY(-50%); pointer-events: none; z-index: 0;
+  background: url('../assets/images/Race Club R Black.webp') center / contain no-repeat; opacity: 0.04;
+}
+.rr-rank-tile:not(.rr-has-photo) > :not(.rr-rank-mark) { position: relative; z-index: 1; }
+/* a red bar at the left of the position, name and class (ranking tile) */
+.rr-rank-tile:not(.rr-has-photo) { padding-left: 30px; }
+.rr-rank-tile:not(.rr-has-photo)::before { content: ""; position: absolute; left: 16px; top: 16px; width: 3px; height: 40px; background: var(--rr-red); z-index: 1; }
+.rr-rank-1:not(.rr-has-photo)::before { height: 62px; }
+/* the driver's numbers: bigger values, each pair after the first set off by a thin line */
+.rr-banner-text .rr-kv-list + .rr-kv-list { gap: 12px 0; }
+.rr-banner-text .rr-kv-list + .rr-kv-list > .rr-kv { padding: 0 24px; border-left: 1px solid var(--rr-line); }
+.rr-banner-text .rr-kv-list + .rr-kv-list > .rr-kv:first-child { padding-left: 0; border-left: 0; }
+.rr-banner-text .rr-kv-list + .rr-kv-list .rr-kv-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
+@media (orientation: portrait) {   /* tall portrait: the numbers sit two across, no dividers */
+  .rr-banner-text .rr-kv-list + .rr-kv-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .rr-banner-text .rr-kv-list + .rr-kv-list > .rr-kv, .rr-banner-text .rr-kv-list + .rr-kv-list > .rr-kv:first-child { padding: 0; border-left: 0; }
+}
+@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 80px; height: 80px; } }
 
 /* ---------- Season sub-tab and track layout pictures ---------- */
 .rr-track-cell { display: flex; align-items: center; gap: 12px; }
