@@ -9,6 +9,7 @@
      data-rr-main="news|leaderboards|profiles"   which main menu item is active (any other word, such as home, highlights none)
      data-rr-tabs="leaderboards|profile"         which sub-tab set to show (optional)
      data-rr-title="Page title"                  starting page title
+     data-rr-crumb="back"                        start with a breadcrumb back to the page the visitor came from (driver.html)
    Sub-tab content lives in <section data-rr-view="tab-id"> inside <main>. */
 (function () {
   'use strict';
@@ -84,9 +85,16 @@
   };
 
   /* ---- Small helpers ---- */
+  /* Every picture on the site starts blank (no broken-picture icon, no alt text) and shows itself only once it has actually loaded. */
+  function quiet(img) {
+    img.style.visibility = 'hidden';
+    img.addEventListener('load', function () { img.style.visibility = ''; });
+    return img;
+  }
   function el(tag, cls, text) {
     var n = document.createElement(tag);
     if (cls) n.className = cls;
+    if (tag === 'img') quiet(n);
     if (text !== undefined && text !== null) n.textContent = String(text);
     return n;
   }
@@ -327,6 +335,25 @@
     crumbBack.href = 'admin.html';
     add(crumb, crumbBack, el('span', 'rr-crumb-sep', '/'), el('span', 'rr-crumb-here', body.getAttribute('data-rr-title') || ''));
     titleBox = add(el('div', 'rr-title-box'), crumb, title);
+  } else if (body.getAttribute('data-rr-crumb') === 'back') {
+    /* A page reached from other pages (a driver's profile) starts with a breadcrumb back to the page the visitor just came from: Drivers / Driver profile.
+       The page before comes from the browser (the referrer, same site only); with none, it goes to the Drivers list. */
+    var PAGE_NAMES = { 'index.html': 'Home', 'news.html': 'News', 'story.html': 'News', 'leaderboards.html': 'League', 'drivers.html': 'Drivers', 'driver.html': 'Drivers',
+      'about.html': 'About', 'help.html': 'Help', 'legal.html': 'Legal', 'protest.html': 'Protest', 'members.html': 'Members' };
+    var backHref = 'drivers.html', backName = 'Drivers';
+    try {
+      var ref = new URL(document.referrer);
+      var refFile = ref.pathname.split('/').pop() || 'index.html';
+      if (ref.origin === location.origin && PAGE_NAMES[refFile]) {
+        backHref = refFile + ref.search + ref.hash; backName = PAGE_NAMES[refFile];
+        if (refFile === 'driver.html') backName = 'Driver profile';
+      }
+    } catch (e) {}
+    var backCrumb = el('nav', 'rr-crumb'), backLink = el('a', 'rr-crumb-link', backName);
+    backCrumb.setAttribute('aria-label', 'Breadcrumb');
+    backLink.href = backHref;
+    add(backCrumb, backLink, el('span', 'rr-crumb-sep', '/'), el('span', 'rr-crumb-here', 'Driver profile'));
+    titleBox = add(el('div', 'rr-title-box'), backCrumb, title);
   } else if (isHub) {
     /* The admin hub starts with Log out / Admin. Log out is the only way to log out, and it takes two clicks. */
     var hubCrumb = el('nav', 'rr-crumb'), outBtn = el('button', 'rr-crumb-link rr-crumb-btn', 'Log out');
@@ -886,18 +913,15 @@
     return node;
   };
 
-  /* The Driver box on a driver's page: the standard plain banner (white, with a small Race Club R in the lower right corner) and the
-     Race Club helmet at the left for every driver, with the driver's information (o.info, a list of nodes) beside it.
-     o: { alt, info }. RaceRoom banners and profile pictures are not looked up or used. */
+  /* The Driver box on a driver's page: the standard plain banner (white, with the Race Club helmet in the lower right corner) and the driver's
+     information (o.info, a list of nodes) at the top left. o: { info }. RaceRoom banners and profile pictures are not looked up or used. */
   RR.banner = function (o) {
-    var b = el('div', 'rr-banner'), who = el('div', 'rr-banner-who'), pic = el('div', 'rr-banner-avatar'), text = el('div', 'rr-banner-text');
-    var helmet = el('img'); helmet.alt = (o.alt || 'Driver') + ' profile picture'; helmet.src = 'assets/images/race_club_helmet.png'; pic.appendChild(helmet);
+    var b = el('div', 'rr-banner'), text = el('div', 'rr-banner-text');
     (o.info || []).forEach(function (n) { if (n) text.appendChild(n); });
-    add(who, pic, text);
     var mark = el('img', 'rr-banner-mark');
-    mark.src = 'assets/images/Race Club R Black.webp';   /* the standard mark: dark R with the red bar in the middle */
+    mark.src = 'assets/images/race_club_helmet.png';   /* the white Race Club helmet with the R */
     mark.alt = '';
-    add(b, who, mark);
+    add(b, text, mark);
     return b;
   };
 
@@ -913,7 +937,7 @@
       add(t, el('div', 'rr-rank-no', RR.pos(i + 1)), name, it.sub ? el('div', 'rr-note', it.sub) : null,
         add(el('div', 'rr-rank-value'), el('span', 'rr-stat-value', dash(it.value)), it.valueLabel ? RR.label(it.valueLabel) : null));
       var mark = el('img', 'rr-rank-mark');     // shown only while the tile has no banner picture
-      mark.src = 'assets/images/Race Club R Black.webp'; mark.alt = '';
+      mark.src = 'assets/images/race_club_helmet.png'; mark.alt = '';
       t.appendChild(mark);
       if (it.livery) RR.photo(t, it.livery, i < 1 ? 'full' : 'small');
       box.appendChild(t);

@@ -901,8 +901,8 @@
       });
       return;
     }
-    RR.setTitle(d.name);
-    (function () { var f = RR.flag(d.country), h = document.querySelector('.rr-page-title'); if (f && h) { h.classList.add('rr-name'); h.insertBefore(f, h.firstChild); f.style.width = '30px'; f.style.height = '21px'; } })();
+    RR.setTitle('Driver profile');
+    document.title = d.name + ' | Race Club';
     var sel = 'all', clsFilter = 'all', achFilter = 'all', statPick = 'highlights', boardTrack = 'all', boardCls = 'all';
     var careerClasses = D.classes.filter(function (c) { return profileRows(d, 'all').some(function (r) { return r.x.cls === c.id; }); });
     var historyBox = el('div'), achBox = el('div', 'rr-stack'), statsRight = el('div', 'rr-stack'), boardBox = el('div', 'rr-stack');
@@ -916,8 +916,11 @@
       var best = rows.filter(function (r) { return r.x.status === 'Finished'; }).sort(function (a, b) { return a.x.pos - b.x.pos; })[0];
       /* The Driver box carries the plain banner and the Race Club helmet, with the driver's information beside the helmet.
          The name and flag are in the page title. A driver has no team, and the class changes from season to season, so neither is shown here. */
-      var card = RR.banner({ alt: d.name, info: [
-        add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
+      var nameLine = el('h2', 'rr-hero-title rr-name');
+      (function () { var f = RR.flag(d.country); if (f) { f.style.width = '30px'; f.style.height = '21px'; nameLine.appendChild(f); } })();
+      nameLine.appendChild(document.createTextNode(d.name));
+      var card = RR.banner({ info: [
+        RR.label('Name'), nameLine, el('div', 'rr-label rr-red', RR.countryName(d.country) || '-'),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
           RR.kv('Hours on track', p1(st.hours)))] });
       /* The radar: the grid is percentages (0% in the centre, 100% at the edge) and higher is better. Results and Pace are shown as Top n%, so
@@ -951,16 +954,12 @@
       });
       var radarAxes = st.radar.map(function (a, i) { return { label: a.label, value: a.value, text: texts[i], tip: tips[i], ref: people > 1 && counts[i] ? sums[i] / counts[i] : undefined }; });
       /* The car box shows the car the driver races in the league now: the car locked in the newest season the driver raced in. A driver who is not
-         in the running season keeps showing the last car used. The line under it is about the league: the season and how many of its rounds the driver ran. */
+         in the running season keeps showing the last car used. The line under it is the league season. */
       var leagueSeason = D.seasons.filter(function (s) { return s.results.some(function (x) { return x.driver === d.id; }); })[0];
       var inLeague = d.current !== false && !!leagueSeason && leagueSeason.status === 'Active';
       var leagueLine = 'No races yet';
       if (leagueSeason) {
-        var ran = {};
-        leagueSeason.results.forEach(function (x) { if (x.driver === d.id) ran[x.round] = 1; });
-        var nRan = Object.keys(ran).length, nDone = doneRounds(leagueSeason).length;
-        leagueLine = inLeague ? leagueSeason.name + ' \u00B7 raced ' + nRan + ' of ' + nDone + (nDone === 1 ? ' round' : ' rounds')
-          : 'Last raced in ' + leagueSeason.name;
+        leagueLine = inLeague ? leagueSeason.name : 'Last raced in ' + leagueSeason.name;
       }
       var hero = RR.photo(add(el('div', 'rr-hero'), RR.label(inLeague ? 'Current Car' : 'Last Car'), el('h2', 'rr-hero-title', d.car || '-'),
         el('div', 'rr-label rr-red', className(d.cls)), el('div', 'rr-note', leagueLine)), d.livery, 'full');

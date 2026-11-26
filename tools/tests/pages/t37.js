@@ -13,14 +13,16 @@ let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else conso
 (async()=>{
   const p=await load('driver.html','/tmp/gs/e2e.js','?driver=101'); const d=p.d; ok(!p.errs.length,'driver page loads '+p.errs.join('|'));
   const ban=d.querySelector('.rr-banner'); ok(!!ban,'the driver banner is there');
-  ok(!ban.querySelector(':scope > .rr-label'),'the banner has no Driver header');
+  
   ok(![...ban.querySelectorAll('.rr-label')].some(l=>l.textContent.trim()==='Points'),'the banner has no Points stat');
-  ok(ban.querySelectorAll('.rr-kv').length===6,'the banner shows Name, Country, Races, Wins, Podiums, Hours on track ('+ban.querySelectorAll('.rr-kv').length+')');
-  const kvs=[...ban.querySelectorAll('.rr-banner-text .rr-kv-list + .rr-kv-list > .rr-kv')]; ok(kvs.length===4,'four stats');
-  const mark=ban.querySelector('.rr-banner-mark'); ok(mark&&/Race Club R Black\.webp$/.test(mark.getAttribute('src')),'the banner uses the standard R mark (with the red bar)');
+  ok(ban.querySelectorAll('.rr-kv').length===4,'the banner shows Races, Wins, Podiums, Hours on track ('+ban.querySelectorAll('.rr-kv').length+')');
+  ok(ban.querySelector('.rr-label').textContent==='Name'&&ban.querySelector('.rr-hero-title .rr-flag')&&ban.querySelector('.rr-label.rr-red'),'NAME header, flag and name, red country');
+  ok(d.querySelector('.rr-page-title').textContent==='Driver profile','page title says Driver profile');
+  const kvs=[...ban.querySelectorAll('.rr-banner-text .rr-kv-list > .rr-kv')]; ok(kvs.length===4,'four stats');
+  const mark=ban.querySelector('.rr-banner-mark'); ok(mark&&/race_club_helmet\.png$/.test(mark.getAttribute('src')),'the banner uses the helmet');
   const hero=d.querySelector('.rr-hero'); const lab=hero&&hero.querySelector('.rr-label').textContent;
   ok(lab==='Current Car'||lab==='Last Car','the car box is labeled Current Car or Last Car ('+lab+')');
   ok(!/% of races/.test(hero.textContent),'no % of races stat ('+hero.textContent.replace(/\s+/g,' ')+')');
-  ok(/Season|round/.test(hero.textContent),'the line under the car is about the league');
+  ok(/Season/.test(hero.textContent)&&!/raced \d+ of/.test(hero.textContent),'the line under the car is about the league');
   console.log(fails?'FAILED '+fails:'ALL PASS (t37)');
 })();

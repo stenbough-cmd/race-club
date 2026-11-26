@@ -927,8 +927,8 @@ a.rr-btn { text-decoration: none; }
 .rr-rank-value { display: flex; align-items: baseline; gap: 8px; margin-top: auto; }
 .rr-rank-value .rr-stat-value { font-size: 22px; }
 /* The black Race Club R in the lower right corner of a tile with no banner picture (hidden when the picture shows) */
-.rr-rank-mark { position: absolute; right: 12px; bottom: 12px; width: 26px; height: auto; }
-.rr-rank-1 .rr-rank-mark { width: 40px; }
+.rr-rank-mark { position: absolute; right: 12px; bottom: 12px; width: 52px; height: auto; }   /* the helmet, twice the size of the R it replaced */
+.rr-rank-1 .rr-rank-mark { width: 80px; }
 .rr-rank-tile.rr-has-photo > .rr-rank-mark { display: none; }
 .rr-rank-1 { grid-column: 1; grid-row: 1 / span 2; }
 .rr-rank-1 .rr-rank-name { font-size: 24px; white-space: normal; }
@@ -1021,15 +1021,12 @@ a.rr-btn { text-decoration: none; }
 .rr-hero .rr-photo-img { position: absolute; top: 0; bottom: 0; right: 0; left: auto; width: 50%; height: 100%; object-fit: contain; object-position: center; padding: 8px 8px 8px 0; box-sizing: border-box; }
 
 /* Wide banner at the top of a page */
-.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-panel); box-shadow: var(--rr-shadow); }
+.rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-panel); box-shadow: var(--rr-shadow); }
 .rr-banner > .rr-label { margin-bottom: 12px; }
-.rr-banner-who { display: flex; align-items: center; justify-content: flex-start; gap: 16px; }   /* the helmet is centered against the text beside it */
-.rr-banner-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: 128px; height: 128px; overflow: hidden; }
-.rr-banner-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-/* The small Race Club R in the lower right corner: only on the plain black banner (no banner picture) */
-.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 44px; height: auto; opacity: 1; }
+/* The Race Club helmet in the lower right corner (twice the size of the R it replaced): only on the plain black banner (no banner picture) */
+.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 88px; height: auto; opacity: 1; }
 .rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
 
 /* ---------- A banner or ranking tile with no picture (the driver's box, and a ranking tile with no livery) ----------
@@ -1052,12 +1049,13 @@ a.rr-btn { text-decoration: none; }
 .rr-rank-tile:not(.rr-has-photo)::before { content: ""; position: absolute; left: 16px; top: 16px; width: 3px; height: 40px; background: var(--rr-red); z-index: 1; }
 .rr-rank-1:not(.rr-has-photo)::before { height: 62px; }
 /* the driver's numbers: bigger values, spaced apart with no lines between them */
-.rr-banner-text .rr-kv-list + .rr-kv-list { gap: 12px 40px; }
-.rr-banner-text .rr-kv-list + .rr-kv-list .rr-kv-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
+.rr-banner-text .rr-kv-list { gap: 12px 40px; }
+.rr-banner-text .rr-kv-list .rr-kv-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
 @media (orientation: portrait) {   /* tall portrait: the numbers sit two across, no dividers */
-  .rr-banner-text .rr-kv-list + .rr-kv-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .rr-banner-text .rr-kv-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 }
-@media (orientation: portrait) { .rr-banner { min-height: 170px; } .rr-banner-avatar { width: 80px; height: 80px; } }
+@media (orientation: portrait) { .rr-banner { min-height: 170px; padding-bottom: 76px; }   /* room under the numbers for the helmet */
+  }
 
 /* ---------- Season sub-tab and track layout pictures ---------- */
 .rr-track-cell { display: flex; align-items: center; gap: 12px; }
