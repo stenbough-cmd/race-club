@@ -210,19 +210,22 @@
       return null;
     });
   }
-  /* The first store picture of the track a layout belongs to, as a small <span> that fills in once the track is known:
-     RR.images.trackPhoto(1671, { className, alt }). Nothing is shown when the track has no picture of ours. */
-  function trackPhoto(layoutId, o) {
+  /* The venue's logo for the track a layout belongs to, as a small <span> that fills in once the track is known:
+     RR.images.venueLogoOfLayout(1671, { className, alt }). The logos are white (made for dark pages), so the page puts them on a black tile.
+     Nothing is shown when we have no logo for the venue. */
+  function venueLogoOfLayout(layoutId, o) {
     o = o || {};
     var box = document.createElement('span');
-    box.className = o.boxClass || 'rr-track-photo-box';
+    box.className = o.boxClass || 'rr-venue-logo-box';
     trackOfLayout(layoutId, o.source).then(function (trackId) {
-      if (!trackId) return;
-      var node = img('track', trackId, { n: 1, className: o.className || 'rr-r3e-img', alt: o.alt || '', quiet: true });
-      box.appendChild(node);
+      return trackId ? tracks(trackId, o.source) : null;
+    }).then(function (t) {
+      if (!t || !t.venueId) return;
+      box.appendChild(img('venue', t.venueId, { className: o.className || 'rr-r3e-img', alt: o.alt || t.venue || '', quiet: true }));
     });
     return box;
   }
+
   /* The venue's logo for a track: RR.images.trackLogo(2519) returns an <img> that fills in once the track is known. */
   function trackLogo(trackId, o) {
     o = o || {};
@@ -253,5 +256,5 @@
     return node;
   }
 
-  RR.images = { trackPhoto: trackPhoto, trackOfLayout: trackOfLayout, logo: logo, tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
+  RR.images = { venueLogoOfLayout: venueLogoOfLayout, trackOfLayout: trackOfLayout, logo: logo, tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
 })();

@@ -410,10 +410,10 @@
         timeZoneName: 'short' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
       return { date: p.day + '.' + p.month + '.' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
     }
-    /* The track's own picture (from the store pictures we saved) in front of its name. */
+    /* The venue's logo (from the store pictures we saved) in front of the track name. */
     function trackCell(r) {
       var w = el('span', 'rr-track-cell');
-      if (r.layoutId) w.appendChild(RR.images.trackPhoto(r.layoutId, { className: 'rr-track-photo', alt: r.track }));
+      if (r.layoutId) w.appendChild(RR.images.venueLogoOfLayout(r.layoutId, { className: 'rr-venue-logo', alt: r.track }));
       w.appendChild(RR.cell(r.track));
       return w;
     }
