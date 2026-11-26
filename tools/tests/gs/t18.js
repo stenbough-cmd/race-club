@@ -70,7 +70,7 @@ const e=run(`rcEndSeason_({seasonId:'SE1',allowUnfinished:true},'m')`);
 ok(e.ok&&tabs.Seasons[0].Status==='Finished','season ended');
 ok(tabs.Rounds[1].Status==='Cancelled'&&tabs.Rounds[0].Status==='Provisional','unraced round cancelled, raced round kept');
 ok(st.Hidden==='','a recap left over from an earlier ending is replaced and shown again');
-ok(/^\d\d\.\d\d\.\d{4}$/.test(run(`rcGetSeasonEnd_({seasonId:'SE1'})`).season.ended),'Ended shown as dd.mm.yyyy: '+run(`rcGetSeasonEnd_({seasonId:'SE1'})`).season.ended);
+ok(/^\d\d\/\d\d\/\d{4}$/.test(run(`rcGetSeasonEnd_({seasonId:'SE1'})`).season.ended),'Ended shown as mm/dd/yyyy: '+run(`rcGetSeasonEnd_({seasonId:'SE1'})`).season.ended);
 // 6. no confirming into a finished season
 ok(run(`rcConfirmRound_({roundId:'1000001'},'m')`).error==='season-ended','confirm refused for a finished season');
 // 7. deleting a season removes its stories

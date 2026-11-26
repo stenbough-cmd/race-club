@@ -21,9 +21,9 @@
     for (var i = 1; i < arguments.length; i++) if (arguments[i]) node.appendChild(arguments[i]);
   }
 
-  /* All posts, newest first. Dates are DD.MM.YYYY. */
+  /* All posts, newest first. Dates are MM/DD/YYYY. */
   function newestFirst() {
-    function stamp(n) { if (n.sort) return String(n.sort).replace(/-/g, ''); var p = n.date.split('.'); return p[2] + p[1] + p[0]; }
+    function stamp(n) { if (n.sort) return String(n.sort).replace(/-/g, ''); var p = n.date.split('/'); return p[2] + p[0] + p[1]; }
     return D.news.slice().sort(function (x, y) { return stamp(y).localeCompare(stamp(x)); });
   }
 
@@ -400,7 +400,7 @@
       fill(RR.view('laptimes'), add(el('div', 'rr-split'), add(el('div'), list), right));
     }
 
-    /* Start time of a round in the visitor's own time zone (the browser's), as { date: 'DD.MM.YYYY', time: '20:00', zone: 'EST' }. */
+    /* Start time of a round in the visitor's own time zone (the browser's), as { date: 'MM/DD/YYYY', time: '20:00', zone: 'EST' }. */
     function localStart(r) {
       if (!r.start) return null;
       var d = new Date(r.start);
@@ -408,7 +408,7 @@
       var p = {};
       new Intl.DateTimeFormat('en-GB', { hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
         timeZoneName: 'short' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
-      return { date: p.day + '.' + p.month + '.' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
+      return { date: p.month + '/' + p.day + '/' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
     }
     /* The venue's logo (from the store pictures we saved) in front of the track name. */
     function trackCell(r) {

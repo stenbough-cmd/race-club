@@ -262,5 +262,18 @@
     d.races = races; d.wins = wins; d.podiums = podiums; d.points = points;
   });
 
+  /* Every date on the site reads MM/DD/YYYY. The data may still carry DD.MM.YYYY (older published data, the sample data), so each such text,
+     with or without a time after it, is turned around here once before any page reads it. */
+  function usDates(node) {
+    if (typeof node === 'string') {
+      var m = /^(\d{2})\.(\d{2})\.(\d{4})(( |$).*)$/.exec(node);
+      return m ? m[2] + '/' + m[1] + '/' + m[3] + m[4] : node;
+    }
+    if (Array.isArray(node)) { for (var i = 0; i < node.length; i++) node[i] = usDates(node[i]); return node; }
+    if (node && typeof node === 'object') { Object.keys(node).forEach(function (k) { node[k] = usDates(node[k]); }); }
+    return node;
+  }
+  usDates(data);
+
   window.RR_DATA = data;
 })();

@@ -15,7 +15,7 @@
 
   function dmy(text) {
     var m = /^(\d{4})-(\d{2})-(\d{2})(.*)$/.exec(String(text || ''));
-    return m ? m[3] + '.' + m[2] + '.' + m[1] + m[4] : String(text || '');
+    return m ? m[2] + '/' + m[3] + '/' + m[1] + m[4] : String(text || '');
   }
   function problem(res) { return 'Could not do that. Try again.'; }
   function publishNote(res) {

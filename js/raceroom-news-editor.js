@@ -60,7 +60,7 @@
   function posts() { return data.items.filter(function (i) { return i.kind === 'post'; }); }
   function find(key) { return data && data.items.filter(function (i) { return i.key === key; })[0]; }
   function stateWord(s) { return s === 'published' ? 'Live' : (s === 'withdrawn' ? 'Withdrawn' : 'Deleted'); }
-  function dmy(d) { var p = String(d || '').split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0] : '-'; }
+  function dmy(d) { var p = String(d || '').split('-'); return p.length === 3 ? p[1] + '/' + p[2] + '/' + p[0] : '-'; }
   function thousands(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
   /* ---------------- The text box and its buttons ---------------- */

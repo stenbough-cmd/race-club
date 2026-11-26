@@ -245,11 +245,12 @@
     var t = timeStr.split(':').map(Number), total = (t[0] * 60 + t[1] + mins) % 1440;
     return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
   }
-  function showDate(d) { var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
-  /* Calendar dates are written out (Thu 3 Dec 2026) so the day and month can never be mixed up. */
+  function showDate(d) { var p = d.split('-'); return p[1] + '/' + p[2] + '/' + p[0]; }
+  /* Calendar dates show the weekday and the date (Thu 12/03/2026). */
   function longDate(d) {
     var p = d.split('-').map(Number);
-    return new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).replace(',', '');
+    var day = new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+    return day + ' ' + showDate(d);
   }
   function weekendOf(r) { return r.weekend || S.weekend; }
   /* Races each night: 1 for a single-race season, 2 or 3 for a multi-race season. */

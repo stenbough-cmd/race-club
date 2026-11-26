@@ -25,10 +25,10 @@
 
   var posts = null, more = false, busy = false, failed = false, message = null;
 
-  /* 2026-11-22 08:15 becomes 22.11.2026 08:15 */
+  /* 2026-11-22 08:15 becomes 11/22/2026 08:15 */
   function when(text) {
     var m = /^(\d{4})-(\d{2})-(\d{2})(.*)$/.exec(String(text || ''));
-    return m ? m[3] + '.' + m[2] + '.' + m[1] + m[4] : String(text || '');
+    return m ? m[2] + '/' + m[3] + '/' + m[1] + m[4] : String(text || '');
   }
   function roundText(p) {
     if (p.round) return 'Round ' + p.round.n + ' · ' + p.round.track + ' ' + p.round.layout;
