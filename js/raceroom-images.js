@@ -211,7 +211,7 @@
     });
   }
   /* The venue's logo for the track a layout belongs to, as a small <span> that fills in once the track is known:
-     RR.images.venueLogoOfLayout(1671, { className, alt }). The logos are white (made for dark pages), so the page puts them on a black tile.
+     RR.images.venueLogoOfLayout(1671, { className, alt }). The logos are made for dark pages (many are white), so the page gives them a thin dark outline.
      Nothing is shown when we have no logo for the venue. */
   function venueLogoOfLayout(layoutId, o) {
     o = o || {};
