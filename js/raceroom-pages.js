@@ -414,14 +414,13 @@
     function trackCell(r) {
       var w = el('span', 'rr-track-cell');
       if (r.layoutId) w.appendChild(RR.images.venueLogoOfLayout(r.layoutId, { className: 'rr-venue-logo', alt: r.track }));
-      w.appendChild(RR.cell(r.track));
+      w.appendChild(RR.cell(r.track, r.layout));
       return w;
     }
-    /* The layout column: the layout map and the layout's name. */
+    /* The layout column: just the layout map (the layout's name stays under the track name). */
     function layoutCell(r) {
       var w = el('span', 'rr-track-cell');
       if (r.layoutId) w.appendChild(RR.images.img('layout', r.layoutId, { className: 'rr-layout-img', alt: (r.layout || r.track) + ' layout' }));
-      w.appendChild(RR.cell(r.layout && r.layout !== r.track ? r.layout : '-'));
       return w;
     }
     var TIMES_OF_DAY = ['Dawn', 'Morning', 'Noon', 'Afternoon', 'Sunset'];
