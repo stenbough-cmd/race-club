@@ -845,18 +845,14 @@
   }
   function sheetPanel() {
     var running = runningSeason();
-    /* Delete season removes the running season, and says which one before and after. */
-    var del = RR.arm(RR.button('Delete season', null, false, 'trash'), '', running ? 'Confirm delete "' + running.name + '"' : '', function () { deleteFromSheet(running.seasonId, running.name); });
-    if (!running) { del.disabled = true; del.setAttribute('data-rr-tip', 'No season is running'); }
     var create = RR.arm(RR.button('Create season', null, false, 'create'), '', 'Confirm create season', createSeason);
     if (running) { create.disabled = true; create.setAttribute('data-rr-tip', '"' + running.name + '" is still running'); }
     var p = panel('Google Sheet', RR.row(
       create,
-      del,
       RR.arm(RR.button('Reset wizard', null, false, 'startover'), '', 'Confirm reset wizard', function () {
         S = newSeason(); flagged = false; sheetNote = null; drawAll();
       })));
-    if (running) p.appendChild(note('"' + running.name + '" (' + running.seasonId + ') is the running season. Delete season removes it from the Sheet, and only while it has no race results. To start a new season, end it on the Results page, Season tab, or delete it.'));
+    if (running) p.appendChild(note('"' + running.name + '" (' + running.seasonId + ') is the running season. To start a new season, end it on the Results page, Season tab, or delete it in the list below (only possible while it has no race results).'));
     if (sheetNote) p.appendChild(RR.notice(sheetNote.text, sheetNote.kind));
     if (sheetSeasons) {
       p.appendChild(RR.table([
