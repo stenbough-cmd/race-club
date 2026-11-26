@@ -1034,7 +1034,8 @@ a.rr-btn { text-decoration: none; }
 .rr-layout-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
 .rr-season-head { display: flex; align-items: center; gap: 16px; }
 .rr-season-class-img { height: 40px; width: auto; max-width: 120px; object-fit: contain; flex: none; }
-.rr-season-cars { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* Up to 4 cars across. As the window narrows a whole car drops off the row (4, 3, 2, 1) instead of every car being squeezed; tall portrait is always 1. */
+.rr-season-cars { display: grid; gap: var(--rr-gap-tiles); grid-template-columns: repeat(auto-fill, minmax(max(260px, calc((100% - 3 * var(--rr-gap-tiles)) / 4)), 1fr)); }
 .rr-season-car { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--rr-well); }
 .rr-season-car-title { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--rr-ink); color: var(--rr-photo-text); }   /* a black bar, like RaceRoom's own dark pages: white and colored logos show as they were made */
 .rr-season-mfr { flex: none; height: 22px; width: auto; max-width: 36px; object-fit: contain; }
