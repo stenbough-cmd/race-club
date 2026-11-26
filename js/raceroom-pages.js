@@ -919,7 +919,7 @@
       var card = RR.banner({ alt: d.name, info: [
         add(el('div', 'rr-kv-list'), RR.kv('Name', d.name), RR.kv('Country', RR.countryName(d.country) || '-')),
         add(el('div', 'rr-kv-list'), RR.kv('Races', st.races), RR.kv('Wins', st.wins), RR.kv('Podiums', st.podiums),
-          RR.kv('Hours on track', p1(st.hours)), RR.kv('Points', RR.num(st.points)))] });
+          RR.kv('Hours on track', p1(st.hours)))] });
       /* The radar: the grid is percentages (0% in the centre, 100% at the edge) and higher is better. Results and Pace are shown as Top n%, so
          Top 1% sits at the edge. Pace is the driver's rank by best-lap gap among every driver in the same seasons. The plain facts behind each
          number are the hover text. A dashed shape shows the league average over the same drivers. */
