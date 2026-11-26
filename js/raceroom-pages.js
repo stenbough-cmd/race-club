@@ -478,12 +478,21 @@
         pic,
         title, info, strip);
     }
+    /* RaceRoom's store page for a class: /store/cars/<class name as a web address>/<class id> (DTM 1992 is /store/cars/dtm-1992/3499). */
+    function storeLabel(c, text) {
+      var slug = String(c.name).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      var label = RR.label(text + ' \u00B7 '), a = el('a', 'rr-link', 'Visit the RaceRoom store to purchase content');
+      a.href = 'https://game.raceroomracing.com/store/cars/' + slug + '/' + c.classId;
+      a.target = '_blank'; a.rel = 'noopener';
+      label.appendChild(a);
+      return label;
+    }
     function seasonClass(c) {
       var liveries = c.cars.reduce(function (n, k) { return n + k.liveries.length; }, 0), cars = el('div', 'rr-season-cars');
       c.cars.forEach(function (k) { cars.appendChild(seasonCar(k)); });
       return seasonPanel(null,
         add(el('div', 'rr-season-head'), RR.images.img('class', c.classId, { className: 'rr-season-class-img', alt: c.name }),
-          add(el('div'), RR.heading(c.name), RR.label(plural(c.cars.length, 'car', 'cars') + ' \u00B7 ' + plural(liveries, 'livery', 'liveries')))),
+          add(el('div'), RR.heading(c.name), storeLabel(c, plural(c.cars.length, 'car', 'cars') + ' \u00B7 ' + plural(liveries, 'livery', 'liveries')))),
         cars);
     }
     /* The box at the top of the Season tab: the season's name, how big it is, and what is worth knowing at a glance, with the two links most people need. */
