@@ -104,6 +104,7 @@
     back: '<path d="M15 5l-7 7 7 7"/>',
     forward: '<path d="M9 5l7 7-7 7"/>',
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+    lock: '<rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     login: '<path d="M14 4h6v16h-6"/><path d="M3 12h11"/><path d="M10 8l4 4-4 4"/>',
     portrait: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',
     logout: '<path d="M10 4H4v16h6"/><path d="M10 12h11"/><path d="M17 8l4 4-4 4"/>',
@@ -1124,7 +1125,8 @@
     [/^end season/i, 'trophy'],
     [/^help\b/i, 'help'],
     [/^log in/i, 'login'],
-    [/^reset wizard/i, 'startover']
+    [/^reset wizard/i, 'startover'],
+    [/^change password/i, 'lock']
   ];
   RR.buttonIcon = function (text) {
     for (var i = 0; i < BUTTON_ICONS.length; i++) if (BUTTON_ICONS[i][0].test(String(text))) return BUTTON_ICONS[i][1];

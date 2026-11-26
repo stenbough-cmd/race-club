@@ -10,7 +10,7 @@ async function load(seasons){
   const calls=[];
   w.fetch=(u,o)=>{u=String(u);
     if(/script\.google\.com/.test(u)){ const req=JSON.parse(o.body); calls.push(req);
-      const res=req.action==='listSeasons'?{ok:true,seasons:seasons}:req.action==='deleteSeason'?{ok:true}:{ok:true,members:[]};
+      const res=req.action==='listSeasons'?{ok:true,seasons:seasons}:req.action==='deleteSeason'||req.action==='changePassword'?{ok:true}:req.action==='loadSeason'?{ok:true,season:{password:'abc123',noPassword:false}}:{ok:true,members:[]};
       return Promise.resolve({ok:true,json:()=>Promise.resolve(res)}); }
     const p=root+u.replace(/^https?:\/\/[^/]+\//,'').split('?')[0];try{const t=fs.readFileSync(p,'utf8');return Promise.resolve({ok:true,json:()=>Promise.resolve(JSON.parse(t)),text:()=>Promise.resolve(t)});}catch(e){return Promise.resolve({ok:false,status:404,json:()=>Promise.reject(e),text:()=>Promise.resolve('')});}};
   w.sessionStorage.setItem('rr-admin',JSON.stringify({name:'Matt',token:'t'.repeat(40),until:Date.now()+3600000}));
@@ -60,5 +60,17 @@ const txt=d=>d.body.textContent.replace(/\s+/g,' ');
   S.noPassword=false; S.password='abc123';
   const f2=p.w.RR_ADMIN.buildRoundFile({id:'1234567',layoutId:1,date:'2026-12-03',time:'20:00',weekend:null},[]);
   ok(f2.GameSettings[0].Password==='abc123','the season password is in every round file');
+  /* Change password in the season row */
+  p=await load(running); d=p.d;
+  const chgB=[...d.querySelectorAll('tbody button')].filter(b=>b.textContent.trim()==='Change password')[0];
+  ok(!!chgB,'each season row has a Change password button');
+  chgB.click(); await new Promise(r=>setTimeout(r,300));
+  const win=d.querySelector('.rr-modal'); ok(!!win&&/Change password: Season 01/.test(win.textContent),'it opens a window that names the season');
+  const wi=win&&win.querySelector('input[type=text],input:not([type])'); ok(wi&&wi.value==='abc123','the window shows the current password');
+  const sv=[...win.querySelectorAll('button')].filter(b=>b.textContent.trim()==='Save password')[0]; ok(!!sv,'Save password button');
+  sv.click(); ok(/Confirm new password for "Season 01"/.test(sv.getAttribute('data-rr-tip')||''),'first click asks to confirm and names the season');
+  sv.click(); await new Promise(r=>setTimeout(r,400));
+  ok(p.calls.some(c=>c.action==='changePassword'&&c.seasonId==='S-AAAAAA'&&c.password==='abc123'&&c.noPassword===false),'second click sends the new password for that season');
+  ok(!d.querySelector('.rr-modal')&&/Password changed for "Season 01"/.test(txt(d)),'the window closes and the page says the password changed');
   console.log(fails?'\nFAILED '+fails:'\nALL PASS (t34)');
 })();

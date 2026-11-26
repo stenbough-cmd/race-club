@@ -772,6 +772,8 @@
     'bad-season': 'The season needs a name before it can be created.',
     'not-found': 'That season is no longer in the Sheet.',
     'has-results': 'Not deleted. This season already has race results in the Sheet.',
+    'empty-password': 'Type a password, or tick No password.',
+    'password-too-long': 'The password is too long. Keep it under 80 characters.',
     'signed-out': 'Your log in has ended. Log in again.'
   };
   function sheetError(res) {
@@ -843,6 +845,34 @@
       sheetDone('Downloaded ' + files.n + ' round file(s) for "' + name + '" in one zip. Blacklist: ' + bans.length + (bans.length === 1 ? ' member.' : ' members.') + ' The zip contains your server password. Keep it on your computer.');
     });
   }
+  /* Change password: opens a small window for one season. It shows the season's current password, takes a new one (or No password), and saves it
+     for the whole season. Protests use the new password at once; the racing server must be changed to match by hand. */
+  function changePassword(s) {
+    if (sheetBusy) return;
+    var win = RR.modal('Change password: ' + s.name), form = { password: '', noPassword: false }, msg = null;
+    function draw() {
+      win.body.innerHTML = '';
+      var pw = RR.input({ label: 'Server password', value: form.password, wide: true, readOnly: form.noPassword, onChange: function (v) { form.password = v; } });
+      var no = RR.checkbox('No password (public racing server)', function (on) { form.noPassword = on; if (on) form.password = ''; draw(); }, form.noPassword);
+      var save = RR.arm(RR.button('Save password', null, true, 'check'), '', 'Confirm new password for "' + s.name + '"', function () {
+        form.password = form.password.trim();
+        if (!form.noPassword && !form.password) { msg = { text: 'Type a password, or tick No password.', kind: 'warn' }; draw(); return; }
+        RR.api('changePassword', { seasonId: s.seasonId, password: form.password, noPassword: form.noPassword }).then(function (res) {
+          if (!res || !res.ok) { msg = { text: sheetError(res || {}), kind: 'warn' }; draw(); return; }
+          win.close();
+          sheetDone('Password changed for "' + s.name + '" (' + s.seasonId + '). Change the racing server to the same password. ' + (form.noPassword ? 'Protests no longer ask for one.' : 'Protests now use the new password.'), 'ok');
+        });
+      }, function () { return form.noPassword || !!form.password.trim(); });
+      win.body.appendChild(pw); win.body.appendChild(no);
+      if (msg) win.body.appendChild(RR.notice(msg.text, msg.kind));
+      win.body.appendChild(note('This is the password for every round of the season. Export season (.zip) uses it too. Drivers already in the server keep racing until they leave; anyone joining needs the new password.'));
+      win.body.appendChild(RR.row(save));
+    }
+    draw();
+    RR.api('loadSeason', { seasonId: s.seasonId }).then(function (res) {
+      if (res && res.ok && res.season) { form.noPassword = res.season.noPassword === true; form.password = String(res.season.password || ''); draw(); }
+    });
+  }
   function sheetPanel() {
     var running = runningSeason();
     var create = RR.arm(RR.button('Create season', null, false, 'create'), '', 'Confirm create season', createSeason);
@@ -862,8 +892,9 @@
       ], sheetSeasons.map(function (s) {
         var remove = RR.arm(RR.button('Delete', null, false, 'trash'), '', 'Confirm delete "' + s.name + '"', function () { deleteFromSheet(s.seasonId, s.name); });
         var exp = RR.button('Export season (.zip)', function () { exportFromSheet(s.seasonId, s.name); });
+        var chg = RR.button('Change password', function () { changePassword(s); });
         return { cells: { name: s.name, id: s.seasonId, status: s.status, first: s.firstRound ? longDate(s.firstRound) : '-',
-          rounds: s.rounds, saved: s.saved, by: s.savedBy, act: RR.row(exp, remove) } };
+          rounds: s.rounds, saved: s.saved, by: s.savedBy, act: RR.row(exp, chg, remove) } };
       }), 'No seasons are in the Sheet yet.'));
     } else {
       p.appendChild(note('Reading the seasons in the Sheet...'));
