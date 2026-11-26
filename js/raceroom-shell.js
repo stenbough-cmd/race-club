@@ -21,7 +21,7 @@
   ];
   /* The short legal notice shown at the bottom of every page. The full text is on legal.html. */
   /* The site version, shown in the footer of every page. Change it here and nowhere else each time the site is updated. */
-  var VERSION = '2.5.0';
+  var VERSION = '2.6.0';
   var LEGAL_SHORT = 'Race Club is an independent community-run sim racing league and is not affiliated with, endorsed by, or sponsored by RaceRoom, KW Studios, RaceRoom Entertainment AG, any racing team, vehicle manufacturer, race circuit, racing series, or trademark owner. All trademarks, logos, team names, liveries, vehicle names, and circuit names are the property of their respective owners and are used for identification and informational purposes only.';
   var TABSETS = {
     leaderboards: [

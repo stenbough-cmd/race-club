@@ -410,26 +410,33 @@
         timeZoneName: 'short' }).formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
       return { date: p.day + '.' + p.month + '.' + p.year, time: p.hour + ':' + p.minute, zone: p.timeZoneName };
     }
-    /* The small track layout picture next to the track name. */
+    /* The track's own picture (from the store pictures we saved) in front of its name. */
     function trackCell(r) {
       var w = el('span', 'rr-track-cell');
-      if (r.layoutId) w.appendChild(RR.images.img('layout', r.layoutId, { className: 'rr-layout-img', alt: r.track + ' layout' }));
-      w.appendChild(RR.cell(r.track, r.layout));
+      if (r.layoutId) w.appendChild(RR.images.trackPhoto(r.layoutId, { className: 'rr-track-photo', alt: r.track }));
+      w.appendChild(RR.cell(r.track));
+      return w;
+    }
+    /* The layout column: the layout map and the layout's name. */
+    function layoutCell(r) {
+      var w = el('span', 'rr-track-cell');
+      if (r.layoutId) w.appendChild(RR.images.img('layout', r.layoutId, { className: 'rr-layout-img', alt: (r.layout || r.track) + ' layout' }));
+      w.appendChild(RR.cell(r.layout && r.layout !== r.track ? r.layout : '-'));
       return w;
     }
     var TIMES_OF_DAY = ['Dawn', 'Morning', 'Noon', 'Afternoon', 'Sunset'];
     function drawSchedule() {
       fill(RR.view('schedule'), RR.table([
         { key: 'n', label: 'Round', sort: true, sorted: true }, { key: 'date', label: 'Date', sort: true }, { key: 'time', label: 'Time', sort: true },
-        { key: 'track', label: 'Track', sort: true }, { key: 'race', label: 'Race time', sort: true }, { key: 'sky', label: 'Weather', sort: true }, { key: 'status', label: 'Status', sort: true }
+        { key: 'track', label: 'Track', sort: true }, { key: 'layout', label: 'Layout', sort: true }, { key: 'race', label: 'Race time', sort: true }, { key: 'sky', label: 'Weather', sort: true }, { key: 'status', label: 'Status', sort: true }
       ], season.rounds.filter(function (r) { return !onlyUpcoming || (!r.done && !r.cancelled); }).map(function (r) {
         var at = localStart(r);
-        return { cells: { n: 'Round ' + r.n, track: trackCell(r), date: at ? at.date : r.date,
+        return { cells: { n: 'Round ' + r.n, track: trackCell(r), layout: layoutCell(r), date: at ? at.date : r.date,
           time: at ? RR.cell(at.time, at.zone) : '-',
           race: r.day ? TIMES_OF_DAY[r.day.tod] || '-' : '-', sky: r.day ? RR.sky(r.day.sky.slice(0, 1)) : '-',
           status: r.cancelled ? RR.tag('Cancelled', true) : (r.done ? RR.tag('Finished') : RR.tag('Upcoming', true)) },
           /* Round and Date are the same order (the calendar). Time is the time of day. Status: Finished, then Upcoming, then Cancelled. */
-          sort: { n: r.n, track: r.track.toLowerCase(), date: r.start && !isNaN(Date.parse(r.start)) ? Date.parse(r.start) : r.n,
+          sort: { n: r.n, track: r.track.toLowerCase(), layout: String(r.layout || '').toLowerCase(), date: r.start && !isNaN(Date.parse(r.start)) ? Date.parse(r.start) : r.n,
             time: at ? Number(at.time.slice(0, 2)) * 60 + Number(at.time.slice(3)) : null,
             race: r.day ? r.day.tod : null, sky: r.day && r.day.sky.length ? r.day.sky[0] : null, status: r.cancelled ? 2 : (r.done ? 0 : 1) } };
       }), onlyUpcoming ? 'No upcoming rounds.' : 'The schedule has not been posted yet.'));

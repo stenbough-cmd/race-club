@@ -1032,6 +1032,8 @@ a.rr-btn { text-decoration: none; }
 /* ---------- Season sub-tab and track layout pictures ---------- */
 .rr-track-cell { display: flex; align-items: center; gap: 12px; }
 .rr-layout-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.rr-track-photo-box { display: block; flex: none; width: 64px; height: 36px; background: var(--rr-well); }
+.rr-track-photo { display: block; width: 64px; height: 36px; object-fit: cover; }
 .rr-season-head { display: flex; align-items: center; gap: 16px; }
 .rr-season-class-img { height: 40px; width: auto; max-width: 120px; object-fit: contain; flex: none; }
 /* Up to 4 cars across. As the window narrows a whole car drops off the row (4, 3, 2, 1) instead of every car being squeezed; tall portrait is always 1. */

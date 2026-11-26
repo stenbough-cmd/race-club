@@ -186,14 +186,42 @@
        { venue, country, location, versions, description, type, opened, racedIn, venueId, pictures,
          layouts: [{ id, name, maxCars, map }] }, or null */
   var trackDetails = null;
-  function tracks(trackId, source) {
+  function allTracks(source) {
     source = source || 'r3e';
     if (!trackDetails) {
       trackDetails = fetch(SOURCES[source].local + 'tracks.json')
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .catch(function () { return { tracks: {} }; });
     }
-    return trackDetails.then(function (d) { return d.tracks[goodId(trackId)] || null; });
+    return trackDetails;
+  }
+  function tracks(trackId, source) {
+    return allTracks(source).then(function (d) { return d.tracks[goodId(trackId)] || null; });
+  }
+  /* The track a layout belongs to: RR.images.trackOfLayout(1671) resolves to the track ID (1670), or null. */
+  function trackOfLayout(layoutId, source) {
+    var want = goodId(layoutId);
+    return allTracks(source).then(function (d) {
+      var ids = Object.keys(d.tracks || {});
+      for (var i = 0; i < ids.length; i++) {
+        var ls = d.tracks[ids[i]].layouts || [];
+        for (var j = 0; j < ls.length; j++) if (goodId(ls[j].id) === want) return ids[i];
+      }
+      return null;
+    });
+  }
+  /* The first store picture of the track a layout belongs to, as a small <span> that fills in once the track is known:
+     RR.images.trackPhoto(1671, { className, alt }). Nothing is shown when the track has no picture of ours. */
+  function trackPhoto(layoutId, o) {
+    o = o || {};
+    var box = document.createElement('span');
+    box.className = o.boxClass || 'rr-track-photo-box';
+    trackOfLayout(layoutId, o.source).then(function (trackId) {
+      if (!trackId) return;
+      var node = img('track', trackId, { n: 1, className: o.className || 'rr-r3e-img', alt: o.alt || '', quiet: true });
+      box.appendChild(node);
+    });
+    return box;
   }
   /* The venue's logo for a track: RR.images.trackLogo(2519) returns an <img> that fills in once the track is known. */
   function trackLogo(trackId, o) {
@@ -225,5 +253,5 @@
     return node;
   }
 
-  RR.images = { logo: logo, tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
+  RR.images = { trackPhoto: trackPhoto, trackOfLayout: trackOfLayout, logo: logo, tracks: tracks, trackLogo: trackLogo, details: details, img: img, info: info, ready: ready, sources: SOURCES, placeholder: PLACEHOLDER };
 })();
