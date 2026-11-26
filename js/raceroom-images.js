@@ -211,8 +211,38 @@
     });
   }
   /* The venue's logo for the track a layout belongs to, as a small <span> that fills in once the track is known:
-     RR.images.venueLogoOfLayout(1671, { className, alt }). The logos are made for dark pages (many are white), so the page gives them a thin dark outline.
+     RR.images.venueLogoOfLayout(1671, { alt }). The logos are made for dark pages (many are white), so each one is drawn on a canvas with a
+     thin hard outline in the page's dark color. A CSS filter cannot do this reliably (half pixel offsets are drawn thick on a computer and
+     dropped on some phones), so the outline is drawn here in whole device pixels: one pixel wide on ordinary screens, two on very sharp ones.
      Nothing is shown when we have no logo for the venue. */
+  var LOGO_W = 64, LOGO_H = 36;
+  function outlinedLogo(src, alt) {
+    var dpr = window.devicePixelRatio || 1, line = Math.max(1, Math.round(0.5 * dpr));
+    var cv = document.createElement('canvas'), pic = new Image();
+    cv.width = Math.round(LOGO_W * dpr); cv.height = Math.round(LOGO_H * dpr);
+    cv.style.width = LOGO_W + 'px'; cv.style.height = LOGO_H + 'px';
+    cv.className = 'rr-venue-logo';
+    cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', alt || '');
+    pic.onload = function () {
+      var g = cv.getContext('2d'), room = line + 1, w = cv.width - room * 2, h = cv.height - room * 2;
+      var k = Math.min(w / pic.naturalWidth, h / pic.naturalHeight), dw = Math.round(pic.naturalWidth * k), dh = Math.round(pic.naturalHeight * k);
+      var x = Math.round((cv.width - dw) / 2), y = Math.round((cv.height - dh) / 2);
+      var ink = '#171717';
+      try { ink = getComputedStyle(document.documentElement).getPropertyValue('--rr-ink').trim() || ink; } catch (e) {}
+      var shade = document.createElement('canvas'), s = shade.getContext('2d');
+      shade.width = cv.width; shade.height = cv.height;
+      s.imageSmoothingQuality = 'high'; s.drawImage(pic, x, y, dw, dh);
+      s.globalCompositeOperation = 'source-in'; s.fillStyle = ink; s.fillRect(0, 0, shade.width, shade.height);
+      for (var i = 0; i < 16; i++) {
+        var ang = i * Math.PI / 8;
+        g.drawImage(shade, Math.round(Math.cos(ang) * line), Math.round(Math.sin(ang) * line));
+      }
+      g.imageSmoothingQuality = 'high'; g.drawImage(pic, x, y, dw, dh);
+    };
+    pic.onerror = function () { if (cv.parentNode) cv.parentNode.removeChild(cv); };
+    pic.src = src;
+    return cv;
+  }
   function venueLogoOfLayout(layoutId, o) {
     o = o || {};
     var box = document.createElement('span');
@@ -221,7 +251,7 @@
       return trackId ? tracks(trackId, o.source) : null;
     }).then(function (t) {
       if (!t || !t.venueId) return;
-      box.appendChild(img('venue', t.venueId, { className: o.className || 'rr-r3e-img', alt: o.alt || t.venue || '', quiet: true }));
+      box.appendChild(outlinedLogo(address(o.source || 'r3e', 'venue', t.venueId).local, o.alt || t.venue || ''));
     });
     return box;
   }

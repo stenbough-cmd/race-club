@@ -1034,9 +1034,8 @@ a.rr-btn { text-decoration: none; }
 .rr-layout-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
 .rr-venue-logo-box { display: flex; align-items: center; justify-content: center; flex: none; width: 64px; height: 36px; }
 .rr-venue-logo-box:empty { display: none; }
-/* The venue logos are made for dark pages (many are white). A 0.5px hard outline in the page's dark color, no blur, makes them stand out on the light table. */
-.rr-venue-logo { display: block; max-width: 100%; max-height: 100%; object-fit: contain;
-  filter: drop-shadow(0.5px 0 0 var(--rr-ink)) drop-shadow(-0.5px 0 0 var(--rr-ink)) drop-shadow(0 0.5px 0 var(--rr-ink)) drop-shadow(0 -0.5px 0 var(--rr-ink)); }
+/* The venue logos are made for dark pages (many are white): each is drawn on a canvas with a thin dark outline (see venueLogoOfLayout in raceroom-images.js). */
+.rr-venue-logo { display: block; width: 64px; height: 36px; }
 .rr-season-head { display: flex; align-items: center; gap: 16px; }
 .rr-season-class-img { height: 40px; width: auto; max-width: 120px; object-fit: contain; flex: none; }
 /* Up to 4 cars across. As the window narrows a whole car drops off the row (4, 3, 2, 1) instead of every car being squeezed; tall portrait is always 1. */
