@@ -19,7 +19,7 @@ let fails=0; const ok=(c,m)=>{ if(!c){fails++;console.log('FAIL',m);} else conso
   }
   const hub=await load('admin.html'); const hc=hub.d.querySelector('.rr-crumb'); ok(hc&&/^Log out\s*\/\s*Admin$/.test(hc.textContent.trim()),'the Admin hub starts with Log out / Admin');
   const pub=await load('index.html'); ok(!pub.d.querySelector('.rr-crumb'),'public pages have no breadcrumb');
-  /* logo: white one gets rr-logo-dark; a coloured one does not */
+  /* logo: returns an img (shown as RaceRoom made it, no inversion) */
   const lb=await load('leaderboards.html'); const w=lb.w, I=w.RR.images;
   const mk=(color)=>{ const n=I.logo(2550); return n; };
   const n=I.logo(10978,{className:'x'}); ok(n.tagName==='IMG'&&n.className.indexOf('x')>=0,'RR.images.logo returns an img');
