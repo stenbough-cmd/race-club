@@ -67,6 +67,7 @@ const txt=d=>d.body.textContent.replace(/\s+/g,' ');
   chgB.click(); await new Promise(r=>setTimeout(r,300));
   const win=d.querySelector('.rr-modal'); ok(!!win&&/Change password: Season 01/.test(win.textContent),'it opens a window that names the season');
   const wi=win&&win.querySelector('input[type=text],input:not([type])'); ok(wi&&wi.value==='abc123','the window shows the current password');
+  ok([...win.querySelectorAll('button')].some(b=>b.textContent.trim()==='Export new file (.zip)'),'the window has an Export new file (.zip) button');
   const sv=[...win.querySelectorAll('button')].filter(b=>b.textContent.trim()==='Save password')[0]; ok(!!sv,'Save password button');
   sv.click(); ok(/Confirm new password for "Season 01"/.test(sv.getAttribute('data-rr-tip')||''),'first click asks to confirm and names the season');
   sv.click(); await new Promise(r=>setTimeout(r,400));

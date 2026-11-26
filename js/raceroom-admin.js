@@ -854,19 +854,26 @@
       win.body.innerHTML = '';
       var pw = RR.input({ label: 'Server password', value: form.password, wide: true, readOnly: form.noPassword, onChange: function (v) { form.password = v; } });
       var no = RR.checkbox('No password (public racing server)', function (on) { form.noPassword = on; if (on) form.password = ''; draw(); }, form.noPassword);
-      var save = RR.arm(RR.button('Save password', null, true, 'check'), '', 'Confirm new password for "' + s.name + '"', function () {
+      /* Both buttons save the password first. Export new file then also downloads the season's files (.zip) with that password in them. */
+      function store(exportAfter) {
         form.password = form.password.trim();
-        if (!form.noPassword && !form.password) { msg = { text: 'Type a password, or tick No password.', kind: 'warn' }; draw(); return; }
         RR.api('changePassword', { seasonId: s.seasonId, password: form.password, noPassword: form.noPassword }).then(function (res) {
           if (!res || !res.ok) { msg = { text: sheetError(res || {}), kind: 'warn' }; draw(); return; }
           win.close();
           sheetDone('Password changed for "' + s.name + '" (' + s.seasonId + '). Change the racing server to the same password. ' + (form.noPassword ? 'Protests no longer ask for one.' : 'Protests now use the new password.'), 'ok');
+          if (exportAfter) exportFromSheet(s.seasonId, s.name);
         });
-      }, function () { return form.noPassword || !!form.password.trim(); });
+      }
+      function ready() {
+        if (form.noPassword || form.password.trim()) return true;
+        msg = { text: 'Type a password, or tick No password.', kind: 'warn' }; draw(); return false;
+      }
+      var save = RR.arm(RR.button('Save password', null, true, 'check'), '', 'Confirm new password for "' + s.name + '"', function () { store(false); }, ready);
+      var exp = RR.arm(RR.button('Export new file (.zip)', null, false, 'download'), '', 'Confirm save and export for "' + s.name + '"', function () { store(true); }, ready);
       win.body.appendChild(pw); win.body.appendChild(no);
       if (msg) win.body.appendChild(RR.notice(msg.text, msg.kind));
-      win.body.appendChild(note('This is the password for every round of the season. Export season (.zip) uses it too. Drivers already in the server keep racing until they leave; anyone joining needs the new password.'));
-      win.body.appendChild(RR.row(save));
+      win.body.appendChild(note('This is the password for every round of the season. Export new file (.zip) saves the password and downloads the files of the season with it. Drivers already in the server keep racing until they leave; anyone joining needs the new password.'));
+      win.body.appendChild(RR.row(save, exp));
     }
     draw();
     RR.api('loadSeason', { seasonId: s.seasonId }).then(function (res) {
