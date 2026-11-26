@@ -496,7 +496,7 @@ button, select { font-family: inherit; }
 .rr-input input[type="number"] { width: 64px; }
 .rr-input-wide { display: flex; flex: 1 1 360px; }
 /* In a column (stack) the 360px basis would be a HEIGHT, so a wide box sizes to its one line instead. */
-.rr-stack > .rr-input-wide { flex: 0 0 auto; }
+.rr-stack > .rr-input-wide, .rr-modal-body > .rr-input-wide { flex: 0 0 auto; }
 /* Shown but not editable: no hover border, muted value. */
 .rr-input-locked, .rr-input-locked:hover { border-color: var(--rr-line); background: transparent; }
 .rr-input-locked input { color: var(--rr-muted); cursor: default; }
