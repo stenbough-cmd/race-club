@@ -995,7 +995,7 @@ a.rr-btn { text-decoration: none; }
 .rr-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; text-transform: uppercase; }
 .rr-flag { display: block; flex: none; width: 20px; height: 14px; object-fit: cover; box-shadow: 0 0 0 1px var(--rr-line); }
 .rr-flag-none { display: flex; align-items: center; justify-content: center; background: var(--rr-photo-text); }
-.rr-flag-none img { display: block; height: 70%; width: auto; }
+.rr-flag-none img { display: block; width: 60%; height: auto; }   /* the R is 60% of the flag width (it was wider than the flag at times), so the white around it has room */
 .rr-rank-name .rr-name { max-width: 100%; }
 
 /* ---------- Picture behind text (RR.photo): ranking tiles, banners and hero panels ---------- */
