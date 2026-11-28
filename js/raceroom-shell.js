@@ -223,6 +223,10 @@
     pillTimer = setTimeout(function () {
       if (!pending) return;
       if (!pill) { pill = el('div', 'rr-working-pill', 'Working... please wait'); pill.setAttribute('role', 'status'); document.body.appendChild(pill); }
+      /* While the black header is on screen the tab hangs from its bottom edge; once scrolled past it, it hangs from the top of the window. */
+      var bar = document.querySelector('.rr-topbar'), edge = bar ? bar.getBoundingClientRect().bottom : 0;
+      pill.classList.toggle('rr-working-fixed', edge <= 0);
+      pill.style.top = edge > 0 ? Math.round(edge - 1 + (window.pageYOffset || 0)) + 'px' : '';
       pill.hidden = false;
     }, 200);
   }
