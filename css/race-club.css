@@ -758,7 +758,7 @@ button, select { font-family: inherit; }
 }
 .rr-promo-feature { min-height: 300px; }
 /* Every bit of text over a photo gets the same very slight shadow so it reads on bright pictures */
-.rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
+.rr-promo.rr-has-photo, .rr-rank-tile.rr-has-photo, .rr-story-hero.rr-has-photo { text-shadow: var(--rr-photo-shadow); }
 /* News on a phone (portrait): no preview text under each story title */
 @media (orientation: portrait) { .rr-news-grid .rr-promo-text .rr-body { display: none; } }
 /* Large photo and news blocks that are links lift off the page on hover (no border change). */
@@ -794,6 +794,7 @@ button, select { font-family: inherit; }
   border: 1px solid var(--rr-hairline); outline: 1px solid var(--rr-hairline); outline-offset: -28px; transform: rotate(45deg);
 }
 .rr-promo-tech .rr-body { color: var(--rr-detail); }
+.rr-promo-tech.rr-block-link:hover, .rr-promo-tech.rr-block-link:focus-visible { box-shadow: none; border-color: var(--rr-hairline); }   /* hovered home tiles lift with no drop shadow */
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .rr-promo-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .rr-promo-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -1021,15 +1022,14 @@ a.rr-btn { text-decoration: none; }
 .rr-flag-none img { display: block; width: 60%; height: auto; }   /* the R is 60% of the flag width (it was wider than the flag at times), so the white around it has room */
 .rr-rank-name .rr-name { max-width: 100%; }
 
-/* ---------- Picture behind text (RR.photo): ranking tiles, banners and hero panels ---------- */
+/* ---------- Picture behind text (RR.photo): ranking tiles and hero panels ---------- */
 .rr-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-.rr-rank-tile.rr-has-photo::before, .rr-banner.rr-has-photo::before {
+.rr-rank-tile.rr-has-photo::before {
   content: ""; position: absolute; inset: 0; z-index: 1;   /* above the picture (z-index 0), under the text (z-index 1, later in the box) */
   background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.15) 80%);
 }
-.rr-banner.rr-has-photo::before { background: linear-gradient(to top, var(--rr-photo-fade), rgba(23, 23, 23, 0.6)); }   /* even fade: the driver's information sits across the whole banner */
-.rr-rank-tile.rr-has-photo > :not(.rr-photo-img), .rr-banner > :not(.rr-photo-img) { position: relative; z-index: 1; }
-.rr-rank-tile.rr-has-photo, .rr-banner.rr-has-photo {
+.rr-rank-tile.rr-has-photo > :not(.rr-photo-img) { position: relative; z-index: 1; }
+.rr-rank-tile.rr-has-photo {
   --rr-text: var(--rr-photo-text);
   --rr-muted: var(--rr-photo-muted);
   --rr-line: var(--rr-photo-line);
@@ -1045,24 +1045,22 @@ a.rr-btn { text-decoration: none; }
 
 /* Wide banner at the top of a page */
 .rr-banner { position: relative; display: flex; flex-direction: column; justify-content: flex-start; min-height: 200px; padding: 16px; overflow: hidden; background: var(--rr-panel); box-shadow: var(--rr-shadow); }
-.rr-banner > .rr-label { margin-bottom: 12px; }
 
 .rr-banner-text { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .rr-banner-text > .rr-label + .rr-hero-title { margin-top: -7px; }   /* the NAME heading sits the same distance from the name as Current Car does from the car name */
 /* The Race Club helmet in the lower right corner : only on the plain black banner (no banner picture) */
-.rr-banner > .rr-banner-mark { display: none; position: absolute; right: 12px; bottom: 12px; width: 66px; height: auto; opacity: 1; }
-.rr-banner:not(.rr-has-photo) > .rr-banner-mark { display: block; }
+.rr-banner > .rr-banner-mark { position: absolute; right: 12px; bottom: 12px; width: 66px; height: auto; opacity: 1; }
 
 /* ---------- A banner or ranking tile with no picture (the driver's box, and a ranking tile with no livery) ----------
    White with a thin line around it, soft slanted technical panels, and a thin rotated square outline in the upper right corner.
    Drawn with CSS only; the small Race Club R stays in the lower right corner. */
-.rr-banner:not(.rr-has-photo), .rr-rank-tile:not(.rr-has-photo) {
+.rr-banner, .rr-rank-tile:not(.rr-has-photo) {
   background-color: var(--rr-panel);
   border: 1px solid var(--rr-line); box-shadow: none;
   isolation: isolate;
   background-image: linear-gradient(120deg, transparent 0 32%, var(--rr-band) 32% 38%, transparent 38% 48%, var(--rr-band-2) 48% 54%, transparent 54%);
 }
-.rr-banner:not(.rr-has-photo)::after, .rr-rank-tile:not(.rr-has-photo)::after {
+.rr-banner::after, .rr-rank-tile:not(.rr-has-photo)::after {
   content: ""; position: absolute; right: -35px; top: -65px; width: 240px; height: 240px; border: 1px solid var(--rr-hairline);
   transform: rotate(45deg); z-index: -1; pointer-events: none;
 }
