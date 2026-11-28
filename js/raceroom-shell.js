@@ -69,7 +69,6 @@
       ['season', 'Running a season'],
       ['backend', 'Behind the scenes'],
       ['change', 'How to change things'],
-      ['pictures', 'Tile pictures'],
       ['database', 'Picture database']
     ],
     /* Admin season wizard: one sub-tab per step. */

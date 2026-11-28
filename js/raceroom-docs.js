@@ -2,7 +2,7 @@
    A reference for the admin: what every part of the site is, how a season runs, what lives where in the backend,
    and what to change (and where) when something has to be different. Nothing here changes anything by itself.
    KEEP IT TRUE: when a page, a tab, a Sheet column, a Script Property or a rule changes, change the matching line here.
-   The Tile pictures and Picture database tabs are in raceroom-options.js.
+   The Picture database tab is in raceroom-options.js.
    Built only from the shared builders in raceroom-shell.js (RR.*). */
 (function () {
   'use strict';
@@ -241,7 +241,6 @@
         ['The version number in the footer', 'js/raceroom-shell.js, VERSION', "Change it each time the site is updated."],
         ['Colors, fonts, sizes', 'css/race-club.css', "The colors are the --rr-... lines at the top. Change them there and nowhere else."],
         ['Legal notice', 'js/raceroom-shell.js, LEGAL_SHORT, and legal.html', "The short notice is in the shell, the full text in legal.html."],
-        ['Home tile pictures', 'assets/images/home', "See the Tile pictures tab."],
         ['Admin button icons', 'js/raceroom-shell.js, ICONS; js/raceroom-hub.js', "Each admin button names an icon in raceroom-hub.js. Icons are drawn in ICONS in the shell. The button look is .rr-tool in css/race-club.css."],
         ['The server banner picture', 'js/raceroom-admin.js, SERVER_IMAGE', "If the picture is uploaded again in the server tool it gets a new address. Copy it from an exported file's Thumbnail."],
         ['Add an admin, change a password, log everyone out', 'The Sheet, Race Club menu', "Add an admin or change a password, Log every admin out."],
