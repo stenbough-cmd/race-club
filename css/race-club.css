@@ -590,7 +590,7 @@ button, select { font-family: inherit; }
 .rr-news-first { grid-template-columns: 2fr 1fr; }
 .rr-news-first > :first-child { grid-row: span 2; }
 .rr-news-rest { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.rr-news-quad { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rr-news-six { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* the home tiles: three across */
 
 /* ---------- Sidebar list ---------- */
 .rr-sidelist { display: flex; flex-direction: column; }
@@ -928,7 +928,7 @@ a.rr-btn { text-decoration: none; }
   .rr-page-title { font-size: 28px; }
   .rr-subtabs { overflow-x: auto; scrollbar-width: none; }
   .rr-subtab { flex: 0 0 auto; padding-left: 16px; padding-right: 16px; }
-  .rr-grid-2, .rr-grid-3, .rr-split, .rr-news-first, .rr-news-rest, .rr-news-quad, .rr-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .rr-grid-2, .rr-grid-3, .rr-split, .rr-news-first, .rr-news-rest, .rr-news-six, .rr-form-grid { grid-template-columns: minmax(0, 1fr); }
   /* When these collapse to one column their boxes are big, so they get the same space as every other stack. Small tiles (stat rows) keep the tight gap. */
   .rr-grid-2, .rr-grid-3 { gap: 16px; }
   .rr-form-grid { gap: var(--rr-gap); }
