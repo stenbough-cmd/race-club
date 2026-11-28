@@ -111,6 +111,7 @@
     back: '<path d="M15 5l-7 7 7 7"/>',
     forward: '<path d="M9 5l7 7-7 7"/>',
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+    basket: '<path d="M3 9h18l-1.8 10.2a1 1 0 0 1-1 .8H5.8a1 1 0 0 1-1-.8z"/><path d="M8 9l3-5"/><path d="M16 9l-3-5"/><path d="M9 13v3"/><path d="M12 13v3"/><path d="M15 13v3"/>',
     lock: '<rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     login: '<path d="M14 4h6v16h-6"/><path d="M3 12h11"/><path d="M10 8l4 4-4 4"/>',
     portrait: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',

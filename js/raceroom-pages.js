@@ -232,12 +232,13 @@
     if (!list.length) return null;
     var multi = (roundOf(season, n) || {}).races > 1;
     return RR.table([
-      { key: 'driver', label: 'Driver', sort: true }, { key: 'reason', label: 'Infraction', sort: true }, { key: 'ruling', label: 'Ruling', sort: true }, { key: 'pen', label: 'Penalty', sort: true }
+      { key: 'driver', label: 'Driver', sort: true }, { key: 'reason', label: 'Infraction', sort: true }, { key: 'lap', label: 'Lap', sort: true, num: true },
+      { key: 'ruling', label: 'Ruling', sort: true }, { key: 'pen', label: 'Penalty', sort: true }
     ], list.map(function (p) {
       var d = driver(p.driver) || { name: String(p.driver), country: '' };
-      return { cells: { driver: RR.nameWithFlag(d.name, d.country), reason: RR.cell(p.reason, (multi && p.race ? 'Race ' + p.race + ' · ' : '') + 'Lap ' + p.lap),
-        ruling: p.comment || '-', pen: p.penalty || '-' },
-        sort: { driver: d.name.toLowerCase(), reason: p.reason.toLowerCase(), ruling: String(p.comment || '').toLowerCase(), pen: p.penalty || '' } };
+      return { cells: { driver: RR.nameWithFlag(d.name, d.country), reason: RR.cell(p.reason, multi && p.race ? 'Race ' + p.race : ''),
+        lap: p.lap || p.lap === 0 ? String(p.lap) : '-', ruling: p.comment || '-', pen: p.penalty || '-' },
+        sort: { driver: d.name.toLowerCase(), reason: p.reason.toLowerCase(), lap: Number(p.lap) || 0, ruling: String(p.comment || '').toLowerCase(), pen: p.penalty || '' } };
     }), 'No penalties were given from protests.');
   }
   /* Mark the row of a sidebar list that matches `index` as the chosen one (the list starts with its first row chosen). */
@@ -491,7 +492,8 @@
     }
     /* A small caps line: the text, a dot, then the link to the RaceRoom store. */
     function storeLine(text, url) {
-      var label = RR.label(text + ' \u00B7 '), a = el('a', 'rr-link', 'Visit the RaceRoom store to purchase content');
+      var label = RR.label(text + ' \u00B7 '), a = el('a', 'rr-link rr-store-link');
+      a.appendChild(RR.icon('basket')); a.appendChild(document.createTextNode('Visit the RaceRoom store to purchase content'));
       a.href = url; a.target = '_blank'; a.rel = 'noopener';
       label.appendChild(a);
       return label;

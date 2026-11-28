@@ -9,9 +9,9 @@
     { title: 'League News', desc: 'The latest from the league.', href: 'news.html' },
     { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html' },
     { title: 'Driver List', desc: 'Comprehensive race reports.', href: 'drivers.html' },
-    { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html' },
     { title: 'File a Protest', desc: 'Dispute an incident from a race.', href: 'protest.html' },
-    { title: 'Help and Rules', desc: 'The league, points and penalties.', href: 'help.html' }
+    { title: 'Help and Rules', desc: 'The league, points and penalties.', href: 'help.html' },
+    { title: 'About Race Club', desc: 'What the league is and how it works.', href: 'about.html' }
   ];
 
   var main = document.querySelector('main');
