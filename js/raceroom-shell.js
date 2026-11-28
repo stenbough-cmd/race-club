@@ -563,6 +563,22 @@
 
   /* Give any button or link the standard tooltip. */
   RR.tip = function (node, text) { node.setAttribute('data-rr-tip', text); return node; };
+  /* Tooltips inside a popup are drawn in the window, so the popup never cuts them off (see .rr-modal-body in the CSS). This puts one on the screen:
+     centered under the control, kept inside the window, and opened above the control when there is no room below. */
+  function placeModalTip(e) {
+    var n = e.target && e.target.closest ? e.target.closest('[data-rr-tip]') : null;
+    if (!n || !n.closest('.rr-modal-body')) return;
+    var r = n.getBoundingClientRect(), text = n.getAttribute('data-rr-tip') || '';
+    var half = Math.round(text.length * 7.4 / 2 + 12), height = 24, gap = 8;
+    var x = Math.max(half + 4, Math.min(window.innerWidth - half - 4, r.left + r.width / 2));
+    var up = r.bottom + gap + height > window.innerHeight - 4;
+    n.classList.toggle('rr-tip-up', up);
+    n.style.setProperty('--rr-tip-x', Math.round(x) + 'px');
+    n.style.setProperty('--rr-tip-top', Math.round(up ? r.top - gap - height : r.bottom + gap) + 'px');
+    n.style.setProperty('--rr-tip-arrow', Math.round(up ? r.top - gap : r.bottom + 2) + 'px');
+  }
+  document.addEventListener('mouseover', placeModalTip, true);
+  document.addEventListener('focusin', placeModalTip, true);
 
   /* Let a page's content fill the whole content area (used so a paged block keeps one height). */
   RR.version = VERSION;
