@@ -7,7 +7,7 @@
 
   var TILES = [
     { title: 'League News', desc: 'The latest from the league.', href: 'news.html' },
-    { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html' },
+    { title: 'Leaderboards', desc: 'Standings, results and lap times.', href: 'leaderboards.html', tag: 'RaceRoom' },
     { title: 'Driver List', desc: 'Comprehensive race reports.', href: 'drivers.html' },
     { title: 'File a Protest', desc: 'Dispute an incident from a race.', href: 'protest.html' },
     { title: 'Help and Rules', desc: 'The league, points and penalties.', href: 'help.html' },
@@ -18,7 +18,7 @@
   RR.fillContent();
   var grid = el('div', 'rr-news-grid rr-news-six');
   TILES.forEach(function (t) {
-    grid.appendChild(RR.promo({ title: t.title, desc: t.desc, href: t.href, tech: true, button: 'Open' }));
+    grid.appendChild(RR.promo({ title: t.title, desc: t.desc, href: t.href, tech: true, tag: t.tag, button: 'Open' }));
   });
   main.appendChild(add(el('div', 'rr-news'), grid));
 })();

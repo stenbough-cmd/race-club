@@ -878,7 +878,8 @@ a.rr-btn { text-decoration: none; }
 
 /* ---------- Links in text ---------- */
 .rr-link:hover { text-decoration: underline; }
-.rr-store-link { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; }   /* the basket icon sits before the store link text */
+.rr-store-link { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; padding: 2px 6px; margin: -2px -6px; transition: background-color var(--rr-speed) ease; }
+.rr-store-link:hover, .rr-store-link:focus-visible { text-decoration: none; background: rgba(23, 23, 23, 0.1); }   /* a darker rectangle behind the text and basket instead of an underline */   /* the basket icon sits before the store link text */
 .rr-store-link .rr-icon { display: inline-flex; }
 .rr-store-link svg { display: block; width: 14px; height: 14px; }
 
