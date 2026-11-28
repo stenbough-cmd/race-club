@@ -833,12 +833,10 @@ button, select { font-family: inherit; }
 /* While the service is busy (RR.api / RR.post pending) every button is disabled and greyed, and a note shows at the top of the screen. */
 .rr-working, .rr-working * { cursor: progress; }
 .rr-working button[disabled] { opacity: 0.4; pointer-events: none; }
-/* A black tab hanging from the bottom edge of the black header, both sides slanting outward toward the edge so it is widest where it meets the header.
-   Scrolled past the header, it hangs from the top of the window instead (.rr-working-fixed). */
-.rr-working-pill { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 40px 9px; isolation: isolate; color: var(--rr-bar-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); }
-.rr-working-pill.rr-working-fixed { position: fixed; top: 0; }
-/* The shape is drawn on its own layer: a shadow on the pill itself would be cut off by the angled edges. */
-.rr-working-pill::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--rr-bar); clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
+/* A red tab hanging from the top edge of the browser: both sides slant outward toward the edge, so it is widest where it meets the top. */
+.rr-working-pill { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 200; padding: 8px 40px 9px; isolation: isolate; color: var(--rr-photo-text); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); }
+/* The red shape is drawn on its own layer: a shadow on the pill itself would be cut off by the angled edges. */
+.rr-working-pill::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--rr-red); clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 20px 100%); }
 .rr-working-pill[hidden] { display: none; }
 .rr-icon-solid svg { fill: currentColor; }
 a.rr-btn { text-decoration: none; }
