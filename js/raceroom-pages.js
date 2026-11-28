@@ -564,7 +564,7 @@
         [{ key: 'session', label: 'Session' }, { key: 'length', label: 'Length' }, { key: 'start', label: 'Start' }],
         setup.weekend.map(function (w) { return { cells: { session: w.session, length: w.length, start: w.start } }; }),
         'The weekend format has not been posted yet.')));
-      var pts = setup.points, bonus = el('div', 'rr-kv-list');
+      var pts = setup.points, bonus = el('div', 'rr-kv-list rr-points-bonus');
       pts.bonuses.forEach(function (b) { bonus.appendChild(RR.kv(b[0], b[1])); });
       (pts.notes || []).forEach(function (t) { bonus.appendChild(RR.kv('Format', t)); });
       bonus.appendChild(RR.kv('Dropped rounds', pts.dropWeeks ? String(pts.dropWeeks) : 'None'));

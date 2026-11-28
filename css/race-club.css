@@ -641,6 +641,7 @@ button, select { font-family: inherit; }
 .rr-kv-value { font-size: 13px; font-weight: 600; }
 .rr-kv-row { flex-direction: row; justify-content: space-between; align-items: baseline; padding: 4px 0; }
 .rr-kv-list { display: flex; flex-wrap: wrap; gap: 16px 40px; }
+.rr-points-bonus { border-top: 1px solid var(--rr-line); padding-top: 16px; margin-top: 16px; }   /* a line between the points table and the bonus labels */
 
 /* ---------- Panel (plain box that groups catalogue parts) ---------- */
 .rr-panel { padding: 16px; background: var(--rr-panel); }
