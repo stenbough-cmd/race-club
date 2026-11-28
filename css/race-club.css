@@ -772,6 +772,28 @@ button, select { font-family: inherit; }
   .rr-promo.rr-block-link:hover, .rr-promo.rr-block-link:focus-visible, .rr-rank-tile.rr-block-link:hover, .rr-rank-tile.rr-block-link:focus-visible { transform: none; }
 }
 .rr-promo-soon { cursor: default; }
+/* ---------- Home tile with no picture (rr-promo-tech) ----------
+   A light panel drawn with CSS only, in the same family as the driver banner but arranged differently: the slanted bands rise from the right at a steep
+   angle, a fine diagonal hatch fades out of the upper right corner, and two nested squares are turned on their corner in the upper left.
+   Everything is pale, so the text and button stay easy to read. */
+.rr-promo-tech {
+  background-color: var(--rr-panel);
+  border: 1px solid var(--rr-line);
+  box-shadow: none;
+  isolation: isolate;
+  overflow: hidden;
+  background-image: linear-gradient(65deg, transparent 0 56%, var(--rr-band) 56% 64%, transparent 64% 70%, var(--rr-band-2) 70% 74%, transparent 74% 80%, var(--rr-band) 80% 82%, transparent 82%);
+}
+.rr-promo-tech::before {
+  content: ""; position: absolute; right: 0; top: 0; width: 55%; height: 60%; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(135deg, var(--rr-hairline) 0 1px, transparent 1px 9px);
+  -webkit-mask-image: linear-gradient(to bottom left, #000, transparent 75%); mask-image: linear-gradient(to bottom left, #000, transparent 75%);
+}
+.rr-promo-tech::after {
+  content: ""; position: absolute; left: -60px; top: -80px; width: 170px; height: 170px; z-index: -1; pointer-events: none;
+  border: 1px solid var(--rr-hairline); outline: 1px solid var(--rr-hairline); outline-offset: -28px; transform: rotate(45deg);
+}
+.rr-promo-tech .rr-body { color: var(--rr-detail); }
 .rr-tile-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .rr-promo-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .rr-promo-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

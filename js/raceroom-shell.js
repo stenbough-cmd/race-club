@@ -837,7 +837,7 @@
      Without an href it is a placeholder for something not built yet: no link, no button, and a NOT YET tag. */
   RR.promo = function (o) {
     var soon = !o.href;
-    var a = el(soon ? 'div' : 'a', 'rr-promo' + (soon ? ' rr-promo-soon' : ' rr-block-link') + (o.feature ? ' rr-promo-feature' : ''));
+    var a = el(soon ? 'div' : 'a', 'rr-promo' + (soon ? ' rr-promo-soon' : ' rr-block-link') + (o.feature ? ' rr-promo-feature' : '') + (o.tech ? ' rr-promo-tech' : ''));   /* o.tech: a light panel drawn with CSS shapes, no picture */
     if (!soon) a.href = o.href;
     if (o.photo) { a.classList.add('rr-has-photo'); a.style.backgroundImage = 'url("' + o.photo + '")'; }
     if (soon) a.appendChild(add(el('span', 'rr-tile-corner'), RR.tag('Not yet', true)));
